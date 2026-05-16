@@ -1,0 +1,37 @@
+# Core
+numpy>=1.26
+pandas>=2.1
+pyarrow>=15.0
+pyyaml>=6.0
+
+# Embeddings
+sentence-transformers>=2.5
+torch>=2.1
+
+# Retrieval
+scikit-learn>=1.4
+rank-bm25>=0.2.2
+
+# AutoML
+optuna>=3.5
+mlflow>=2.10
+
+# Online learning
+river>=0.21
+
+# Ingest
+pypdf>=4.0
+pymupdf>=1.23
+requests>=2.31
+arxiv>=2.1
+ir_datasets>=0.5
+
+# Eval & viz
+matplotlib>=3.8
+
+# Testing
+pytest>=8.0
+
+# Notebook
+jupyter>=1.0
+ipykernel>=6.29

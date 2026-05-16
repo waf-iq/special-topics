@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Project data (too large for git)
+data/raw_pdfs/*
+!data/raw_pdfs/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+*.parquet
+*.npy
+*.pkl
+*.bin
+
+# Optuna study DB / MLflow runs
+*.db
+*.sqlite
+*.sqlite3
+mlruns/
+mlartifacts/
+
+# Reports build artifacts (keep final PDF only)
+reports/*.aux
+reports/*.log
+reports/*.out
+reports/*.toc
+
+# Env
+.env
+.env.local
+
+# IDE / tooling
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
