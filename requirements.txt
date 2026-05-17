@@ -28,6 +28,7 @@ ir_datasets>=0.5
 
 # Eval & viz
 matplotlib>=3.8
+tabulate>=0.9          # pandas .to_markdown() backend, used by mlflow_tracking export
 
 # Testing
 pytest>=8.0
