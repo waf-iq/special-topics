@@ -115,3 +115,34 @@ def test_ndcg_retrieved_shorter_than_k():
 def test_ingest_produces_chunks():
     from pathlib import Path
     assert Path("data/processed/chunks.parquet").exists()
+
+
+def test_runcard_extended_fields(tmp_path):
+    from csai415.runcard import write_runcard
+    import yaml
+
+    out = tmp_path / "card.yaml"
+    write_runcard(
+        best_params={"candidate_k": 10, "metric": "cosine"},
+        best_value=0.72,
+        n_trials=80,
+        embedding_model="BAAI/bge-small-en-v1.5",
+        chunks_parquet=tmp_path / "chunks.parquet",
+        gold_jsonl=tmp_path / "gold.jsonl",
+        metrics={"ndcg5_tune": 0.72, "ndcg5_holdout": 0.68},
+        split={"strategy": "80_20", "split_seed": 42},
+        sampler_config={"class": "TPESampler", "multivariate": True, "seed": 42},
+        pruner_config={"class": "NopPruner"},
+        study_storage="sqlite:///study.db",
+        notes="single-seed study; 5-fold CV deferred to D2",
+        out_path=out,
+    )
+
+    card = yaml.safe_load(out.read_text())
+    assert card["schema_version"] == "2"
+    assert card["automl"]["sampler"]["multivariate"] is True
+    assert card["automl"]["storage"] == "sqlite:///study.db"
+    assert card["split"]["strategy"] == "80_20"
+    assert card["notes"].startswith("single-seed")
+    assert "env" in card and "code" in card
+    assert card["dataset"]["chunks_sha256"] is None
