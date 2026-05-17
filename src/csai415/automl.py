@@ -27,7 +27,8 @@ def build_objective(chunks_df, queries, k: int = 5, latency_penalty_ms: float = 
 
     For D1 we optimize raw NDCG@5 and record p95 latency as a user_attr so the
     notebook can show the latency/quality tradeoff without folding it into the
-    objective. latency_penalty_ms is reserved for D2 when latency matters at scale.
+    objective. latency_penalty_ms is kept in the signature for D2 (where multi-
+    objective or constraints_func will handle latency properly) — don't delete it.
     """
 
     def objective(trial: optuna.Trial) -> float:
@@ -51,7 +52,7 @@ def build_objective(chunks_df, queries, k: int = 5, latency_penalty_ms: float = 
 
 
 def run_study(
-    n_trials: int = 60,
+    n_trials: int = 80,
     study_name: str = "csai415-d1-knn",
     storage: str | None = None,
     callbacks: list | None = None,
@@ -63,8 +64,8 @@ def run_study(
     """
     chunks_df = load_chunks()
     queries = load_queries()
-    sampler = optuna.samplers.TPESampler(seed=42)
-    pruner = optuna.pruners.MedianPruner()
+    sampler = optuna.samplers.TPESampler(seed=42, n_startup_trials=20, multivariate=True)
+    pruner = optuna.pruners.NopPruner()
     study = optuna.create_study(
         study_name=study_name,
         storage=storage,
