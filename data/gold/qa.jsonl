@@ -1,0 +1,300 @@
+{"qid": "1", "question": "0-dimensional biomaterials show inductive properties.", "relevant_chunk_ids": ["scifact:31715818:0"], "topic": null}
+{"qid": "3", "question": "1,000 genomes project enables mapping of genetic sequence variation consisting of rare variants with larger penetrance effects than common variants.", "relevant_chunk_ids": ["scifact:14717500:0"], "topic": null}
+{"qid": "5", "question": "1/2000 in UK have abnormal PrP positivity.", "relevant_chunk_ids": ["scifact:13734012:0"], "topic": null}
+{"qid": "13", "question": "5% of perinatal mortality is due to low birth weight.", "relevant_chunk_ids": ["scifact:1606628:0", "scifact:1606628:1"], "topic": null}
+{"qid": "36", "question": "A deficiency of vitamin B12 increases blood levels of homocysteine.", "relevant_chunk_ids": ["scifact:11705328:0", "scifact:5152028:0"], "topic": null}
+{"qid": "42", "question": "A high microerythrocyte count raises vulnerability to severe anemia in homozygous alpha (+)- thalassemia trait subjects.", "relevant_chunk_ids": ["scifact:18174210:0", "scifact:18174210:1"], "topic": null}
+{"qid": "48", "question": "A total of 1,000 people in the UK are asymptomatic carriers of vCJD infection.", "relevant_chunk_ids": ["scifact:13734012:0"], "topic": null}
+{"qid": "49", "question": "ADAR1 binds to Dicer to cleave pre-miRNA.", "relevant_chunk_ids": ["scifact:5953485:0"], "topic": null}
+{"qid": "50", "question": "AIRE is expressed in some skin tumors.", "relevant_chunk_ids": ["scifact:12580014:0"], "topic": null}
+{"qid": "51", "question": "ALDH1 expression is associated with better breast cancer outcomes.", "relevant_chunk_ids": ["scifact:45638119:0"], "topic": null}
+{"qid": "53", "question": "ALDH1 expression is associated with poorer prognosis in breast cancer.", "relevant_chunk_ids": ["scifact:45638119:0"], "topic": null}
+{"qid": "54", "question": "AMP-activated protein kinase (AMPK) activation increases inflammation-related fibrosis in the lungs.", "relevant_chunk_ids": ["scifact:49556906:0"], "topic": null}
+{"qid": "56", "question": "APOE4 expression in iPSC-derived neurons increases AlphaBeta production and tau phosphorylation causing GABA neuron degeneration.", "relevant_chunk_ids": ["scifact:4709641:0"], "topic": null}
+{"qid": "57", "question": "APOE4 expression in iPSC-derived neurons increases AlphaBeta production and tau phosphorylation, delaying GABA neuron degeneration.", "relevant_chunk_ids": ["scifact:4709641:0"], "topic": null}
+{"qid": "70", "question": "Activation of PPM1D suppresses p53 function.", "relevant_chunk_ids": ["scifact:4414547:0", "scifact:5956380:0"], "topic": null}
+{"qid": "72", "question": "Activator-inhibitor pairs are provided dorsally by Admpchordin.", "relevant_chunk_ids": ["scifact:6076903:0"], "topic": null}
+{"qid": "75", "question": "Active H. pylori urease has a polymeric structure that compromises two subunits, UreA and UreB.", "relevant_chunk_ids": ["scifact:4387784:0"], "topic": null}
+{"qid": "94", "question": "Albendazole is used to treat lymphatic filariasis.", "relevant_chunk_ids": ["scifact:1215116:0"], "topic": null}
+{"qid": "99", "question": "Alizarin forms hydrogen bonds with residues involved in PGAM1 substrate binding.", "relevant_chunk_ids": ["scifact:18810195:0"], "topic": null}
+{"qid": "100", "question": "All hematopoietic stem cells segregate their chromosomes randomly.", "relevant_chunk_ids": ["scifact:4381486:0"], "topic": null}
+{"qid": "113", "question": "Angiotensin converting enzyme inhibitors are associated with increased risk for functional renal insufficiency.", "relevant_chunk_ids": ["scifact:6157837:0"], "topic": null}
+{"qid": "115", "question": "Anthrax spores can be disposed of easily after they are dispersed.", "relevant_chunk_ids": ["scifact:33872649:0"], "topic": null}
+{"qid": "118", "question": "Antibiotic induced alterations in the gut microbiome reduce resistance against Clostridium difficile", "relevant_chunk_ids": ["scifact:6372244:0"], "topic": null}
+{"qid": "124", "question": "Antiretroviral therapy reduces rates of tuberculosis across a broad range of CD4 strata.", "relevant_chunk_ids": ["scifact:4883040:0", "scifact:4883040:1"], "topic": null}
+{"qid": "127", "question": "Arginine 90 in p150n is important for interaction with EB1.", "relevant_chunk_ids": ["scifact:21598000:0"], "topic": null}
+{"qid": "128", "question": "Arterioles have a larger lumen diameter than venules.", "relevant_chunk_ids": ["scifact:8290953:0"], "topic": null}
+{"qid": "129", "question": "Articles published in open access format are less likely to be cited than traditional journals.", "relevant_chunk_ids": ["scifact:27768226:0", "scifact:27768226:1", "scifact:27768226:2"], "topic": null}
+{"qid": "130", "question": "Articles published in open access format are more likely to be cited than traditional journals.", "relevant_chunk_ids": ["scifact:27768226:0", "scifact:27768226:1", "scifact:27768226:2"], "topic": null}
+{"qid": "132", "question": "Aspirin inhibits the production of PGE2.", "relevant_chunk_ids": ["scifact:7975937:0"], "topic": null}
+{"qid": "133", "question": "Assembly of invadopodia is triggered by focal generation of phosphatidylinositol-3,4-biphosphate and the activation of the nonreceptor tyrosine kinase Src.", "relevant_chunk_ids": ["scifact:12640810:0", "scifact:16280642:0", "scifact:17934082:0", "scifact:38485364:0", "scifact:6969753:0"], "topic": null}
+{"qid": "137", "question": "Asymptomatic visual impairment screening in elderly populations does not lead to improved vision.", "relevant_chunk_ids": ["scifact:26016929:0"], "topic": null}
+{"qid": "141", "question": "Auditory entrainment is strengthened when people see congruent visual and auditory information.", "relevant_chunk_ids": ["scifact:14437255:0", "scifact:6955746:0"], "topic": null}
+{"qid": "142", "question": "Autologous transplantation of mesenchymal stem cells causes a higher rate of opportunistic infections than induction therapy with anti-interleukin-2 receptor antibodies.", "relevant_chunk_ids": ["scifact:10582939:0", "scifact:10582939:1"], "topic": null}
+{"qid": "143", "question": "Autologous transplantation of mesenchymal stem cells causes fewer opportunistic infections than induction therapy with anti-interleukin-2 receptor antibodies.", "relevant_chunk_ids": ["scifact:10582939:0", "scifact:10582939:1"], "topic": null}
+{"qid": "146", "question": "Autologous transplantation of mesenchymal stem cells has lower rates of rejection than induction therapy with anti-interleukin-2 receptor antibodies.", "relevant_chunk_ids": ["scifact:10582939:0", "scifact:10582939:1"], "topic": null}
+{"qid": "148", "question": "Autophagy declines in aged organisms.", "relevant_chunk_ids": ["scifact:1084345:0"], "topic": null}
+{"qid": "163", "question": "Bariatric surgery has a positive impact on mental health.", "relevant_chunk_ids": ["scifact:18872233:0"], "topic": null}
+{"qid": "171", "question": "Basophils counteract disease development in patients with systemic lupus erythematosus (SLE).", "relevant_chunk_ids": ["scifact:12670680:0"], "topic": null}
+{"qid": "179", "question": "Birth-weight is positively associated with breast cancer.", "relevant_chunk_ids": ["scifact:16322674:0", "scifact:16322674:1", "scifact:17450673:0", "scifact:23557241:0", "scifact:27123743:0"], "topic": null}
+{"qid": "180", "question": "Blocking the interaction between TDP-43 and respiratory complex I proteins ND3 and ND6 leads to increased TDP-43-induced neuronal loss.", "relevant_chunk_ids": ["scifact:16966326:0"], "topic": null}
+{"qid": "183", "question": "Bone marrow cells contribute to adult macrophage compartments.", "relevant_chunk_ids": ["scifact:12827098:0"], "topic": null}
+{"qid": "185", "question": "Breast cancer development is determined exclusively by genetic factors.", "relevant_chunk_ids": ["scifact:18340282:0", "scifact:18340282:1"], "topic": null}
+{"qid": "198", "question": "CCL19 is absent within dLNs.", "relevant_chunk_ids": ["scifact:2177022:0"], "topic": null}
+{"qid": "208", "question": "CHEK2 is not associated with breast cancer.", "relevant_chunk_ids": ["scifact:13519661:0"], "topic": null}
+{"qid": "212", "question": "CR is associated with higher methylation age.", "relevant_chunk_ids": ["scifact:22038539:0"], "topic": null}
+{"qid": "213", "question": "CRP is not predictive of postoperative mortality following Coronary Artery Bypass Graft (CABG) surgery.", "relevant_chunk_ids": ["scifact:13625993:0", "scifact:13625993:1"], "topic": null}
+{"qid": "216", "question": "CX3CR1 on the Th2 cells impairs T cell survival", "relevant_chunk_ids": ["scifact:21366394:0"], "topic": null}
+{"qid": "217", "question": "CX3CR1 on the Th2 cells promotes T cell survival", "relevant_chunk_ids": ["scifact:21366394:0"], "topic": null}
+{"qid": "218", "question": "CX3CR1 on the Th2 cells promotes airway inflammation.", "relevant_chunk_ids": ["scifact:21366394:0"], "topic": null}
+{"qid": "219", "question": "CX3CR1 on the Th2 cells suppresses airway inflammation.", "relevant_chunk_ids": ["scifact:21366394:0"], "topic": null}
+{"qid": "230", "question": "Carriers of the alcohol aldehyde dehydrogenase deficiency mutation drink less that non-carries.", "relevant_chunk_ids": ["scifact:3067015:0"], "topic": null}
+{"qid": "232", "question": "Cataract and trachoma are the primary cause of blindness in Southern Sudan.", "relevant_chunk_ids": ["scifact:10536636:0"], "topic": null}
+{"qid": "233", "question": "Cell autonomous sex determination in somatic cells does not occur in Galliformes.", "relevant_chunk_ids": ["scifact:4388470:0"], "topic": null}
+{"qid": "236", "question": "Cell autonomous sex determination in somatic cells occurs in Passeriformes.", "relevant_chunk_ids": ["scifact:4388470:0"], "topic": null}
+{"qid": "237", "question": "Cells lacking clpC have a defect in sporulation efficiency in Bacillus subtilis.", "relevant_chunk_ids": ["scifact:4942718:0"], "topic": null}
+{"qid": "238", "question": "Cells undergoing methionine restriction may activate miRNAs.", "relevant_chunk_ids": ["scifact:2251426:0"], "topic": null}
+{"qid": "239", "question": "Cellular aging closely links to an older appearance.", "relevant_chunk_ids": ["scifact:14079881:0"], "topic": null}
+{"qid": "248", "question": "Chenodeosycholic acid treatment increases whole-body energy expenditure.", "relevant_chunk_ids": ["scifact:1568684:0"], "topic": null}
+{"qid": "249", "question": "Chenodeosycholic acid treatment reduces whole-body energy expenditure.", "relevant_chunk_ids": ["scifact:1568684:0"], "topic": null}
+{"qid": "261", "question": "Chronic aerobic exercise alters endothelial function, improving vasodilating mechanisms mediated by NO.", "relevant_chunk_ids": ["scifact:10697096:0", "scifact:10697096:1", "scifact:1122279:0"], "topic": null}
+{"qid": "268", "question": "Cold exposure increases BAT recruitment.", "relevant_chunk_ids": ["scifact:970012:0"], "topic": null}
+{"qid": "269", "question": "Cold exposure reduces BAT recruitment.", "relevant_chunk_ids": ["scifact:970012:0"], "topic": null}
+{"qid": "274", "question": "Combination nicotine replacement therapies with varenicline or bupropion lead to significantly higher long-term abstinence rates at 52 weeks than varenicline monotherapy.", "relevant_chunk_ids": ["scifact:11614737:0", "scifact:11614737:1"], "topic": null}
+{"qid": "275", "question": "Combining phosphatidylinositide 3-kinase and MEK 1/2 inhibitors is effective at treating KRAS mutant tumors.", "relevant_chunk_ids": ["scifact:14241418:0", "scifact:14819804:0", "scifact:4961038:0"], "topic": null}
+{"qid": "279", "question": "Commelina yellow mottle virus' (ComYMV) genome consists of 7489 baise pairs.", "relevant_chunk_ids": ["scifact:14376683:0"], "topic": null}
+{"qid": "294", "question": "Crossover hot spots are not found within gene promoters in Saccharomyces cerevisiae.", "relevant_chunk_ids": ["scifact:10874408:0"], "topic": null}
+{"qid": "295", "question": "Crosstalk between dendritic cells (DCs) and innate lymphoid cells (ILCs) is important in the regulation of intestinal homeostasis.", "relevant_chunk_ids": ["scifact:20310709:0"], "topic": null}
+{"qid": "298", "question": "Cytochrome c is released from the mitochondrial intermembrane space to cytosol during apoptosis.", "relevant_chunk_ids": ["scifact:39381118:0"], "topic": null}
+{"qid": "300", "question": "Cytosolic proteins bind to iron-responsive elements on mRNAs coding for DMT1. Cytosolic proteins bind to iron-responsive elements on mRNAs coding for proteins involved in iron uptake.", "relevant_chunk_ids": ["scifact:3553087:0"], "topic": null}
+{"qid": "303", "question": "DMRT1 is a sex-determining gene that is epigenetically regulated by the MHM region.", "relevant_chunk_ids": ["scifact:4388470:0"], "topic": null}
+{"qid": "312", "question": "De novo assembly of sequence data has more specific contigs than unassembled sequence data.", "relevant_chunk_ids": ["scifact:6173523:0"], "topic": null}
+{"qid": "314", "question": "Deamination of cytidine to uridine on the minus strand of viral DNA results in catastrophic G-to-A mutations in the viral genome.", "relevant_chunk_ids": ["scifact:4347374:0"], "topic": null}
+{"qid": "324", "question": "Deleting Raptor reduces G-CSF levels.", "relevant_chunk_ids": ["scifact:2014909:0"], "topic": null}
+{"qid": "327", "question": "Deletion of αvβ8 does not result in a spontaneous inflammatory phenotype.", "relevant_chunk_ids": ["scifact:17997584:0"], "topic": null}
+{"qid": "338", "question": "Dexamethasone decreases risk of postoperative bleeding.", "relevant_chunk_ids": ["scifact:23349986:0", "scifact:23349986:1"], "topic": null}
+{"qid": "343", "question": "Diabetic patients with acute coronary syndrome experience increased short-term and long-term risk for bleeding events.", "relevant_chunk_ids": ["scifact:5884524:0", "scifact:7873737:0"], "topic": null}
+{"qid": "350", "question": "Discrimination between the initiator and elongation tRNAs depends on the translation initiation factor IF3.", "relevant_chunk_ids": ["scifact:16927286:0"], "topic": null}
+{"qid": "354", "question": "Downregulation and mislocalization of Scribble prevents cell transformation and mammary tumorigenesis.", "relevant_chunk_ids": ["scifact:8774475:0"], "topic": null}
+{"qid": "362", "question": "During the primary early antibody response activated B cells migrate toward the inner-and outer paracortical areas where oxysterol accumulation is generated by stromal cells.", "relevant_chunk_ids": ["scifact:38587347:0"], "topic": null}
+{"qid": "380", "question": "Enhanced early production of inflammatory chemokines improves viral control in the lung.", "relevant_chunk_ids": ["scifact:19005293:0"], "topic": null}
+{"qid": "384", "question": "Epidemiological disease burden from noncommunicable diseases is more prevalent in low economic settings.", "relevant_chunk_ids": ["scifact:13770184:0", "scifact:13770184:1", "scifact:13770184:2"], "topic": null}
+{"qid": "385", "question": "Epigenetic modulating agents (EMAs) modulate antitumor immune response in a cancer model system.", "relevant_chunk_ids": ["scifact:9767444:0", "scifact:9955779:0"], "topic": null}
+{"qid": "386", "question": "Errors in peripheral IV drug administration are most common during bolus administration and multiple-step medicine preparations.", "relevant_chunk_ids": ["scifact:16495649:0"], "topic": null}
+{"qid": "388", "question": "Ethanol stress decreases the expression of IBP in bacteria.", "relevant_chunk_ids": ["scifact:1148122:0"], "topic": null}
+{"qid": "399", "question": "Exposure to fine particulate air pollution is relate to anxiety prevalence.", "relevant_chunk_ids": ["scifact:791050:0"], "topic": null}
+{"qid": "410", "question": "Febrile seizures increase the threshold for development of epilepsy.", "relevant_chunk_ids": ["scifact:14924526:0"], "topic": null}
+{"qid": "411", "question": "Febrile seizures reduce the threshold for development of epilepsy.", "relevant_chunk_ids": ["scifact:14924526:0"], "topic": null}
+{"qid": "415", "question": "Female carriers of the Apolipoprotein E4 (APOE4) allele have increased risk for dementia.", "relevant_chunk_ids": ["scifact:6309659:0", "scifact:6309659:1"], "topic": null}
+{"qid": "421", "question": "Flexible molecules experience greater steric hindrance in the tumor microenviroment than rigid molecules.", "relevant_chunk_ids": ["scifact:11172205:0"], "topic": null}
+{"qid": "431", "question": "FoxO3a activation in neuronal death is mediated by reactive oxygen species (ROS).", "relevant_chunk_ids": ["scifact:28937856:0"], "topic": null}
+{"qid": "436", "question": "Free histones are degraded by a Rad53-dependent mechanism once DNA has been replicated.", "relevant_chunk_ids": ["scifact:14637235:0"], "topic": null}
+{"qid": "437", "question": "Functional consequences of genomic alterations due to Myelodysplastic syndrome (MDS) are poorly understood due to the lack of an animal model.", "relevant_chunk_ids": ["scifact:18399038:0"], "topic": null}
+{"qid": "439", "question": "Fz/PCP-dependent Pk localizes to the anterior membrane of neuroectoderm cells during zebrafish neuralation", "relevant_chunk_ids": ["scifact:4423559:0"], "topic": null}
+{"qid": "440", "question": "Fz/PCP-dependent Pk localizes to the anterior membrane of notochord cells during zebrafish neuralation.", "relevant_chunk_ids": ["scifact:4423559:0"], "topic": null}
+{"qid": "443", "question": "GATA-3 is important for hematopoietic stem cell (HSC) function.", "relevant_chunk_ids": ["scifact:10165258:0"], "topic": null}
+{"qid": "452", "question": "Gene expression does not vary appreciably across genetically identical cells.", "relevant_chunk_ids": ["scifact:12804937:0", "scifact:464511:0"], "topic": null}
+{"qid": "475", "question": "Glycolysis is one of the primary glycometabolic pathways in cells.", "relevant_chunk_ids": ["scifact:18678095:0"], "topic": null}
+{"qid": "478", "question": "Golli-deficient T-cells prefer to differentiate into an anergic phenotype in the adaptive immune response when there are increased levels of Ca2+ in the cytosol.", "relevant_chunk_ids": ["scifact:14767844:0"], "topic": null}
+{"qid": "491", "question": "HNF4A mutations can cause diabetes in mutant carriers by the age of 14 years", "relevant_chunk_ids": ["scifact:56893404:0"], "topic": null}
+{"qid": "501", "question": "Headaches are not correlated with cognitive impairment.", "relevant_chunk_ids": ["scifact:17930286:0"], "topic": null}
+{"qid": "502", "question": "Healthcare delivery efficiency in crowded delivery centers is impaired by improving structural, logistical, and interpersonal elements.", "relevant_chunk_ids": ["scifact:13071728:0", "scifact:13071728:1"], "topic": null}
+{"qid": "507", "question": "Helminths interfere with immune system control of macrophages activated by IL-4 favor Mycobacterium tuberculosis replication.", "relevant_chunk_ids": ["scifact:30774694:0"], "topic": null}
+{"qid": "508", "question": "Hematopoietic Stem Cell purification reaches purity rate of up to 50%.", "relevant_chunk_ids": ["scifact:13980338:0"], "topic": null}
+{"qid": "513", "question": "High cardiopulmonary fitness causes increased mortality rate.", "relevant_chunk_ids": ["scifact:13230773:0", "scifact:13230773:1"], "topic": null}
+{"qid": "514", "question": "High dietary calcium intakes are unnecessary for prevention of secondary hyperparathyroidism in subjects with 25(OH)D levels above 75 nmol/liter.", "relevant_chunk_ids": ["scifact:16256507:0"], "topic": null}
+{"qid": "516", "question": "High levels of CRP reduces the risk of exacerbations in chronic obstructive pulmonary disease (COPD).", "relevant_chunk_ids": ["scifact:29564505:0", "scifact:29564505:1"], "topic": null}
+{"qid": "517", "question": "High levels of copeptin decrease risk of diabetes.", "relevant_chunk_ids": ["scifact:15663829:0", "scifact:15663829:1"], "topic": null}
+{"qid": "521", "question": "High-sensitivity cardiac troponin T (HSCT-T) dosage may not be diagnostic if the onset of symptoms occurs less than 3 hours before acute myocardial injury (AMI).", "relevant_chunk_ids": ["scifact:34873974:0", "scifact:34873974:1"], "topic": null}
+{"qid": "525", "question": "Histone demethylase recruitment and a transient decrease in histone methylation is necessary for ligand-dependent induction of transcription by nuclear receptors.", "relevant_chunk_ids": ["scifact:13639330:0"], "topic": null}
+{"qid": "527", "question": "Homozygous deletion of murine Sbds gene from osterix-expressing mesenchymal stem and progenitor cells (MPCs) prevents oxidative stress.", "relevant_chunk_ids": ["scifact:3863543:0"], "topic": null}
+{"qid": "528", "question": "Human T-lymphotropic virus type-I-associated myelopathy / tropical spastic paraparesis (HAM/TSP) patients produce Immunoglobulin G (IgG) antibodies which cross-react with an immunodominant epitope in Tax.", "relevant_chunk_ids": ["scifact:5476778:0"], "topic": null}
+{"qid": "532", "question": "Hyperfibrinogenemia decreases rates of femoropopliteal bypass thrombosis.", "relevant_chunk_ids": ["scifact:12991445:0", "scifact:12991445:1"], "topic": null}
+{"qid": "533", "question": "Hyperfibrinogenemia increases rates of femoropopliteal bypass thrombosis.", "relevant_chunk_ids": ["scifact:12991445:0", "scifact:12991445:1"], "topic": null}
+{"qid": "535", "question": "Hypertension is frequently observed in type 1 diabetes patients.", "relevant_chunk_ids": ["scifact:39368721:0", "scifact:39368721:1"], "topic": null}
+{"qid": "536", "question": "Hypocretin neurones induce panicprone state in rats.", "relevant_chunk_ids": ["scifact:16056514:0"], "topic": null}
+{"qid": "539", "question": "Hypoglycemia increases the risk of dementia.", "relevant_chunk_ids": ["scifact:13282296:0", "scifact:13282296:1"], "topic": null}
+{"qid": "540", "question": "Hypothalamic glutamate neurotransmission is crucial to energy balance.", "relevant_chunk_ids": ["scifact:11886686:0", "scifact:25007443:0"], "topic": null}
+{"qid": "544", "question": "IFIT1 restricts viral replication by sequestrating mis-capped viral RNAs.", "relevant_chunk_ids": ["scifact:24221369:0"], "topic": null}
+{"qid": "549", "question": "IRG1 has antiviral effects against neurotropic viruses.", "relevant_chunk_ids": ["scifact:9433958:0"], "topic": null}
+{"qid": "551", "question": "ITAM phosphorylation prevents the transfer of the T cell receptor (TCR) signal from the echo-domain to the cytoplasmic tail of the T cell receptor (TCR).", "relevant_chunk_ids": ["scifact:33499189:0"], "topic": null}
+{"qid": "552", "question": "IgA plasma cells that are specific for transglutaminase 2 accumulate in the duodenal mucosa on commencement of a gluten-free diet.", "relevant_chunk_ids": ["scifact:1471041:0"], "topic": null}
+{"qid": "554", "question": "Immune complex triggered cell death leads to extracellular release of neutrophil protein HMGB1.", "relevant_chunk_ids": ["scifact:1049501:0"], "topic": null}
+{"qid": "560", "question": "Immune responses result in the development of inflammatory Th17 cells and anti-inflammatory iTregs.", "relevant_chunk_ids": ["scifact:40096222:0"], "topic": null}
+{"qid": "569", "question": "In adult tissue, most T cells are memory T cells.", "relevant_chunk_ids": ["scifact:23460562:0"], "topic": null}
+{"qid": "575", "question": "In domesticated populations of Saccharomyces cerevisiae, whole chromosome aneuploidy is very uncommon.", "relevant_chunk_ids": ["scifact:10300888:0"], "topic": null}
+{"qid": "577", "question": "In mice, P. chabaudi parasites are able to proliferate faster early in infection when inoculated at lower numbers than when inoculated at high numbers.", "relevant_chunk_ids": ["scifact:5289038:0"], "topic": null}
+{"qid": "578", "question": "In mouse models, the loss of CSF1R facilitates MOZ-TIF2-induced leuekmogenesis.", "relevant_chunk_ids": ["scifact:8764879:0"], "topic": null}
+{"qid": "587", "question": "In transgenic mice harboring green florescent protein under the control of the Sox2 promoter, less than ten percent of the cells with green florescent colocalize with cell proliferation markers.", "relevant_chunk_ids": ["scifact:16999023:0"], "topic": null}
+{"qid": "589", "question": "In young and middle-aged adults, current or remote uses of ADHD medications do not increase the risk of serious cardiovascular events.", "relevant_chunk_ids": ["scifact:10984005:0", "scifact:10984005:1"], "topic": null}
+{"qid": "593", "question": "Incidence of heart failure decreased by 10% in women since 1979.", "relevant_chunk_ids": ["scifact:19675911:0"], "topic": null}
+{"qid": "597", "question": "Incidence rates of cervical cancer have decreased.", "relevant_chunk_ids": ["scifact:12779444:0", "scifact:25742130:0", "scifact:36355784:0"], "topic": null}
+{"qid": "598", "question": "Incidence rates of cervical cancer have increased due to nationwide screening programs based primarily on cytology to detect uterine cervical cancer.", "relevant_chunk_ids": ["scifact:25742130:0"], "topic": null}
+{"qid": "613", "question": "Increased microtubule acetylation repairs LRRK2 Roc-COR domain mutation induced locomotor deficits.", "relevant_chunk_ids": ["scifact:9638032:0"], "topic": null}
+{"qid": "619", "question": "Increased vessel density along with a reduction in fibrosis decreases the efficacy of chemotherapy treatments.", "relevant_chunk_ids": ["scifact:20888849:0", "scifact:2565138:0"], "topic": null}
+{"qid": "623", "question": "Individuals with low serum vitamin D concentrations have increased risk of multiple sclerosis.", "relevant_chunk_ids": ["scifact:17000834:0"], "topic": null}
+{"qid": "628", "question": "Infection of human T-cell lymphotropic virus type 1 is most frequent in individuals of African origin.", "relevant_chunk_ids": ["scifact:24512064:0"], "topic": null}
+{"qid": "636", "question": "Inositol lipid 3-phosphatase PTEN converts Ptdlns(3,4)P 2 into phosphatidylinositol 4-phosphate.", "relevant_chunk_ids": ["scifact:24294572:0"], "topic": null}
+{"qid": "637", "question": "Input from  mental and physical health care professionals is effective at decreasing homelessness.", "relevant_chunk_ids": ["scifact:25649714:0"], "topic": null}
+{"qid": "641", "question": "Insomnia can be effectively treated with cognitive behavioral therapy.", "relevant_chunk_ids": ["scifact:31554917:0", "scifact:5912283:0", "scifact:5912283:1"], "topic": null}
+{"qid": "644", "question": "Insulin increases risk of severe kidney failure.", "relevant_chunk_ids": ["scifact:13619127:0", "scifact:13619127:1"], "topic": null}
+{"qid": "649", "question": "Integrating classroom-based collaborative learning with Web-based collaborative learning leads to subpar class performance", "relevant_chunk_ids": ["scifact:12789595:0"], "topic": null}
+{"qid": "659", "question": "Ivermectin is used to treat lymphatic filariasis.", "relevant_chunk_ids": ["scifact:1215116:0"], "topic": null}
+{"qid": "660", "question": "Ivermectin is used to treat onchocerciasis.", "relevant_chunk_ids": ["scifact:1215116:0"], "topic": null}
+{"qid": "674", "question": "LDL cholesterol has no involvement in the development of cardiovascular disease.", "relevant_chunk_ids": ["scifact:2095573:0", "scifact:2095573:1"], "topic": null}
+{"qid": "684", "question": "Lack of clpC does not affect sporulation efficiency in Bacillus subtilis cells.", "relevant_chunk_ids": ["scifact:4942718:0"], "topic": null}
+{"qid": "690", "question": "Less than 10% of the gabonese children with Schimmelpenning-Feuerstein-Mims syndrome (SFM) had a plasma lactate of more than 5mmol/L.", "relevant_chunk_ids": ["scifact:18750453:0"], "topic": null}
+{"qid": "691", "question": "Leukemia associated Rho guanine nucleotide-exchange factor represses RhoA in response to SRC activation.", "relevant_chunk_ids": ["scifact:10991183:0"], "topic": null}
+{"qid": "692", "question": "Leuko-increased blood increases infectious complications in red blood cell transfusion.", "relevant_chunk_ids": ["scifact:24088502:0"], "topic": null}
+{"qid": "693", "question": "Leuko-reduced blood reduces infectious complications in red blood cell transfusion.", "relevant_chunk_ids": ["scifact:24088502:0"], "topic": null}
+{"qid": "700", "question": "Localization of PIN1 in the Arabidopsis embryo does not require VPS9a", "relevant_chunk_ids": ["scifact:4350400:0"], "topic": null}
+{"qid": "702", "question": "Localization of PIN1 in the roots of Arabidopsis does not require VPS9a", "relevant_chunk_ids": ["scifact:4350400:0"], "topic": null}
+{"qid": "715", "question": "Low expression of miR7a does represses target genes and exerts a biological function in ovaries.", "relevant_chunk_ids": ["scifact:18421962:0"], "topic": null}
+{"qid": "716", "question": "Low expression of miR7a exerts a biological function in testis.", "relevant_chunk_ids": ["scifact:18421962:0"], "topic": null}
+{"qid": "718", "question": "Low nucleosome occupancy correlates with low methylation levels across species.", "relevant_chunk_ids": ["scifact:17587795:0"], "topic": null}
+{"qid": "721", "question": "Lupus-prone mice infected with curliproducing bacteria have higher autoantibody titers compared to controls.", "relevant_chunk_ids": ["scifact:1834762:0"], "topic": null}
+{"qid": "723", "question": "Ly49Q directs the organization of neutrophil migration to inflammation sites by regulating membrane raft functions.", "relevant_chunk_ids": ["scifact:5531479:0"], "topic": null}
+{"qid": "727", "question": "Ly6C hi monocytes have a lower inflammatory capacity compared to their Ly6C lo counterparts.", "relevant_chunk_ids": ["scifact:7521113:0"], "topic": null}
+{"qid": "728", "question": "Ly6C hi monocytes have a lower inflammatory capacity than Ly6C lo monocytes.", "relevant_chunk_ids": ["scifact:36444198:0", "scifact:7521113:0"], "topic": null}
+{"qid": "729", "question": "Lymphadenopathy is observed in knockin mouse lacking the SHP-2 MAPK pathway.", "relevant_chunk_ids": ["scifact:26851674:0"], "topic": null}
+{"qid": "742", "question": "Macrolides have no protective effect against myocardial infarction.", "relevant_chunk_ids": ["scifact:32159283:0"], "topic": null}
+{"qid": "743", "question": "Macrolides protect against myocardial infarction.", "relevant_chunk_ids": ["scifact:32159283:0"], "topic": null}
+{"qid": "744", "question": "Macropinocytosis contributes to a cell's supply of amino acids via the intracellular uptake of protein.", "relevant_chunk_ids": ["scifact:8460275:0"], "topic": null}
+{"qid": "756", "question": "Many proteins in human cells can be post-translationally modified at lysine residues via acetylation.", "relevant_chunk_ids": ["scifact:2831620:0"], "topic": null}
+{"qid": "759", "question": "Mathematical models predict that using Artemisinin-based combination therapy over nongametocytocidal drugs have a dramatic impact in reducing malaria transmission.", "relevant_chunk_ids": ["scifact:1805641:0", "scifact:1805641:1"], "topic": null}
+{"qid": "768", "question": "Mercaptopurine is anabolized into the inactive methylmercaptopurine by thiopurine methyltrasnferase (TPMT).", "relevant_chunk_ids": ["scifact:6421792:0"], "topic": null}
+{"qid": "770", "question": "Metastatic colorectal cancer treated with a single agent fluoropyrimidines resulted in reduced efficacy and lower quality of life when compared with oxaliplatin-based chemotherapy in elderly patients.", "relevant_chunk_ids": ["scifact:15476777:0", "scifact:15476777:1"], "topic": null}
+{"qid": "775", "question": "Mice defective for deoxyribonucleic acid (DNA) polymerase I (polI) reveal increased sensitivity to ionizing radiation (IR).", "relevant_chunk_ids": ["scifact:32275758:0"], "topic": null}
+{"qid": "781", "question": "Mice that lack Interferon-γ or its receptor exhibit high resistance to experimental autoimmune myocarditis.", "relevant_chunk_ids": ["scifact:24338780:0"], "topic": null}
+{"qid": "783", "question": "Mice without IFN-γ or its receptor are resistant to EAM induced with α-MyHC/CFA.", "relevant_chunk_ids": ["scifact:40632104:0"], "topic": null}
+{"qid": "784", "question": "MicroRNA is involved in the regulation of Neural Stem Cell (NSC) differentiation and proliferation dynamic homeostasis", "relevant_chunk_ids": ["scifact:2356950:0"], "topic": null}
+{"qid": "785", "question": "Microarray results from culture-amplified mixtures of serotypes correlate poorly with microarray results from uncultured mixtures.", "relevant_chunk_ids": ["scifact:12471115:0", "scifact:12471115:1"], "topic": null}
+{"qid": "793", "question": "Mitochondria are uninvolved in apoptosis.", "relevant_chunk_ids": ["scifact:8551160:0"], "topic": null}
+{"qid": "800", "question": "Modifying the epigenome in the brain affects the normal human aging process by affecting certain genes related to neurogenesis.", "relevant_chunk_ids": ["scifact:22543403:0"], "topic": null}
+{"qid": "805", "question": "Monoclonal antibody targeting of N-cadherin inhibits metastasis.", "relevant_chunk_ids": ["scifact:22180793:0"], "topic": null}
+{"qid": "808", "question": "Most termination events in Okazaki fragments are sequence specific.", "relevant_chunk_ids": ["scifact:36606083:0"], "topic": null}
+{"qid": "811", "question": "Mutant mice lacking SVCT2 have greatly increased ascorbic acid levels in both brain and adrenals.", "relevant_chunk_ids": ["scifact:19799455:0"], "topic": null}
+{"qid": "814", "question": "Mutations in G-Beta protein GNB2 are present in many cancers, resulting in loss of interaction with G-alpha subunits and concomitant activation of AKT pathway.", "relevant_chunk_ids": ["scifact:33387953:0"], "topic": null}
+{"qid": "820", "question": "N-terminal cleavage increases success identifying transcription start sites.", "relevant_chunk_ids": ["scifact:8646760:0"], "topic": null}
+{"qid": "821", "question": "N-terminal cleavage reduces success identifying transcription start sites.", "relevant_chunk_ids": ["scifact:8646760:0"], "topic": null}
+{"qid": "823", "question": "N348I mutations cause resistance to zidovudine (AZT).", "relevant_chunk_ids": ["scifact:15319019:0", "scifact:15319019:1"], "topic": null}
+{"qid": "830", "question": "NF2 (Merlin) causes phosphorylation and subsequent cytoplasmic sequestration of YAP in Drosophila by activating LATS1/2 kinases.", "relevant_chunk_ids": ["scifact:1897324:0"], "topic": null}
+{"qid": "831", "question": "NF2 (Merlin) prevents phosphorylation and subsequent cytoplasmic sequestration of YAP in Drosophila.", "relevant_chunk_ids": ["scifact:1897324:0"], "topic": null}
+{"qid": "832", "question": "NFAT4 activation requires IP3R-mediated Ca2+ mobilization.", "relevant_chunk_ids": ["scifact:30303335:0"], "topic": null}
+{"qid": "834", "question": "NOX2-independent pathways can generate peroxynitrite by reacting with nitrogen intermediates.", "relevant_chunk_ids": ["scifact:5483793:0"], "topic": null}
+{"qid": "837", "question": "NR5A2 is important in development of endometrial tissues.", "relevant_chunk_ids": ["scifact:15928989:0"], "topic": null}
+{"qid": "839", "question": "Nanoparticles can be targeted against specific cell types by incorporating aptamers into lipid nanoparticles.", "relevant_chunk_ids": ["scifact:1469751:0"], "topic": null}
+{"qid": "845", "question": "Neutrophil extracellular traps (NETs) are released by ANCA-stimulated neutrophils.", "relevant_chunk_ids": ["scifact:17741440:0"], "topic": null}
+{"qid": "847", "question": "New drugs for tuberculosis often do not penetrate the necrotic portion of a tuberculosis lesion in high concentrations.", "relevant_chunk_ids": ["scifact:16787954:0"], "topic": null}
+{"qid": "852", "question": "Non-invasive ventilation use should be decreased if there is inadequate response to conventional treatment.", "relevant_chunk_ids": ["scifact:13843341:0"], "topic": null}
+{"qid": "859", "question": "Normal expression of RUNX1 has tumor-promoting effects.", "relevant_chunk_ids": ["scifact:1982286:0"], "topic": null}
+{"qid": "870", "question": "Obesity decreases life quality.", "relevant_chunk_ids": ["scifact:195689316:0", "scifact:195689316:1"], "topic": null}
+{"qid": "873", "question": "Obesity is determined solely by environmental factors.", "relevant_chunk_ids": ["scifact:1180972:0", "scifact:19307912:0", "scifact:27393799:0", "scifact:29025270:0", "scifact:3315558:0"], "topic": null}
+{"qid": "879", "question": "Occupancy of ribosomes by IncRNAs do not make functional peptides.", "relevant_chunk_ids": ["scifact:8426046:0"], "topic": null}
+{"qid": "880", "question": "Occupancy of ribosomes by IncRNAs mirror 5 0-UTRs", "relevant_chunk_ids": ["scifact:8426046:0"], "topic": null}
+{"qid": "882", "question": "Omnivores produce less trimethylamine N-oxide from dietary I-carnitine than vegetarians.", "relevant_chunk_ids": ["scifact:14803797:0"], "topic": null}
+{"qid": "887", "question": "Only a minority of cells survive development after differentiation into stress-resistant spores.", "relevant_chunk_ids": ["scifact:18855191:0"], "topic": null}
+{"qid": "903", "question": "PD-1 triggering on monocytes reduces IL-10 production by monocytes.", "relevant_chunk_ids": ["scifact:10648422:0"], "topic": null}
+{"qid": "904", "question": "PDPN promotes efficient motility along stromal surfaces by activating the C-type lectin receptor to rearrange the actin cytoskeleton in dendritic cells.", "relevant_chunk_ids": ["scifact:7370282:0"], "topic": null}
+{"qid": "907", "question": "PGE 2 promotes intestinal tumor growth by altering the expression of tumor suppressing and DNA repair genes.", "relevant_chunk_ids": ["scifact:6923961:0"], "topic": null}
+{"qid": "911", "question": "PKG-la plays an essential role in expression of pain hypersensitivity in PGK-la knockout mice.", "relevant_chunk_ids": ["scifact:11254556:0", "scifact:11254556:1"], "topic": null}
+{"qid": "913", "question": "PPAR-RXRs are inhibited by PPAR ligands.", "relevant_chunk_ids": ["scifact:3203590:0"], "topic": null}
+{"qid": "914", "question": "PPAR-RXRs can be activated by PPAR ligands.", "relevant_chunk_ids": ["scifact:3203590:0"], "topic": null}
+{"qid": "921", "question": "Participating in six months of physical activity improves cognitive functioning.", "relevant_chunk_ids": ["scifact:1642727:0", "scifact:1642727:1"], "topic": null}
+{"qid": "922", "question": "Patients in stable partnerships have a faster progression from HIV to AIDS.", "relevant_chunk_ids": ["scifact:17077004:0"], "topic": null}
+{"qid": "936", "question": "Peroxynitrite is required for nitration of TCR/CD8.", "relevant_chunk_ids": ["scifact:5483793:0"], "topic": null}
+{"qid": "956", "question": "Pleiotropic coupling of GLP-1R to intracellular effectors promotes distinct profiles of cellular signaling.", "relevant_chunk_ids": ["scifact:12956194:0"], "topic": null}
+{"qid": "957", "question": "Podocytes are motile and migrate in the presence of injury.", "relevant_chunk_ids": ["scifact:123859:0"], "topic": null}
+{"qid": "960", "question": "Polymeal nutrition reduces cardiovascular mortality.", "relevant_chunk_ids": ["scifact:8780599:0"], "topic": null}
+{"qid": "967", "question": "Pretreatment with the Arp2/3 inhibitor CK-666 affects lamelliopodia formation.", "relevant_chunk_ids": ["scifact:2119889:0", "scifact:8997410:0"], "topic": null}
+{"qid": "971", "question": "Primary cervical cancer screening with HPV detection has higher longitudinal sensitivity than conventional cytology to detect cervical intraepithelial neoplasia grade 2.", "relevant_chunk_ids": ["scifact:27873158:0", "scifact:27873158:1", "scifact:28617573:0", "scifact:28617573:1", "scifact:46695481:0", "scifact:46695481:1", "scifact:9764256:0", "scifact:9764256:1", "scifact:9764256:2"], "topic": null}
+{"qid": "975", "question": "Primary pro-inflammatory cytokines induce secondary pro- and anti-inflammatory mediators.", "relevant_chunk_ids": ["scifact:5304891:0"], "topic": null}
+{"qid": "982", "question": "Proteins synthesized at the growth cone are ubiquitinated at a higher rate than proteins from the cell body.", "relevant_chunk_ids": ["scifact:2988714:0"], "topic": null}
+{"qid": "985", "question": "Pseudogene PTENP1 regulates the expression of PTEN by functioning as an miRNA decoy.", "relevant_chunk_ids": ["scifact:6828370:0"], "topic": null}
+{"qid": "993", "question": "Pyridostatin destabilizes the G - quadruplex in the telomeric region.", "relevant_chunk_ids": ["scifact:16472469:0"], "topic": null}
+{"qid": "1012", "question": "Radioiodine treatment of non-toxic multinodular goitre reduces thyroid volume.", "relevant_chunk_ids": ["scifact:9745001:0"], "topic": null}
+{"qid": "1014", "question": "Rapamycin decreases the concentration of triacylglycerols in fruit flies.", "relevant_chunk_ids": ["scifact:6277638:0"], "topic": null}
+{"qid": "1019", "question": "Rapid phosphotransfer rates govern fidelity in two component systems", "relevant_chunk_ids": ["scifact:11603066:0"], "topic": null}
+{"qid": "1020", "question": "Rapid up-regulation and higher basal expression of interferon-induced genes increase survival of granule cell neurons that are infected by West Nile virus.", "relevant_chunk_ids": ["scifact:9433958:0"], "topic": null}
+{"qid": "1021", "question": "Rapid up-regulation and higher basal expression of interferon-induced genes reduce survival of granule cell neurons that are infected by West Nile virus.", "relevant_chunk_ids": ["scifact:9433958:0"], "topic": null}
+{"qid": "1024", "question": "Recurrent mutations occur frequently within CTCF anchor sites adjacent to oncogenes.", "relevant_chunk_ids": ["scifact:5373138:0"], "topic": null}
+{"qid": "1029", "question": "Reduced responsiveness to interleukin-2 in regulatory T cells is associated with greater resistance to autoimmune diseases such as Type 1 Diabetes.", "relevant_chunk_ids": ["scifact:11899391:0", "scifact:13923140:0", "scifact:13940200:0"], "topic": null}
+{"qid": "1041", "question": "Replacement of histone H2A with H2A.Z slows gene activation in yeasts by stabilizing +1 nucleosomes.", "relevant_chunk_ids": ["scifact:16626264:0", "scifact:25254425:0"], "topic": null}
+{"qid": "1049", "question": "Ribosomopathies have a low degree of cell and tissue specific pathology.", "relevant_chunk_ids": ["scifact:12486491:0"], "topic": null}
+{"qid": "1062", "question": "S-nitrosylated GAPDH physiologically transnitrosylates histone deacetylases.", "relevant_chunk_ids": ["scifact:20381484:0"], "topic": null}
+{"qid": "1086", "question": "Sildenafil improves erectile function in men who experience sexual dysfunction as a result of the use of SSRI antidepressants.", "relevant_chunk_ids": ["scifact:39281140:0"], "topic": null}
+{"qid": "1088", "question": "Silencing of Bcl2 is important for the maintenance and progression of tumors.", "relevant_chunk_ids": ["scifact:37549932:0"], "topic": null}
+{"qid": "1089", "question": "Smc5/6 engagment drives the activation of SUMO E3 ligase Mms21 by ATP-dependent remolding.", "relevant_chunk_ids": ["scifact:17628888:0"], "topic": null}
+{"qid": "1099", "question": "Statins decrease blood cholesterol.", "relevant_chunk_ids": ["scifact:7662206:0"], "topic": null}
+{"qid": "1100", "question": "Statins increase blood cholesterol.", "relevant_chunk_ids": ["scifact:7662206:0"], "topic": null}
+{"qid": "1104", "question": "Stroke patients with prior use of direct oral anticoagulants have a lower risk of in-hospital mortality than stroke patients with prior use of warfarin.", "relevant_chunk_ids": ["scifact:3898784:0", "scifact:3898784:1"], "topic": null}
+{"qid": "1107", "question": "Subcutaneous fat depots undergo extensive browning processes after cold exposure.", "relevant_chunk_ids": ["scifact:20532591:0"], "topic": null}
+{"qid": "1110", "question": "Suboptimal nutrition is not predictive of chronic disease", "relevant_chunk_ids": ["scifact:13770184:0", "scifact:13770184:1", "scifact:13770184:2"], "topic": null}
+{"qid": "1121", "question": "Synaptic activity enhances local release of brain derived neurotrophic factor from postsynaptic dendrites.", "relevant_chunk_ids": ["scifact:4456756:0"], "topic": null}
+{"qid": "1130", "question": "T regulatory cells (tTregs) lacking αvβ8 are more adept at suppressing pathogenic T-cell responses during active inflammation.", "relevant_chunk_ids": ["scifact:17997584:0"], "topic": null}
+{"qid": "1132", "question": "TCR/CD3 microdomains are a required to induce the immunologic synapse to activate T cells.", "relevant_chunk_ids": ["scifact:33499189:0", "scifact:9283422:0"], "topic": null}
+{"qid": "1137", "question": "TNFAIP3 is a tumor suppressor in glioblastoma.", "relevant_chunk_ids": ["scifact:33370:0"], "topic": null}
+{"qid": "1140", "question": "Taking 400mg of α-tocopheryl acetate helps to prevent prostate cancer.", "relevant_chunk_ids": ["scifact:12009265:0", "scifact:12009265:1"], "topic": null}
+{"qid": "1144", "question": "Taxation of sugar-sweetened beverages had no effect on the incidence rate of type II diabetes in India.", "relevant_chunk_ids": ["scifact:10071552:0", "scifact:10071552:1"], "topic": null}
+{"qid": "1146", "question": "Teaching hospitals do not provide better care than non-teaching hospitals.", "relevant_chunk_ids": ["scifact:13906581:0"], "topic": null}
+{"qid": "1150", "question": "Tetraspanin-3 is a causative factor in the development of acute myelogenous leukemia", "relevant_chunk_ids": ["scifact:11369420:0"], "topic": null}
+{"qid": "1163", "question": "The DdrB protein from Deinococcus radiodurans is an alternative SSB.", "relevant_chunk_ids": ["scifact:15305881:0"], "topic": null}
+{"qid": "1175", "question": "The PPR MDA5 has two N-terminal CARD domains.", "relevant_chunk_ids": ["scifact:31272411:0"], "topic": null}
+{"qid": "1179", "question": "The PRR MDA5 has a central DExD/H RNA helices domain.", "relevant_chunk_ids": ["scifact:31272411:0"], "topic": null}
+{"qid": "1180", "question": "The PRR MDA5 is a sensor of RNA virus infection.", "relevant_chunk_ids": ["scifact:31272411:0"], "topic": null}
+{"qid": "1185", "question": "The US health care system can save up to $750 million if 7% of patients waiting for kidney transplants participate in the optimized national kidney paired donation program.", "relevant_chunk_ids": ["scifact:16737210:0"], "topic": null}
+{"qid": "1187", "question": "The YAP1 and TEAD complex tanslocates into the nucleus where it interacts with transcription factors and DNA-binding proteins that modulate target gene transcription.", "relevant_chunk_ids": ["scifact:52873726:0"], "topic": null}
+{"qid": "1191", "question": "The amount of publicly available DNA data doubles every 10 years.", "relevant_chunk_ids": ["scifact:30655442:0"], "topic": null}
+{"qid": "1194", "question": "The arm density of TatAd complexes is due to structural rearrangements within Class1 TatAd complexes such as the 'charge zipper mechanism'.", "relevant_chunk_ids": ["scifact:11419230:0"], "topic": null}
+{"qid": "1196", "question": "The availability of safe places to study is effective at decreasing homelessness.", "relevant_chunk_ids": ["scifact:25649714:0"], "topic": null}
+{"qid": "1197", "question": "The availability of safe places to study is not effective at decreasing homelessness.", "relevant_chunk_ids": ["scifact:25649714:0"], "topic": null}
+{"qid": "1199", "question": "The benefits of colchicine were achieved with effective widespread use of secondary prevention strategies such as high-dose statins.", "relevant_chunk_ids": ["scifact:16760369:0", "scifact:16760369:1"], "topic": null}
+{"qid": "1200", "question": "The binding orientation of the ML-SA1 activator at hTRPML2 is different from the binding orientation of the ML-SA1 activator at hTRPML1.", "relevant_chunk_ids": ["scifact:3441524:0"], "topic": null}
+{"qid": "1202", "question": "The center of the granuloma in an immune cell induces a pro-inflammatory immune response.", "relevant_chunk_ids": ["scifact:3475317:0"], "topic": null}
+{"qid": "1204", "question": "The combination of H3K4me3 and H3K79me2 is found in quiescent hair follicle stem cells.", "relevant_chunk_ids": ["scifact:31141365:0"], "topic": null}
+{"qid": "1207", "question": "The composition of myosin-II isoform switches from the polarizable B isoform to the more homogenous A isoform during hematopoietic differentiation.", "relevant_chunk_ids": ["scifact:18909530:0"], "topic": null}
+{"qid": "1213", "question": "The deregulated and prolonged activation of monocytes has deleterious effects in inflammatory diseases.", "relevant_chunk_ids": ["scifact:14407673:0", "scifact:14407673:1"], "topic": null}
+{"qid": "1216", "question": "The extracellular domain of TMEM27 is cleaved in human beta cells.", "relevant_chunk_ids": ["scifact:24142891:0"], "topic": null}
+{"qid": "1221", "question": "The genomic aberrations found in matasteses are very similar to those found in the primary tumor.", "relevant_chunk_ids": ["scifact:19736671:0"], "topic": null}
+{"qid": "1225", "question": "The locus rs647161 is associated with colorectal carcinoma.", "relevant_chunk_ids": ["scifact:9650982:0"], "topic": null}
+{"qid": "1226", "question": "The loss of the TET protein functions may have dire biological consequences, such as myeloid cancers.", "relevant_chunk_ids": ["scifact:13777138:0"], "topic": null}
+{"qid": "1232", "question": "The minor G allele of FOXO3 is related to more severe symptoms of Crohn's Disease.", "relevant_chunk_ids": ["scifact:13905670:0"], "topic": null}
+{"qid": "1241", "question": "The myocardial lineage develops from cardiac progenitors of mesodermal origin.", "relevant_chunk_ids": ["scifact:4427392:0"], "topic": null}
+{"qid": "1245", "question": "The one-child policy has been successful in lowering population growth.", "relevant_chunk_ids": ["scifact:7662395:0"], "topic": null}
+{"qid": "1259", "question": "The relationship between a breast cancer patient's capacity to metabolize tamoxifen and treatment outcome is dependent on the patient's genetic make-up.", "relevant_chunk_ids": ["scifact:24341590:0", "scifact:24341590:1"], "topic": null}
+{"qid": "1262", "question": "The repair of Cas9-induced double strand breaks in human DNA is error-prone.", "relevant_chunk_ids": ["scifact:44172171:0"], "topic": null}
+{"qid": "1266", "question": "The risk of breast cancer among parous women increases with placental weight of pregnancies, and this association is strongest for premenopausal breast cancer.", "relevant_chunk_ids": ["scifact:37480103:0"], "topic": null}
+{"qid": "1270", "question": "The risk of male prisoners harming themselves is ten times that of female prisoners.", "relevant_chunk_ids": ["scifact:13900610:0", "scifact:13900610:1"], "topic": null}
+{"qid": "1271", "question": "The severity of cardiac involvement in amyloidosis can be described by the degree of transmurality of late gadolinium enhancement in MRI.", "relevant_chunk_ids": ["scifact:13768432:0", "scifact:13768432:1"], "topic": null}
+{"qid": "1272", "question": "The single flash-evoked ERG b-wave is generated by activity of ON-bipolar cells.", "relevant_chunk_ids": ["scifact:17081238:0"], "topic": null}
+{"qid": "1273", "question": "The sliding activity of kinesin-8 protein Kip3 promotes bipolar spindle assembly.", "relevant_chunk_ids": ["scifact:11041152:0"], "topic": null}
+{"qid": "1274", "question": "The tip of the inner tube of the toxic type VI secretion system (T6SS) antibacterial effector in Escherichia coli (E. coli) carries toxic effector proteins.", "relevant_chunk_ids": ["scifact:12428814:0", "scifact:27731651:0", "scifact:4406819:0"], "topic": null}
+{"qid": "1278", "question": "The treatment of cancer patients with co-IR blockade does not cause any adverse autoimmune events.", "relevant_chunk_ids": ["scifact:11335781:0"], "topic": null}
+{"qid": "1279", "question": "The treatment of cancer patients with co-IR blockade precipitates adverse autoimmune events.", "relevant_chunk_ids": ["scifact:11335781:0"], "topic": null}
+{"qid": "1280", "question": "The ureABIEFGH gene cluster encodes urease maturation proteins : UreD/UreH, UreE, UreF, and UreG.", "relevant_chunk_ids": ["scifact:4387784:0"], "topic": null}
+{"qid": "1281", "question": "The ureABIEFGH gene cluster is induced by nickel (II) ion.", "relevant_chunk_ids": ["scifact:4387784:0"], "topic": null}
+{"qid": "1282", "question": "Therapeutic use of the drug Dapsone to treat pyoderma gangrenous is based on anecdotal evidence.", "relevant_chunk_ids": ["scifact:23649163:0"], "topic": null}
+{"qid": "1290", "question": "There is an inverse relationship between hip fractures and statin use.", "relevant_chunk_ids": ["scifact:4687948:0", "scifact:4687948:1"], "topic": null}
+{"qid": "1292", "question": "There is no association between HNF4A mutations and diabetes risks.", "relevant_chunk_ids": ["scifact:56893404:0"], "topic": null}
+{"qid": "1298", "question": "Thigh-length graduated compression stockings (GCS) did not reduce deep vein thrombosis in patients admitted to hospital who are immobile because of acute stroke.", "relevant_chunk_ids": ["scifact:11718220:0", "scifact:11718220:1"], "topic": null}
+{"qid": "1303", "question": "Tirasemtiv has no effect on fast-twitch muscle.", "relevant_chunk_ids": ["scifact:12631697:0"], "topic": null}
+{"qid": "1316", "question": "Transferred UCB T cells acquire a memory-like phenotype in recipients.", "relevant_chunk_ids": ["scifact:27910499:0"], "topic": null}
+{"qid": "1319", "question": "Transplanted human glial cells can differentiate within the host animal.", "relevant_chunk_ids": ["scifact:16284655:0"], "topic": null}
+{"qid": "1320", "question": "Transplanted human glial progenitor cells are incapable of forming a neural network with host animals' neurons.", "relevant_chunk_ids": ["scifact:16284655:0"], "topic": null}
+{"qid": "1332", "question": "Tumor necrosis factor alpha (TNF-α) and interleukin-1 (IL-1) are pro-inflammatory cytokines that inhibit IL-6 and IL-10.", "relevant_chunk_ids": ["scifact:5304891:0"], "topic": null}
+{"qid": "1335", "question": "UCB T cells maintain high TCR diversity after transplantation.", "relevant_chunk_ids": ["scifact:27910499:0"], "topic": null}
+{"qid": "1336", "question": "UCB T cells reduce TCR diversity after transplantation.", "relevant_chunk_ids": ["scifact:27910499:0"], "topic": null}
+{"qid": "1337", "question": "Ubiquitin ligase UBC13 generates a K63-linked polyubiquitin moiety at PCNA K164.", "relevant_chunk_ids": ["scifact:20231138:0"], "topic": null}
+{"qid": "1339", "question": "Ultrasound guidance significantly raises the number of traumatic procedures when attempting needle insertion.", "relevant_chunk_ids": ["scifact:15482274:0"], "topic": null}
+{"qid": "1344", "question": "Up-regulation of the p53 pathway and related molecular events casues cancer resistance and results in a significantly shortened lifespan marked by senescent cells and accelerated organismal aging.", "relevant_chunk_ids": ["scifact:9559146:0"], "topic": null}
+{"qid": "1352", "question": "Upregulation of mosGCTL-1 is induced upon infection with West Nile virus.", "relevant_chunk_ids": ["scifact:12885341:0"], "topic": null}
+{"qid": "1359", "question": "Varenicline monotherapy is more effective after 12 weeks of treatment compared to combination nicotine replacement therapies with varenicline or bupropion.", "relevant_chunk_ids": ["scifact:11614737:0", "scifact:11614737:1"], "topic": null}
+{"qid": "1362", "question": "Venules have a larger lumen diameter than arterioles.", "relevant_chunk_ids": ["scifact:8290953:0"], "topic": null}
+{"qid": "1363", "question": "Venules have a thinner or absent smooth layer compared to arterioles.", "relevant_chunk_ids": ["scifact:8290953:0"], "topic": null}
+{"qid": "1368", "question": "Vitamin D deficiency effects the term of delivery.", "relevant_chunk_ids": ["scifact:2425364:0"], "topic": null}
+{"qid": "1370", "question": "Vitamin D deficiency is unrelated to birth weight.", "relevant_chunk_ids": ["scifact:2425364:0"], "topic": null}
+{"qid": "1379", "question": "Women with a higher birth weight are more likely to develop breast cancer later in life.", "relevant_chunk_ids": ["scifact:16322674:0", "scifact:16322674:1", "scifact:17450673:0", "scifact:23557241:0", "scifact:27123743:0"], "topic": null}
+{"qid": "1382", "question": "aPKCz causes tumour enhancement by affecting glutamine metabolism.", "relevant_chunk_ids": ["scifact:17755060:0"], "topic": null}
+{"qid": "1385", "question": "cSMAC formation enhances weak ligand signalling.", "relevant_chunk_ids": ["scifact:306006:0"], "topic": null}
+{"qid": "1389", "question": "mTORC2 regulates intracellular cysteine levels through xCT inhibition.", "relevant_chunk_ids": ["scifact:23895668:0"], "topic": null}
+{"qid": "1395", "question": "p16INK4A accumulation is  linked to an abnormal wound response caused by the microinvasive step of advanced Oral Potentially Malignant Lesions (OPMLs).", "relevant_chunk_ids": ["scifact:17717391:0"], "topic": null}
