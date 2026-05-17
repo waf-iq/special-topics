@@ -175,21 +175,23 @@ def run_and_record(
     tune_w = evaluate(winner_fn, tune_queries, k=5, hybrid_weight=winning.hybrid_weight)
     holdout_w = evaluate(winner_fn, holdout_queries, k=5, hybrid_weight=winning.hybrid_weight)
 
-    # Baseline = all defaults: cosine, no SVD, normalize=True, hybrid_weight=0.5, candidate_k=10
+    # Baselines for the report table. All use cosine, no SVD, normalize=True, candidate_k=10
+    # (RetrieverConfig defaults). Only hybrid_weight varies — same retriever reused since
+    # hybrid_weight is a per-call override.
     baseline = RetrieverConfig()
     baseline_fn = make_retriever_fn(HybridRetriever(chunks_df, baseline))
-    holdout_b = evaluate(baseline_fn, holdout_queries, k=5, hybrid_weight=baseline.hybrid_weight)
+    bm25_only = evaluate(baseline_fn, holdout_queries, k=5, hybrid_weight=0.0)
+    dense_only = evaluate(baseline_fn, holdout_queries, k=5, hybrid_weight=1.0)
+    default_hybrid = evaluate(baseline_fn, holdout_queries, k=5, hybrid_weight=0.5)
 
     metrics = {
-        "ndcg5_tune": tune_w["ndcg5"],
-        "recall5_tune": tune_w["recall5"],
-        "p95_latency_ms_tune": tune_w["p95_latency_ms"],
-        "ndcg5_holdout": holdout_w["ndcg5"],
-        "recall5_holdout": holdout_w["recall5"],
-        "p95_latency_ms_holdout": holdout_w["p95_latency_ms"],
-        "baseline_ndcg5_holdout": holdout_b["ndcg5"],
-        "baseline_recall5_holdout": holdout_b["recall5"],
-        "baseline_p95_latency_ms_holdout": holdout_b["p95_latency_ms"],
+        "winner_tune": tune_w,
+        "winner_holdout": holdout_w,
+        "baselines_holdout": {
+            "bm25_only": bm25_only,
+            "dense_only": dense_only,
+            "default_hybrid": default_hybrid,
+        },
     }
 
     sampler_config = {
