@@ -28,6 +28,7 @@ STUDY_STORAGE = "sqlite:///studies/csai415-d1-knn.db"
 RUNCARD_PATH = Path("configs/winning_runcard.yaml")
 PLOTS_DIR = Path("reports")
 MARKDOWN_OUT = Path("reports/mlflow_top5.md")
+PARALLEL_COORDS_OUT = Path("reports/mlflow_parallel_coords.png")
 
 BLESSED_TAG_KEY = "csai415.blessed"
 ARTIFACT_PLOT_NAMES = (
@@ -146,8 +147,32 @@ def export_comparison_table(top_n: int = 5, out_path: Path = MARKDOWN_OUT) -> Pa
     return out_path
 
 
+def plot_parallel_coords(
+    study_storage: str = STUDY_STORAGE,
+    out_path: Path = PARALLEL_COORDS_OUT,
+) -> Path:
+    """Render Optuna's parallel-coordinates view of the study as a PNG.
+
+    Equivalent to the MLflow UI's Compare-Runs > Parallel Coordinates view,
+    but reproducible from code — no manual UI screenshot needed.
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    study = optuna.load_study(study_name=STUDY_NAME, storage=study_storage)
+    ax = optuna.visualization.matplotlib.plot_parallel_coordinate(study)
+    fig = ax.figure
+    fig.set_size_inches(9, 4.5)
+    plt.tight_layout()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=120, bbox_inches="tight")
+    plt.close(fig)
+    return out_path
+
+
 def main() -> None:
-    """Orchestration: replay study -> bless winner -> export top-5 table."""
+    """Orchestration: replay study -> bless winner -> export top-5 table -> parallel-coords PNG."""
     setup_experiment()
 
     with RUNCARD_PATH.open(encoding="utf-8") as f:
@@ -168,6 +193,10 @@ def main() -> None:
     print("Exporting top-5 comparison table...")
     out = export_comparison_table()
     print(f"  wrote {out}")
+
+    print("Rendering parallel-coordinates PNG...")
+    pc = plot_parallel_coords()
+    print(f"  wrote {pc}")
 
     print("\nDone. UI: mlflow ui --backend-store-uri sqlite:///mlruns.db")
 
