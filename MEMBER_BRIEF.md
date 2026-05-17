@@ -151,7 +151,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 **You start in Wave 2:** wait for Pair A's `chunks.parquet` to land before running against real data. You CAN build code against a synthetic fixture in the meantime.
 
 **Acceptance bar:**
-- A clear search space over: `k` (int), `metric` ({cosine, l2, dot}), `svd_dim` ({None, 64, 128, 256}), `normalize` (bool), `hybrid_weight` (float [0,1]).
+- A clear search space over: `candidate_k` (int [5,50], = pool size per backend before fusion; the eval k stays fixed at 5), `metric` ({cosine, l2, dot}), `svd_dim` ({None, 64, 128, 256}), `normalize` (bool), `hybrid_weight` (float [0,1]).
 - ≥ 60 Optuna trials, MedianPruner enabled.
 - Baseline-vs-AutoML table: rows = {baseline, winning}, cols = {NDCG@5, Recall@5, p95 latency ms}.
 - `configs/winning_runcard.yaml` reproducible: seed, embedding model, all winning hyperparams, dataset hash.
