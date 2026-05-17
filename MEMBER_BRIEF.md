@@ -36,7 +36,7 @@ Baseline targets from brief: Recall@5 ≥ 0.60, p95 latency ≤ 2s on CPU, onlin
 | AutoML track | **A — supervised kNN with Optuna** |
 | Online-learning task | **(ii) adaptive hybrid weight from feedback** |
 | Stores for D1 | **Local Parquet + JSONL only** (no Mongo/Qdrant/Neo4j) |
-| Dense embedder | **`sentence-transformers/bge-small-en` (384-dim)** |
+| Dense embedder | **`BAAI/bge-small-en-v1.5`** (384-dim) — corrected from the original `sentence-transformers/bge-small-en`, which is not a real HuggingFace repo. Pair B **must** embed queries with this same model. |
 | Lexical | **`rank-bm25`** (pure Python) |
 | AutoML library | **Optuna** with TPE sampler + MedianPruner |
 | Online learner | **River** (`river.linear_model` family) + `river.drift.ADWIN` |
@@ -157,7 +157,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 - `configs/winning_runcard.yaml` reproducible: seed, embedding model, all winning hyperparams, dataset hash.
 
 **Starter questions for your AI (don't stop at the first answer):**
-1. Given bge-small-en (384-dim) embeddings over ~5,200 chunks and 300 SciFact queries, what's a sensible Optuna search space for hybrid kNN? What should be log-scale, what should be categorical, and what's the risk of overfitting the study to 300 queries?
+1. Given BAAI/bge-small-en-v1.5 (384-dim) embeddings over ~5,200 chunks and 300 SciFact queries, what's a sensible Optuna search space for hybrid kNN? What should be log-scale, what should be categorical, and what's the risk of overfitting the study to 300 queries?
 2. Should the objective be raw NDCG@5, or NDCG@5 minus a latency penalty? If I add a latency penalty, how do I weight it without dominating the signal?
 3. When I apply SVD before cosine similarity, are the post-SVD vectors already mean-centered? Do I still need explicit L2 normalization for cosine to be well-defined?
 4. For hybrid blend, weighted-sum-of-scores requires score normalization (BM25 is unbounded, cosine is in [-1,1]). Is RRF (reciprocal rank fusion) safer? What does each break under?
