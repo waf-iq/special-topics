@@ -22,11 +22,17 @@ Metric = Literal["cosine", "l2", "dot"]
 
 @dataclass
 class RetrieverConfig:
-    """Captures every hyperparameter Optuna can search over."""
+    """Captures every hyperparameter Optuna can search over.
+
+    candidate_k = how many candidates to pull from EACH backend (BM25, dense)
+    before fusion. The caller's `k` in .search(query, k, ...) is the final
+    top-k returned. Splitting them avoids the NDCG@5 / candidate-pool confusion.
+    """
     metric: Metric = "cosine"
     svd_dim: int | None = None         # None means no SVD
     normalize: bool = True
     hybrid_weight: float = 0.5
+    candidate_k: int = 10              # pool size per backend before fusion
     seed: int = 42
 
 

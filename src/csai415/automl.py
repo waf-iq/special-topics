@@ -23,7 +23,12 @@ def load_queries(path: Path = GOLD_JSONL) -> list[dict[str, Any]]:
 
 
 def build_objective(chunks_df, queries, k: int = 5, latency_penalty_ms: float = 0.0):
-    """Return an Optuna objective closure. See §6.B question 2 for penalty rationale."""
+    """Return an Optuna objective closure.
+
+    For D1 we optimize raw NDCG@5 and record p95 latency as a user_attr so the
+    notebook can show the latency/quality tradeoff without folding it into the
+    objective. latency_penalty_ms is reserved for D2 when latency matters at scale.
+    """
 
     def objective(trial: optuna.Trial) -> float:
         config = RetrieverConfig(
@@ -31,16 +36,16 @@ def build_objective(chunks_df, queries, k: int = 5, latency_penalty_ms: float = 
             svd_dim=trial.suggest_categorical("svd_dim", [None, 64, 128, 256]),
             normalize=trial.suggest_categorical("normalize", [True, False]),
             hybrid_weight=trial.suggest_float("hybrid_weight", 0.0, 1.0),
+            candidate_k=trial.suggest_int("candidate_k", 5, 50),
             seed=42,
         )
-        k_param = trial.suggest_int("k", 1, 50)
         retriever = HybridRetriever(chunks_df, config)
         fn = make_retriever_fn(retriever)
-        metrics = evaluate(fn, queries, k=max(k_param, k))
-        score = metrics["ndcg5"]
-        if latency_penalty_ms > 0:
-            score -= (metrics["p95_latency_ms"] / latency_penalty_ms) * 0.01
-        return score
+        metrics = evaluate(fn, queries, k=k, hybrid_weight=config.hybrid_weight)
+        trial.set_user_attr("ndcg5", metrics["ndcg5"])
+        trial.set_user_attr("recall5", metrics["recall5"])
+        trial.set_user_attr("p95_latency_ms", metrics["p95_latency_ms"])
+        return metrics["ndcg5"]
 
     return objective
 
