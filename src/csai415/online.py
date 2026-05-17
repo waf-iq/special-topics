@@ -97,7 +97,7 @@ class OnlineLearnerState:
 
 
 # --------------------------------------------------------------------------- #
-# Ahmed Soliman — the learner
+# Abdulrahman — the learner
 # --------------------------------------------------------------------------- #
 
 def load_automl_weight(path: Path = RUNCARD_PATH) -> float:
