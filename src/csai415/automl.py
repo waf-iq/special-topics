@@ -12,9 +12,19 @@ from typing import Any
 import optuna
 
 from .eval import evaluate
-from .retrieve import HybridRetriever, RetrieverConfig, load_chunks, make_retriever_fn
+from .ingest import EMBED_MODEL
+from .retrieve import (
+    CHUNKS_PARQUET,
+    HybridRetriever,
+    RetrieverConfig,
+    load_chunks,
+    make_retriever_fn,
+)
+from .runcard import RUNCARD_PATH, write_runcard
 
 GOLD_JSONL = Path("data/gold/qa.jsonl")
+SPLIT_INDICES_PATH = Path("configs/d1_split_indices.json")
+STUDY_STORAGE_DIR = Path("studies")
 
 
 def load_queries(path: Path = GOLD_JSONL) -> list[dict[str, Any]]:
@@ -56,14 +66,18 @@ def run_study(
     study_name: str = "csai415-d1-knn",
     storage: str | None = None,
     callbacks: list | None = None,
+    chunks_df=None,
+    queries=None,
 ) -> optuna.Study:
     """Run the Optuna study. See §6.B question 1 for search-space sizing.
 
     Pass MLflow callback from csai415.mlflow_tracking.make_mlflow_callback()
     via `callbacks=[cb]` to enable experiment tracking (Musab's slice §6.D).
     """
-    chunks_df = load_chunks()
-    queries = load_queries()
+    if chunks_df is None:
+        chunks_df = load_chunks()
+    if queries is None:
+        queries = load_queries()
     sampler = optuna.samplers.TPESampler(seed=42, n_startup_trials=20, multivariate=True)
     pruner = optuna.pruners.NopPruner()
     study = optuna.create_study(
@@ -81,3 +95,127 @@ def run_study(
 
 def best_config(study: optuna.Study) -> dict[str, Any]:
     return {"value": study.best_value, "params": study.best_params}
+
+
+def _split_queries(queries, holdout_frac: float = 0.20, split_seed: int = 42):
+    """80/20 split stratified by whether the claim has multiple relevant docs.
+
+    Writes the indices to SPLIT_INDICES_PATH so Pair C uses the same split.
+    Returns (tune_queries, holdout_queries, split_meta_dict).
+    """
+    from sklearn.model_selection import train_test_split
+
+    indices = list(range(len(queries)))
+    stratify = [len(q["relevant_chunk_ids"]) > 1 for q in queries]
+
+    tune_idx, holdout_idx = train_test_split(
+        indices,
+        test_size=holdout_frac,
+        random_state=split_seed,
+        stratify=stratify,
+    )
+
+    tune_queries = [queries[i] for i in tune_idx]
+    holdout_queries = [queries[i] for i in holdout_idx]
+
+    SPLIT_INDICES_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with SPLIT_INDICES_PATH.open("w") as f:
+        json.dump({"tune": sorted(tune_idx), "holdout": sorted(holdout_idx)}, f)
+
+    split_meta = {
+        "strategy": "stratified_by_n_relevant_bool",
+        "split_seed": split_seed,
+        "n_tune": len(tune_idx),
+        "n_holdout": len(holdout_idx),
+        "indices_path": str(SPLIT_INDICES_PATH),
+    }
+    return tune_queries, holdout_queries, split_meta
+
+
+def run_and_record(
+    n_trials: int = 80,
+    study_name: str = "csai415-d1-knn",
+    holdout_frac: float = 0.20,
+    split_seed: int = 42,
+    callbacks: list | None = None,
+    out_path: Path = RUNCARD_PATH,
+) -> Path:
+    """End-to-end D1 entry point: split queries, tune on 240, eval winner + baseline
+    on the held-out 60, write the runcard.
+    """
+    chunks_df = load_chunks()
+    queries = load_queries()
+    tune_queries, holdout_queries, split_meta = _split_queries(
+        queries, holdout_frac=holdout_frac, split_seed=split_seed
+    )
+
+    STUDY_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+    storage_path = STUDY_STORAGE_DIR / f"{study_name}.db"
+    storage = f"sqlite:///{storage_path.as_posix()}"
+
+    study = run_study(
+        n_trials=n_trials,
+        study_name=study_name,
+        storage=storage,
+        callbacks=callbacks,
+        chunks_df=chunks_df,
+        queries=tune_queries,
+    )
+
+    # Winning config (everything except seed comes from the study)
+    winning = RetrieverConfig(
+        metric=study.best_params["metric"],
+        svd_dim=study.best_params["svd_dim"],
+        normalize=study.best_params["normalize"],
+        hybrid_weight=study.best_params["hybrid_weight"],
+        candidate_k=study.best_params["candidate_k"],
+        seed=42,
+    )
+    winner_fn = make_retriever_fn(HybridRetriever(chunks_df, winning))
+    tune_w = evaluate(winner_fn, tune_queries, k=5, hybrid_weight=winning.hybrid_weight)
+    holdout_w = evaluate(winner_fn, holdout_queries, k=5, hybrid_weight=winning.hybrid_weight)
+
+    # Baseline = all defaults: cosine, no SVD, normalize=True, hybrid_weight=0.5, candidate_k=10
+    baseline = RetrieverConfig()
+    baseline_fn = make_retriever_fn(HybridRetriever(chunks_df, baseline))
+    holdout_b = evaluate(baseline_fn, holdout_queries, k=5, hybrid_weight=baseline.hybrid_weight)
+
+    metrics = {
+        "ndcg5_tune": tune_w["ndcg5"],
+        "recall5_tune": tune_w["recall5"],
+        "p95_latency_ms_tune": tune_w["p95_latency_ms"],
+        "ndcg5_holdout": holdout_w["ndcg5"],
+        "recall5_holdout": holdout_w["recall5"],
+        "p95_latency_ms_holdout": holdout_w["p95_latency_ms"],
+        "baseline_ndcg5_holdout": holdout_b["ndcg5"],
+        "baseline_recall5_holdout": holdout_b["recall5"],
+        "baseline_p95_latency_ms_holdout": holdout_b["p95_latency_ms"],
+    }
+
+    sampler_config = {
+        "class": "TPESampler",
+        "seed": 42,
+        "n_startup_trials": 20,
+        "multivariate": True,
+    }
+    pruner_config = {"class": "NopPruner"}
+    notes = (
+        f"single-seed study; holdout n={len(holdout_queries)} so NDCG@5 CI is wide (~±0.05). "
+        "5-fold CV and multi-objective deferred to D2."
+    )
+
+    return write_runcard(
+        best_params=study.best_params,
+        best_value=study.best_value,
+        n_trials=n_trials,
+        embedding_model=EMBED_MODEL,
+        chunks_parquet=CHUNKS_PARQUET,
+        gold_jsonl=GOLD_JSONL,
+        metrics=metrics,
+        split=split_meta,
+        sampler_config=sampler_config,
+        pruner_config=pruner_config,
+        study_storage=storage,
+        notes=notes,
+        out_path=out_path,
+    )
