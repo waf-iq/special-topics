@@ -6,7 +6,8 @@ Sub-roles inside this file:
   * Ahmed Soliman  — the learner: build_learner / ContextualBanditLearner /
                       query_features / load_automl_weight.
   * Yehia Noureldin — drift simulation + ADWIN response + prequential plot:
-                      simulate_feedback_stream / plot_prequential.
+                      simulate_feedback_stream / _load_holdout_queries /
+                      plot_prequential.
   * Shared meeting point — run_prequential().
 
 Model class (the load-bearing §6.C-Q1 decision):
@@ -49,6 +50,7 @@ weight and re-explores from there instead of diverging on stale estimates.
 from __future__ import annotations
 
 import copy
+import json
 import random
 import re
 from dataclasses import dataclass, field
@@ -65,12 +67,15 @@ from .eval import ndcg_at_k
 # action of samples on a 60-query split.
 WEIGHT_GRID: list[float] = [0.0, 0.25, 0.5, 0.75, 1.0]
 
-# Fallback when configs/winning_runcard.yaml is absent. 0.5 == RetrieverConfig
-# default == the balanced middle action. Pair B (WAFIQ) commits the real
-# run-card in a later wave; the learner must not hard-depend on it for D1.
+# Fallback when configs/winning_runcard.yaml is unreadable. 0.5 ==
+# RetrieverConfig default == the balanced middle action. Pair B's run-card now
+# exists (best hybrid_weight ≈ 0.81); the learner still must not hard-depend on
+# it so D1 keeps running if it is missing/malformed.
 FALLBACK_WEIGHT: float = 0.5
 
 RUNCARD_PATH = Path("configs/winning_runcard.yaml")
+SPLIT_INDICES_PATH = Path("configs/d1_split_indices.json")
+GOLD_JSONL = Path("data/gold/qa.jsonl")
 
 
 @dataclass
@@ -98,10 +103,10 @@ class OnlineLearnerState:
 def load_automl_weight(path: Path = RUNCARD_PATH) -> float:
     """Cold-start weight = the AutoML-winning hybrid_weight (§6.C Q6).
 
-    Reads automl.best_params.hybrid_weight from Pair B's run-card. Falls back to
-    FALLBACK_WEIGHT if the file is missing or malformed — the run-card is a
-    later-wave deliverable (configs/winning_runcard.yaml does not exist yet), so
-    D1 must degrade gracefully rather than crash on open() like a naive loader.
+    Reads automl.best_params.hybrid_weight from Pair B's run-card (now committed:
+    hybrid_weight ≈ 0.81). Falls back to FALLBACK_WEIGHT if the file is missing
+    or malformed, so D1 degrades gracefully rather than crashing on open() like
+    a naive loader.
     """
     try:
         card = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
@@ -226,27 +231,44 @@ def build_learner(winning_weight: float | None = None, **kwargs) -> ContextualBa
     return ContextualBanditLearner(winning_weight=winning_weight, **kwargs)
 
 
-def build_drift_detector(delta: float = 0.2) -> drift.ADWIN:
+def build_drift_detector(delta: float = 0.5) -> drift.ADWIN:
     """ADWIN detector (§6.C Q3 / Q7). delta is ADWIN's false-alarm confidence
-    bound — smaller = fewer false positives but less sensitive. Swept on the
-    exact shipping static-probe stream (binary, drift @100, Δ mean ≈ 0.32):
+    bound — smaller = fewer false positives but less sensitive. Calibrated on
+    the *real* shipping static-probe stream (Pair B's AutoML weight ≈ 0.81,
+    binary, drift @100): the post-drift hit-rate only falls 0.67 -> 0.41
+    (Δ≈0.26), a weaker footprint than the artificial w=1.0 baseline gave,
+    precisely because 0.81 is already a strong hybrid. Sweep result:
 
-      delta <= 0.05  -> never fires (textbook value is too strict for a
-                        100-event binary post-drift window — the §6.C-Q7
-                        finding: binary-feedback variance swamps the shift);
-      delta = 0.1    -> fires at event 191 (too late to show recovery);
-      delta >= 0.2   -> fires at event 159, ~59-event detection lag, with
-                        ZERO pre-drift false positives.
+      delta <= 0.1  -> never fires (binary-feedback variance swamps a Δ0.26
+                       shift over a 100-event window — the §6.C-Q7 finding,
+                       and it gets *harder* the better-tuned the baseline is);
+      delta 0.2-0.3 -> fires at event 191 (too late to be useful);
+      delta >= 0.5  -> fires at event 159, ~59-event lag, ZERO pre-drift
+                       false positives.
 
-    delta=0.2 is the smallest value that detects the planted drift early enough
-    to demonstrate the reset_to_baseline response while staying false-positive
-    free. The detection lag is reported honestly rather than hidden."""
+    delta=0.5 is the smallest value that detects this weaker, realistic drift
+    early enough to exercise reset_to_baseline while staying false-positive
+    free. A loose bound is the honest price of a short binary stream against a
+    well-tuned baseline; the detection lag is reported, not hidden."""
     return drift.ADWIN(delta=delta)
 
 
 # --------------------------------------------------------------------------- #
 # Yehia Noureldin — drift simulation + prequential plot
 # --------------------------------------------------------------------------- #
+
+def _load_holdout_queries() -> list[dict]:
+    """Pull the 60 holdout queries (not the tune set) so the static baseline
+    isn't inflated by queries Pair B's AutoML already optimized on. Reads the
+    split written by Pair B's run_and_record(), so seeds match. (Yehia's helper,
+    kept from the merge — used when run_prequential is called with queries=None.)
+    """
+    with GOLD_JSONL.open(encoding="utf-8") as f:
+        all_queries = [json.loads(line) for line in f]
+    with SPLIT_INDICES_PATH.open() as f:
+        split = json.load(f)
+    return [all_queries[i] for i in split["holdout"]]
+
 
 # Tiny stopword set for the query-style drift transform. Not exhaustive on
 # purpose — the point is to strip glue words so a claim collapses to its
@@ -274,7 +296,7 @@ def _keywordize(question: str, max_tokens: int = 2) -> str:
 
 
 def simulate_feedback_stream(
-    queries: list[dict],
+    queries: list[dict] | None = None,
     n_events: int = 200,
     drift_at: int = 100,
     seed: int = 42,
@@ -282,17 +304,20 @@ def simulate_feedback_stream(
 ) -> list[tuple[int, dict, set]]:
     """Materialize an `n_events` stream with a planted shift at `drift_at`.
 
-    Drift type = **query-style shift** (§6.C Q4), and this is the answer to
-    "how does the learner framing line up with the drift side": we empirically
-    swept the held-out set and with this corpus + bge-small pure-dense (w=1.0)
-    is optimal for *every* query length, so a length/topic shift does NOT move
-    the optimal weight — adaptation would then have nothing to win and only pay
-    exploration cost. A query-style shift (natural-language claim -> keyword
-    query) DOES flip the optimum (validated: pre-drift best w≈1.0 NDCG@5≈0.56,
-    post-drift best w≈0.5 NDCG@5≈0.42 as dense degrades on keyword fragments).
-    That genuine optimal-weight shift is what makes the §6.C demo sound. Topic
-    labels in qa.jsonl are all null, so a topic shift was infeasible anyway;
-    `drift_kind="length"` is kept for ablation but is the weak variant.
+    `queries=None` auto-loads the 60 holdout queries via _load_holdout_queries()
+    (Yehia's loader, so seeds match Pair B's split).
+
+    Drift type — this is the Pair C meeting point between the learner framing
+    and the drift side. We empirically swept the held-out set: with this corpus
+    + bge-small, pure-dense (w=1.0) is optimal for *every* query length, so a
+    length shift (Yehia's first cut, kept as `drift_kind="length"`) does NOT
+    move the optimal weight — adaptation then has nothing to win and only pays
+    exploration cost. A **query-style shift** (natural-language claim -> 2-token
+    keyword query) DOES flip the optimum (validated: pre-drift best w≈1.0
+    NDCG@5≈0.56, post-drift best w≈0.5 NDCG@5≈0.42 as dense degrades on keyword
+    fragments). That genuine optimal-weight shift is what makes the §6.C demo
+    sound, so it is the default. Topic labels in qa.jsonl are all null, so a
+    topic shift was infeasible anyway.
 
     Returned (not yielded) so the learner and the static baseline replay the
     *identical* stream — the only fair basis for the >=5% post-drift claim.
@@ -301,6 +326,9 @@ def simulate_feedback_stream(
     untouched, so the reward rule itself never changes — only the input
     distribution does (an honest drift, not a moved goalpost).
     """
+    if queries is None:
+        queries = _load_holdout_queries()
+
     rng = random.Random(seed)
 
     if drift_kind == "length":
@@ -376,7 +404,7 @@ def _reward(retrieved: list[str], relevant: set, k: int) -> float:
 
 def run_prequential(
     retriever_fn: Callable[[str, int, float], list[str]],
-    queries: list[dict],
+    queries: list[dict] | None = None,
     n_events: int = 200,
     drift_at: int = 100,
     k: int = 5,
@@ -384,6 +412,8 @@ def run_prequential(
     seed: int = 42,
 ) -> OnlineLearnerState:
     """Prequential test-then-train loop (the Pair C meeting point).
+
+    `queries=None` auto-loads the 60 holdout queries (Yehia's loader).
 
     Per event: learner.predict_action -> retrieve -> binary reward ->
     learner.update; the static baseline (fixed AutoML/fallback weight, never

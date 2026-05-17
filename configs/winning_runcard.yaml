@@ -1,0 +1,72 @@
+schema_version: '2'
+created_utc: '2026-05-17T14:55:41.252711+00:00'
+deliverable: D1
+track: A-supervised-knn
+seed: 42
+embedding:
+  model: BAAI/bge-small-en-v1.5
+  dim: 384
+dataset:
+  chunks_parquet: data\processed\chunks.parquet
+  chunks_sha256: 11c40b8d4b4e91a0d1f70078db117f5804041432296e6c58186eeb865cbc91ab
+  gold_jsonl: data\gold\qa.jsonl
+  gold_sha256: 09fe4d20dc9ae4de8ed3c03591d333de81554c36ffa7b950c5c0d9e7bb92d9ca
+code:
+  sha: 1a1ee2e3e2f1e452477ffa9a92064a30ab13a77b
+  dirty: true
+env:
+  python: 3.12.10
+  packages:
+    optuna: 4.2.1
+    numpy: 2.4.5
+    pandas: 2.2.3
+    scikit-learn: 1.6.1
+    sentence-transformers: 5.5.0
+split:
+  strategy: stratified_by_n_relevant_bool
+  split_seed: 42
+  n_tune: 240
+  n_holdout: 60
+  indices_path: configs\d1_split_indices.json
+automl:
+  library: optuna
+  sampler:
+    class: TPESampler
+    seed: 42
+    n_startup_trials: 20
+    multivariate: true
+  pruner:
+    class: NopPruner
+  storage: sqlite:///studies/csai415-d1-knn.db
+  n_trials: 80
+  best_value_ndcg5_tune: 0.7166351232738053
+  best_params:
+    metric: l2
+    svd_dim: null
+    normalize: false
+    hybrid_weight: 0.8102310529569093
+    candidate_k: 24
+metrics:
+  winner_tune:
+    ndcg5: 0.7166351232738053
+    recall5: 0.7880555555555555
+    p95_latency_ms: 109.86756501952186
+  winner_holdout:
+    ndcg5: 0.5646231643969631
+    recall5: 0.6322222222222222
+    p95_latency_ms: 112.0377749990439
+  baselines_holdout:
+    bm25_only:
+      ndcg5: 0.4163228684869845
+      recall5: 0.46499999999999997
+      p95_latency_ms: 103.06483503663912
+    dense_only:
+      ndcg5: 0.5630428724188206
+      recall5: 0.648888888888889
+      p95_latency_ms: 97.38586001039945
+    default_hybrid:
+      ndcg5: 0.5341771784871768
+      recall5: 0.5933333333333334
+      p95_latency_ms: 92.02554496005177
+notes: "single-seed study; holdout n=60 so NDCG@5 CI is wide (~\xB10.05). 5-fold CV\
+  \ and multi-objective deferred to D2."

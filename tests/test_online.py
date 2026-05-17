@@ -125,7 +125,11 @@ def test_run_prequential_populates_state():
     assert len(state.baseline_ndcg5) == 40
     assert len(state.chosen_weights) == 40
     assert len(state.rewards) == 40
-    assert all(w in WEIGHT_GRID for w in state.chosen_weights)
+    # Grid weights once initialized; the deterministic cold-start (and the
+    # post-reset re-cold-start) legitimately emits the exact AutoML weight,
+    # which need not be a grid point (real run-card -> ~0.81).
+    cold = state.baseline_weight
+    assert all(w in WEIGHT_GRID or w == cold for w in state.chosen_weights)
     assert all(0.0 <= n <= 1.0 for n in state.prequential_ndcg5)
     assert all(r in (0.0, 1.0) for r in state.rewards)   # strictly binary
     assert state.drift_at == 20
