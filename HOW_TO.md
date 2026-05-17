@@ -1,67 +1,114 @@
-# How to use this folder
+# How to reproduce D1 results
 
-This is **not** the official repo itself — it's a staging copy of the files that need to go in your **first commit** on the official repo. The folder is git-ignored inside `waf-iq/CSAI415` so it never leaks into staging history.
+Step-by-step guide to regenerate every artifact in this repo from a fresh clone. The README's Quickstart is the short version; this doc is the detailed walkthrough with timings and per-slice commands.
 
-## Workflow
-
-### Step 1 — Initialize the official repo locally
+## Setup
 
 ```bash
-# clone the empty official repo somewhere outside this staging project
-git clone <official-repo-url> C:\Users\waska\Projects\CSAI415_official
-cd C:\Users\waska\Projects\CSAI415_official
+git clone https://github.com/waf-iq/special-topics.git
+cd special-topics
+python -m venv .venv
+
+# Windows
+.venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
+pip install -r requirements.txt
+pip install -e .
+cp .env.example .env   # no secrets needed for D1
 ```
 
-### Step 2 — Copy everything from this folder into the clone
+First run will download `BAAI/bge-small-en-v1.5` (~150 MB) on demand and cache it under `~/.cache/huggingface/`.
 
-```powershell
-# from the official clone directory:
-xcopy /E /I /Y C:\Users\waska\Projects\CSAI415\official_repo\* .
-```
+## Pipeline data — Pair A
 
-or in bash:
+`data/processed/chunks.parquet` (6,020 chunks) and `data/gold/qa.jsonl` (300 SciFact test claims) are **committed** so D1 runs out of the box.
+
+To regenerate from source:
 
 ```bash
-cp -r C:/Users/waska/Projects/CSAI415/official_repo/* .
-cp C:/Users/waska/Projects/CSAI415/official_repo/.gitignore .
-cp C:/Users/waska/Projects/CSAI415/official_repo/.env.example .
+python -m csai415.ingest                # ~5-8 min: downloads SciFact + 5 arXiv PDFs, embeds, writes parquet + qa.jsonl
 ```
 
-### Step 3 — Make the bootstrap commit
+## AutoML study — Pair B
+
+Runs 80 Optuna trials (multivariate TPE, NopPruner, stratified 80/20 split), evaluates winner + 3 baselines on the 60-query holdout, writes the runcard:
 
 ```bash
-git add .
-git commit -m "Initial project scaffold: build config, README, MEMBER_BRIEF, package init"
-git push origin main
+python -c "from csai415.automl import run_and_record; run_and_record()"
+# ~15-25 min on CPU
+# outputs: configs/winning_runcard.yaml, configs/d1_split_indices.json, studies/csai415-d1-knn.db (gitignored)
 ```
 
-That's your one bootstrap commit. After this, share the official repo URL with the team.
+Render the report figures from the study:
 
-## What this folder does NOT contain (by design)
+```bash
+python -m nbconvert --to notebook --execute notebooks/01_automl.ipynb --inplace
+# ~30 sec
+# outputs: reports/optimization_history.png, reports/param_importances.png, reports/winner_vs_baselines.png, reports/winner_vs_baselines.csv
+```
 
-These files are owned by your teammates — they each create them in their own commits on the official repo, under their own GitHub identity. Do not bootstrap them.
+## Online learning prequential — Pair C
 
-| File | Whose commit |
-|---|---|
-| `src/csai415/ingest.py` | Abdurlahman |
-| `src/csai415/eval.py`, `runcard.py`, full `README.md`, `tests/test_smoke.py`, `reports/D1_report.pdf` | Yousef |
-| `src/csai415/retrieve.py` | Ahmad |
-| `src/csai415/automl.py`, `configs/winning_runcard.yaml`, `notebooks/01_automl.ipynb` | You (WAFIQ) — separate commit later when Pair B's work is ready |
-| `src/csai415/online.py`, `notebooks/02_online_learning.ipynb`, `reports/prequential.png` | Ahmed + Yehia |
-| `src/csai415/mlflow_tracking.py` | Musab |
-| `ai_logs/<their-name>.md` | each member commits their own |
+Runs the ε-greedy bandit vs static AutoML-winner baseline over a 200-event stream with a query-style drift at event 100:
 
-Each teammate clones the official repo (after your bootstrap commit lands), reads their `ai_briefs/<name>.md` from the staging repo, does their AI conversation, writes their files into their local clone, and commits.
+```bash
+python -m nbconvert --to notebook --execute notebooks/02_online_learning.ipynb --inplace
+# ~2 min
+# outputs: reports/prequential.png (depends on configs/winning_runcard.yaml from Pair B)
+```
 
-## What this folder also does NOT contain
+## MLflow tracking — Solo (Musab)
 
-`ai_briefs/*.md` — these are staging-only coordination docs. They explicitly document the prompt-templating workflow which would look meta/weird to a grader. Keep them in `waf-iq/CSAI415` only.
+Replays the completed Optuna study into MLflow, tags the winner as blessed with artifacts, exports the top-5 comparison table + parallel-coordinates plot:
 
-## After everyone is done
+```bash
+python -m csai415.mlflow_tracking
+# ~30 sec
+# outputs: mlruns.db (gitignored), reports/mlflow_top5.md, reports/mlflow_parallel_coords.png
 
-Final repo on the official side should have:
+mlflow ui --backend-store-uri sqlite:///mlruns.db
+# browse at http://localhost:5000
+```
 
-- ~10+ commits, at least 1 from each of 7 GitHub identities (`git log --pretty=format:'%an' | sort -u` shows all 7 names)
-- Every member's `ai_logs/<name>.md` has a real share-link
-- `pytest tests/test_smoke.py` passes on a fresh clone
-- `reports/D1_report.pdf` exists, 2 pages
+## D1 report
+
+The Markdown source is at `reports/D1_report.md`; the committed PDF was rendered via:
+
+```bash
+pandoc reports/D1_report.md -o reports/D1_report.pdf
+```
+
+(Any Markdown→PDF tool works; the figure paths are relative so `pandoc` handles them out of the box.)
+
+## Smoke tests
+
+```bash
+pytest tests/test_smoke.py
+# expect: 11 passed, 1 xpassed
+```
+
+## Full end-to-end from a blank clone
+
+```bash
+# 1. Setup
+git clone https://github.com/waf-iq/special-topics.git && cd special-topics
+python -m venv .venv && source .venv/bin/activate   # or .venv\Scripts\activate on Windows
+pip install -r requirements.txt && pip install -e .
+
+# 2. Pair B AutoML (~20 min)
+python -c "from csai415.automl import run_and_record; run_and_record()"
+python -m nbconvert --to notebook --execute notebooks/01_automl.ipynb --inplace
+
+# 3. Pair C prequential (~2 min)
+python -m nbconvert --to notebook --execute notebooks/02_online_learning.ipynb --inplace
+
+# 4. MLflow replay (~30 sec)
+python -m csai415.mlflow_tracking
+
+# 5. Verify
+pytest tests/test_smoke.py
+```
+
+Total ≈ 25-30 minutes on a CPU laptop. After this, every `reports/*.png`, `reports/*.csv`, `reports/*.md`, and `configs/winning_runcard.yaml` is regenerated and `pytest` is green.
