@@ -4,6 +4,24 @@ Contract:
     retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]
     hybrid_weight=1.0 -> pure dense; 0.0 -> pure BM25.
 Both Pair B's AutoML and Pair C's online learner consume this signature.
+
+Design decisions (from my AI session for D1):
+* Dense ANN: brute-force numpy. 6,020 vectors x 384 dims is ~9 MB — sklearn
+  NearestNeighbors or hnswlib add deps and complexity for no measurable win.
+* SVD order: TruncatedSVD fit on corpus, .transform on query, then L2 normalize
+  AFTER SVD. Normalizing before SVD leaves the reduced vectors with arbitrary
+  magnitudes, so cosine/dot are no longer well-defined.
+* BGE prefix: bge-small-en-v1.5 is asymmetric — query side gets the prefix
+  "Represent this sentence for searching relevant passages: ", corpus side
+  does not. Pair A embedded the corpus without it; we add it only at query
+  time inside _embed_query.
+* Fusion: weighted-sum of per-query min-max scaled BM25 + dense scores. RRF
+  would sidestep BM25 unboundedness but throws away magnitude and doesn't
+  honor the `hybrid_weight` contract that Pair B's Optuna and Pair C's online
+  learner depend on.
+* Candidate pool: union of top candidate_k from each backend BEFORE fusion;
+  scaling happens over the union so both backends are normalized to the same
+  reference frame per query.
 """
 
 from __future__ import annotations
