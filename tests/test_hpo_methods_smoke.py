@@ -1,10 +1,13 @@
-"""Smoke tests for the multi-method HPO comparison (D1 rework task B1).
+"""Smoke tests for the multi-method HPO comparison (D1 rework tasks B1 + B3).
 
 We don't run the full 5×80-trial comparison here — that takes ~hours. We just
 verify the API surface, the RunResult dataclass shape, that the Grid runner
 works end-to-end on a tiny grid, and that the multi-fidelity wiring (trial.report
 + pruning) doesn't break under Hyperband. Random/TPE/BOHB share scaffolding
 with Grid/Hyperband, so they're covered transitively.
+
+B3 tests verify write_blessed_runcard() against the actual B1 artifacts on
+disk — they skip if those artifacts haven't been generated yet (fresh clone).
 
 Tests skip if the corpus or gold files are absent so a fresh clone still passes.
 """
@@ -18,10 +21,16 @@ import pytest
 
 CHUNKS_PARQUET = Path("data/processed/chunks.parquet")
 GOLD_JSONL = Path("data/gold/qa.jsonl")
+COMPARISON_CSV = Path("reports/sampler_comparison.csv")
+BOHB_STUDY_DB  = Path("studies/csai415-d1-bohb.db")
 
 
 def _have_data() -> bool:
     return CHUNKS_PARQUET.exists() and GOLD_JSONL.exists()
+
+
+def _have_b1_artifacts() -> bool:
+    return COMPARISON_CSV.exists() and BOHB_STUDY_DB.exists()
 
 
 def test_runresult_fields_match_lab():
@@ -110,3 +119,92 @@ def test_multifidelity_wiring_via_hyperband():
     # The RunResult should carry holdout metrics
     assert 0.0 <= result.holdout_recall5 <= 1.0
     assert result.holdout_p95_ms >= 0.0
+
+
+# --------------------------------------------------------------------------- #
+# B3 — blessed-runcard writer
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.skipif(
+    not (_have_data() and _have_b1_artifacts()),
+    reason="needs B1 artifacts on disk (run `python -m csai415.hpo_methods` first)",
+)
+def test_write_blessed_runcard_from_b1_artifacts(tmp_path):
+    """End-to-end: read the actual BOHB study + comparison CSV that B1 produced,
+    write a v3 runcard to tmp_path, parse it back, and check the blessed-method
+    fields are populated.
+
+    Skips baseline recompute (`recompute_baselines=False`) so the test stays
+    fast — that path is separately covered by `test_baselines_recompute_runs`.
+    """
+    import yaml
+    from csai415.hpo_methods import write_blessed_runcard
+
+    out = tmp_path / "rework_runcard.yaml"
+    written = write_blessed_runcard(
+        blessed_method="bohb",
+        out_path=out,
+        recompute_baselines=False,
+    )
+    assert written == out
+    card = yaml.safe_load(out.read_text(encoding="utf-8"))
+
+    # Schema + rework-specific fields
+    assert card["schema_version"] == "3"
+    assert card["automl"]["blessed_method"] == "bohb"
+    assert "comparison" in card["automl"]
+    assert "comparison_csv" in card["automl"]
+
+    # The comparison embeds 5 method rows in lab order (CSV preserves it).
+    methods_in_table = [row["method"] for row in card["automl"]["comparison"]]
+    assert len(methods_in_table) == 5
+    assert set(methods_in_table) == {"grid", "random", "tpe_bayesian", "hyperband", "bohb"}
+
+    # best_params must be a real dict (not a string), and must match the
+    # blessed row's params — that's the schema's whole point.
+    blessed_row = next(r for r in card["automl"]["comparison"] if r["method"] == "bohb")
+    assert isinstance(blessed_row["best_params"], dict)
+    assert card["automl"]["best_params"] == blessed_row["best_params"]
+
+    # Sampler/pruner config records *intent* (not just Optuna's serialization).
+    assert card["automl"]["sampler"]["class"] == "TPESampler"
+    assert card["automl"]["pruner"]["class"] == "HyperbandPruner"
+    assert card["automl"]["pruner"]["min_resource"] == 1
+    assert card["automl"]["pruner"]["reduction_factor"] == 2
+
+    # Winner metrics come from the CSV row, not a fresh eval
+    assert 0.0 <= card["metrics"]["winner_tune"]["ndcg5"] <= 1.0
+    assert 0.0 <= card["metrics"]["winner_holdout"]["ndcg5"] <= 1.0
+    # Baselines skipped this test (see recompute_baselines=False above)
+    assert "baselines_holdout" not in card["metrics"]
+
+
+@pytest.mark.skipif(
+    not (_have_data() and _have_b1_artifacts()),
+    reason="needs B1 artifacts on disk (run `python -m csai415.hpo_methods` first)",
+)
+def test_write_blessed_runcard_baselines_recompute(tmp_path):
+    """Slower path: recompute_baselines=True actually evaluates the three
+    legacy baselines (BM25 / dense / default-hybrid) on the holdout. The
+    v2-shaped `metrics.baselines_holdout` keys must appear so Pair C and Pair A
+    don't have to change their readers."""
+    import yaml
+    from csai415.hpo_methods import write_blessed_runcard
+
+    out = tmp_path / "rework_runcard.yaml"
+    write_blessed_runcard(blessed_method="bohb", out_path=out, recompute_baselines=True)
+    card = yaml.safe_load(out.read_text(encoding="utf-8"))
+
+    baselines = card["metrics"]["baselines_holdout"]
+    assert set(baselines.keys()) == {"bm25_only", "dense_only", "default_hybrid"}
+    for name, m in baselines.items():
+        assert set(m.keys()) == {"ndcg5", "recall5", "p95_latency_ms"}
+        assert 0.0 <= m["ndcg5"] <= 1.0, f"{name}: {m}"
+
+
+def test_blessed_method_lookup_table_covers_registry():
+    """The sampler/pruner config table must have an entry per METHODS — if a
+    new method is added to the registry without updating _METHOD_SAMPLER_PRUNER,
+    write_blessed_runcard will KeyError. Catch that here."""
+    from csai415.hpo_methods import METHODS, _METHOD_SAMPLER_PRUNER
+    assert set(_METHOD_SAMPLER_PRUNER.keys()) == set(METHODS)

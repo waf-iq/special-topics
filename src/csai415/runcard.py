@@ -65,37 +65,62 @@ def write_runcard(
     pruner_config: dict | None = None,
     study_storage: str | None = None,
     notes: str | None = None,
+    # v3 (D1 rework — B3): records which HPO method's winner is blessed +
+    # the full 5-method comparison so the marker can read it without opening
+    # sampler_comparison.csv. All optional; if every v3 field is None the
+    # runcard still has the new schema_version but no rework-specific data.
+    blessed_method: str | None = None,
+    comparison_table: list[dict[str, Any]] | None = None,
+    comparison_csv: Path | str | None = None,
 ) -> Path:
     """Write a fully reproducible run-card.
 
     metrics should carry both tune and holdout numbers with suffixed keys
     (e.g. ndcg5_tune, ndcg5_holdout, p95_latency_ms_tune, ...).
+
+    Schema is v3 from the D1 rework onward (see [[project-b1-blessed-winner]]).
+    The rework-only fields (`blessed_method`, `comparison_table`,
+    `comparison_csv`) live under `automl.*`. Callers writing pre-rework
+    single-method runcards just leave them None.
     """
+    automl_section: dict[str, Any] = {
+        "library": "optuna",
+        "sampler": sampler_config if sampler_config is not None else DEFAULT_SAMPLER,
+        "pruner": pruner_config if pruner_config is not None else DEFAULT_PRUNER,
+        "storage": study_storage,
+        "n_trials": n_trials,
+        "best_value_ndcg5_tune": best_value,
+        "best_params": best_params,
+    }
+    if blessed_method is not None:
+        automl_section["blessed_method"] = blessed_method
+    if comparison_table is not None:
+        automl_section["comparison"] = comparison_table
+    if comparison_csv is not None:
+        # Normalize to forward-slash so the runcard is portable across OSes.
+        # (The pre-existing v2 dataset paths still use the native separator —
+        # cleanup tracked separately.)
+        automl_section["comparison_csv"] = Path(comparison_csv).as_posix()
+
     card = {
-        "schema_version": "2",
+        "schema_version": "3",
         "created_utc": datetime.now(timezone.utc).isoformat(),
         "deliverable": "D1",
         "track": "A-supervised-knn",
         "seed": 42,
         "embedding": {"model": embedding_model, "dim": 384},
         "dataset": {
-            "chunks_parquet": str(chunks_parquet),
+            # POSIX-normalize so the same runcard renders identically on
+            # Windows and Unix (and its SHA — if anyone hashes it — matches).
+            "chunks_parquet": Path(chunks_parquet).as_posix(),
             "chunks_sha256": _hash_file(chunks_parquet) if chunks_parquet.exists() else None,
-            "gold_jsonl": str(gold_jsonl),
+            "gold_jsonl": Path(gold_jsonl).as_posix(),
             "gold_sha256": _hash_file(gold_jsonl) if gold_jsonl.exists() else None,
         },
         "code": _git_info(),
         "env": _env_info(),
         "split": split,
-        "automl": {
-            "library": "optuna",
-            "sampler": sampler_config if sampler_config is not None else DEFAULT_SAMPLER,
-            "pruner": pruner_config if pruner_config is not None else DEFAULT_PRUNER,
-            "storage": study_storage,
-            "n_trials": n_trials,
-            "best_value_ndcg5_tune": best_value,
-            "best_params": best_params,
-        },
+        "automl": automl_section,
         "metrics": metrics,
         "notes": notes,
     }

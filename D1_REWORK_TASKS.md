@@ -21,21 +21,32 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 
 ### Pair B — AutoML (WAFIQ + Ahmed Soliman)
 
-#### Task B1 — Multi-sampler comparison
+#### Task B1 — Multi-method HPO comparison ✅ DONE (2026-05-30)
 **Owner:** WAFIQ
 
-- In `src/csai415/automl.py`, add a `SAMPLERS` registry and a `run_multi_sampler_studies()` driver that runs the same search space, same 240-query tune set, same 80 trials under at least **3 samplers**: `TPESampler` (current), `RandomSampler`, `CmaEsSampler`. Optional fourth: a separate FLAML study (the brief literally says "Optuna/FLAML").
-- Each sampler writes its own SQLite DB in `studies/`.
-- Output `reports/sampler_comparison.csv`: rows = samplers, cols = `best_tune_ndcg5`, `holdout_ndcg5`, `holdout_recall5`, `holdout_p95_ms`, `wall_clock_sec`.
-- Winner is picked on **holdout** NDCG@5 (not tune — that's how we got burned on overfit last time).
-- Update `runcard.yaml` schema to record `sampler.winner` and the full comparison.
+Recalibrated up from "≥3 samplers" to the prof's Week 02 HPO lab framing: **five methods** (Grid, Random, Bayesian/TPE, Hyperband multi-fidelity, BOHB) per `labs/Week 02 - HPO-tutorial.ipynb`. Implemented in `src/csai415/hpo_methods.py` (not `automl.py`) to keep the old TPE-only path intact for backwards compat.
 
-#### Task B2 — Expand search space + ablation
+**Outcome:** All five methods converge to the same configuration neighborhood (`metric=l2, svd_dim=None, normalize=False, hybrid_weight ∈ [0.73, 0.83], candidate_k ∈ [24, 34]`). Paired bootstrap on the 60 holdout queries showed Grid and BOHB produce **identical NDCG@5 on every single holdout query** (the 1.5pp `hybrid_weight` difference doesn't flip top-5 ordering), and TPE is within the same bootstrap CI.
+
+**Blessed method (Option C):** BOHB — best lab-narrative pick (53/80 trials pruned, continuous-space search), tied with Grid empirically. Reported alongside Grid and TPE as "statistically indistinguishable" in the rework report.
+
+**Outputs produced:**
+- `reports/sampler_comparison.csv` + `.md` — 5-row leaderboard
+- `studies/csai415-d1-{grid,random,tpe_bayesian,hyperband,bohb}.db` — one Optuna SQLite per method
+- `tests/test_hpo_methods_smoke.py` — 5 tests, all green
+
+Run with `python -m csai415.hpo_methods`. See [[project-b1-blessed-winner]] (in memory) for the bootstrap detail.
+
+#### Task B2 — Search-space ablation (REFRAMED from "expand + ablate")
 **Owner:** Ahmed Soliman
 
-- The rubric Excellent line is "**clear** search space". Currently the space is 5 dims. Add at least one defensible new dimension — e.g., BM25 `k1`/`b`, or query-prefix toggle on/off (BGE has a prompt for asymmetric retrieval).
-- Surface the new params on `RetrieverConfig` in `src/csai415/retrieve.py` and on the Optuna trial in `automl.py`.
-- Produce `reports/search_space_ablation.csv`: hold the winner fixed, drop each dim back to its default, re-evaluate on holdout. This is the "did the AutoML actually need this dimension" evidence.
+Originally scoped as "add a new dimension to the search space + ablate". After B1 showed every method lands at the same answer, the case for **adding** a new dimension in D1-rework is weak — defer that to D2. Keep the **ablation half** of B2, which directly addresses the rubric line "clear search space" by showing each existing dim actually contributes.
+
+- Hold the BOHB-blessed config fixed: `metric=l2, svd_dim=None, normalize=False, hybrid_weight=0.825, candidate_k=25`.
+- For each dim in `RetrieverConfig`, drop it back to its `RetrieverConfig` default (cosine / None / True / 0.5 / 10) one at a time and re-evaluate on the 60-query holdout.
+- Output `reports/search_space_ablation.csv`: rows = dims, cols = `dim_name`, `value_blessed`, `value_default`, `holdout_ndcg5_blessed`, `holdout_ndcg5_default`, `delta`.
+- Defensible new-dim work (BM25 `k1`/`b`, query-prefix toggle) moves to D2 with a one-line note in the D1 report.
+- **Does not block B3** — can run in parallel since B3 only consumes B1 output.
 
 ### Pair C — Online learning (Abdurlahman + Yehia)
 
@@ -63,9 +74,10 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 #### Task M1 — MLflow supports multiple studies
 **Owner:** Musab
 
-- Restructure `src/csai415/mlflow_tracking.py` so each sampler from B1 gets its own parent MLflow run, with the 80 trials as child runs.
-- `reports/mlflow_top5.md` becomes per-sampler (top-5 per sampler + an overall blessed run).
-- Compare-runs screenshot should now show TPE vs Random vs CMA-ES side by side — that's the new headline for Musab's slice.
+- Restructure `src/csai415/mlflow_tracking.py` so each of the 5 method study DBs from B1 (`studies/csai415-d1-{grid,random,tpe_bayesian,hyperband,bohb}.db`) gets its own parent MLflow run, with each method's trials as child runs.
+- `reports/mlflow_top5.md` becomes per-method (top-5 per method + an overall blessed run pointing at the BOHB winner).
+- Compare-runs screenshot should now show all 5 methods (Grid / Random / TPE / Hyperband / BOHB) side by side — that's the new headline for Musab's slice.
+- **Important:** the old single-study constants (`STUDY_NAME = "csai415-d1-knn"`, `STUDY_STORAGE = "sqlite:///studies/csai415-d1-knn.db"`) are dead code paths now. Either delete or update to read from the rework studies.
 
 ---
 
@@ -75,11 +87,17 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 
 #### Task B3 — Regenerate the runcard
 **Owner:** WAFIQ
-**Depends on:** B1, B2
+**Depends on:** B1 (done) — **no longer blocked by B2** since search space is unchanged
 
-- After B1 + B2 are merged, run `run_and_record()` end-to-end against the chosen sampler + expanded space.
-- New `configs/winning_runcard.yaml` committed.
-- `notebooks/01_automl.ipynb` regenerates `optimization_history.png`, `param_importances.png`, `winner_vs_baselines.png`, plus a new `sampler_comparison.png` (bar chart of holdout NDCG@5 per sampler).
+Inputs are already on disk from B1; no recompute needed:
+- `studies/csai415-d1-bohb.db` (blessed method's full trial history)
+- `reports/sampler_comparison.csv` (5-method leaderboard for the comparison section)
+
+Tasks:
+- Extend `csai415.runcard.write_runcard()` to accept a `comparison` table + `blessed_method` name. Schema bump to v3.
+- Add `csai415.hpo_methods.write_blessed_runcard()` — reads the BOHB study + comparison CSV, calls `write_runcard()` with the right kwargs. Wire it into the CLI via `--no-runcard` flag (default = write).
+- Notebook regeneration (`optimization_history.png`, `param_importances.png`, `winner_vs_baselines.png`, new `sampler_comparison.png`) — handled in `notebooks/01_automl.ipynb` as a follow-up, NOT part of the runcard-write code path.
+- New `configs/winning_runcard.yaml` overwrites the original. Old version recoverable from git SHA `a5662cc`.
 
 ### Pair C
 

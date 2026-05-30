@@ -139,10 +139,14 @@ def test_runcard_extended_fields(tmp_path):
     )
 
     card = yaml.safe_load(out.read_text())
-    assert card["schema_version"] == "2"
+    assert card["schema_version"] == "3"   # bumped in D1-rework B3
     assert card["automl"]["sampler"]["multivariate"] is True
     assert card["automl"]["storage"] == "sqlite:///study.db"
     assert card["split"]["strategy"] == "80_20"
     assert card["notes"].startswith("single-seed")
     assert "env" in card and "code" in card
     assert card["dataset"]["chunks_sha256"] is None
+    # v3 rework fields are optional and absent here (this test calls
+    # write_runcard without the rework kwargs)
+    assert "blessed_method" not in card["automl"]
+    assert "comparison" not in card["automl"]
