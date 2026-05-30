@@ -60,7 +60,10 @@ class RetrieverConfig:
     normalize: bool = True
     hybrid_weight: float = 0.5
     candidate_k: int = 10              # pool size per backend before fusion
+    bm25_k1: float = 1.5
+    bm25_b: float = 0.75
     seed: int = 42
+
 
 
 _embedder = None
@@ -85,8 +88,7 @@ class HybridRetriever:
     def _build_indexes(self) -> None:
         """Build BM25 over chunk text + dense matrix (optional SVD, then normalize)."""
         tokenized = [t.lower().split() for t in self.df["text"]]
-        self.bm25 = BM25Okapi(tokenized)
-
+        self.bm25 = BM25Okapi(tokenized, k1=self.config.bm25_k1, b=self.config.bm25_b)
         dense = np.array(self.df["embedding"].tolist(), dtype=np.float32)
 
         # Optional SVD — fit on corpus now, .transform the query later in search()

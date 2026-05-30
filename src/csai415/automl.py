@@ -48,6 +48,8 @@ def build_objective(chunks_df, queries, k: int = 5, latency_penalty_ms: float = 
             normalize=trial.suggest_categorical("normalize", [True, False]),
             hybrid_weight=trial.suggest_float("hybrid_weight", 0.0, 1.0),
             candidate_k=trial.suggest_int("candidate_k", 5, 50),
+            bm25_k1=trial.suggest_float("bm25_k1", 0.5, 3.0),
+            bm25_b=trial.suggest_float("bm25_b", 0.0, 1.0),
             seed=42,
         )
         retriever = HybridRetriever(chunks_df, config)
@@ -169,6 +171,8 @@ def run_and_record(
         normalize=study.best_params["normalize"],
         hybrid_weight=study.best_params["hybrid_weight"],
         candidate_k=study.best_params["candidate_k"],
+        bm25_k1=study.best_params["bm25_k1"],
+        bm25_b=study.best_params["bm25_b"],
         seed=42,
     )
     winner_fn = make_retriever_fn(HybridRetriever(chunks_df, winning))
