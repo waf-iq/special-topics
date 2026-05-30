@@ -8,10 +8,10 @@ Pair labels reflect temporal order: Pair A starts first, Pair C starts last.
 
 | Member | D1 slice |
 |---|---|
-| Ahmed Soliman | Pair A — Corpus + Eval + Report (ingest pipeline + gold Q/A) |
+| Ahmed Soliman + Ahmad Fraij | Pair A — Corpus + Eval + Report (ingest pipeline + gold Q/A) |
 | Yousef Alsakkaf | Pair A — Corpus + Eval + Report (eval/runcard/report/plumbing) |
 | WAFIQ Akram ABO DAKEN | Pair B — AutoML (Optuna driver + run card + notebook) |
-| Ahmad Fraij | Pair B — AutoML (HybridRetriever class + search space) |
+| Ahmed Soliman + Ahmad Fraij | Pair B — AutoML (HybridRetriever class + search space) |
 | Abdurlahman Alali | Pair C — Online learning (River learner) |
 | Yehia Noureldin | Pair C — Online learning (drift simulation + prequential plot) |
 | Musab | Solo — Experiment tracking (MLflow integration around Optuna study) |

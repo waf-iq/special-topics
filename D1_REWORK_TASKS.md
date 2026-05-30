@@ -19,7 +19,7 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 
 ## Wave 1 — start in parallel (no cross-dependencies)
 
-### Pair B — AutoML (WAFIQ + Ahmad Fraij)
+### Pair B — AutoML (WAFIQ + Ahmed Soliman)
 
 #### Task B1 — Multi-sampler comparison
 **Owner:** WAFIQ
@@ -31,7 +31,7 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 - Update `runcard.yaml` schema to record `sampler.winner` and the full comparison.
 
 #### Task B2 — Expand search space + ablation
-**Owner:** Ahmad Fraij
+**Owner:** Ahmed Soliman
 
 - The rubric Excellent line is "**clear** search space". Currently the space is 5 dims. Add at least one defensible new dimension — e.g., BM25 `k1`/`b`, or query-prefix toggle on/off (BGE has a prompt for asymmetric retrieval).
 - Surface the new params on `RetrieverConfig` in `src/csai415/retrieve.py` and on the Optuna trial in `automl.py`.
@@ -105,7 +105,7 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 
 ## Wave 3 — report rewrite (runs last)
 
-### Pair A (Ahmed Soliman + Yousef Alsakkaf)
+### Pair A (Ahmad Fraij + Yousef Alsakkaf)
 
 #### Task A1 — Rewrite `reports/D1_report.md`
 **Owner:** Yousef Alsakkaf
@@ -118,7 +118,7 @@ Report quality (3%) was not specifically called out, but it must be rewritten to
 - Replace `prequential.png` and `winner_vs_baselines.png` references with the regenerated versions.
 
 #### Task A2 — Smoke tests stay green
-**Owner:** Ahmed Soliman
+**Owner:** Ahmad Fraij
 **Depends on:** B3, C3
 
 - Add a multi-sampler smoke test (1 trial each, just verifies the registry wires up).
