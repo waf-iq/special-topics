@@ -150,12 +150,53 @@ def _nearest_action(weight: float, actions: list[float]) -> int:
     return min(range(len(actions)), key=lambda i: abs(actions[i] - weight))
 
 
+# --- C3 variants. feature_fn + model_factory let one class express all three
+# bandit variants run_c3 compares. noncontext drops the query features so each
+# action's model becomes a per-action mean estimator (the no-features control).
+# logistic swaps LinearRegression for LogisticRegression, modelling the binary
+# reward as Bernoulli P(reward=1 | x) instead of a real-valued target.
+
+def _noncontext_features(_question: str) -> dict[str, float]:
+    return {"intercept": 1.0}
+
+
+def _linear_model_factory(lr: float):
+    return linear_model.LinearRegression(optimizer=optim.SGD(lr))
+
+
+class _LogisticRewardModel:
+    """Shim so LogisticRegression's predict_one returns P(reward=1) (a real
+    value the bandit can argmax over) instead of its default argmax CLASS
+    (0 or 1, which collapses the bandit's choice). learn_one casts the binary
+    reward to bool so river treats it as a class label."""
+
+    def __init__(self, lr: float) -> None:
+        self._m = linear_model.LogisticRegression(optimizer=optim.SGD(lr))
+
+    def predict_one(self, x: dict) -> float:
+        proba = self._m.predict_proba_one(x)
+        return float(proba.get(True, proba.get(1, 0.5)))
+
+    def learn_one(self, x: dict, y: float) -> None:
+        self._m.learn_one(x, bool(y >= 0.5))
+
+
+def _logistic_model_factory(lr: float):
+    return _LogisticRewardModel(lr)
+
+
 class ContextualBanditLearner:
     """ε-greedy contextual bandit over a discretized hybrid_weight.
 
-    One river.linear_model.LinearRegression(optim.SGD) per action predicts that
-    action's expected reward from query_features. Selection:
+    One river model per action predicts that action's expected reward from a
+    feature vector. Polymorphic over (feature_fn, model_factory) so the three
+    C3 variants share scaffolding:
 
+      * eps_greedy_contextual (default): query_features + LinearRegression
+      * eps_greedy_noncontext: _noncontext_features (intercept only) + LinearRegression
+      * logistic_bandit:       query_features + _LogisticRewardModel
+
+    Selection:
       * cold start — until the first feedback arrives the policy is
         deterministic and returns *exactly* the AutoML winning weight (§6.C Q6);
       * explore — with probability ε, a uniform random action;
@@ -176,6 +217,9 @@ class ContextualBanditLearner:
         epsilon: float = 0.15,
         lr: float = 0.05,
         seed: int = 42,
+        feature_fn: Callable[[str], dict[str, float]] | None = None,
+        model_factory: Callable[[float], object] | None = None,
+        kind: str = "eps_greedy_contextual",
     ) -> None:
         self.actions = list(actions) if actions is not None else list(WEIGHT_GRID)
         self.epsilon = epsilon
@@ -185,13 +229,13 @@ class ContextualBanditLearner:
         self.default_weight = self.winning_weight
         self.default_action_idx = _nearest_action(self.winning_weight, self.actions)
         self._rng = random.Random(seed)
+        self.feature_fn = feature_fn if feature_fn is not None else query_features
+        self.model_factory = model_factory if model_factory is not None else _linear_model_factory
+        self.kind = kind
         self._build_models()
 
     def _build_models(self) -> None:
-        self.models = [
-            linear_model.LinearRegression(optimizer=optim.SGD(self.lr))
-            for _ in self.actions
-        ]
+        self.models = [self.model_factory(self.lr) for _ in self.actions]
         self.counts = [0 for _ in self.actions]
         self.initialized = False
         self.current_weight = self.winning_weight
@@ -213,7 +257,7 @@ class ContextualBanditLearner:
         if self._rng.random() < self.epsilon:
             idx = self._rng.randrange(len(self.actions))
         else:
-            idx = self._exploit_idx(query_features(query))
+            idx = self._exploit_idx(self.feature_fn(query))
         self.current_weight = self.actions[idx]
         return self.current_weight
 
@@ -221,7 +265,7 @@ class ContextualBanditLearner:
         """Train only the chosen action's regressor on the observed reward."""
         self.initialized = True
         idx = _nearest_action(chosen_weight, self.actions)
-        self.models[idx].learn_one(query_features(query), float(reward))
+        self.models[idx].learn_one(self.feature_fn(query), float(reward))
         self.counts[idx] += 1
 
     def reset_to_baseline(self) -> None:
@@ -232,12 +276,31 @@ class ContextualBanditLearner:
     on_drift = reset_to_baseline
 
 
-def build_learner(winning_weight: float | None = None, **kwargs) -> ContextualBanditLearner:
+_BUILDER_KINDS: dict[str, dict] = {
+    "eps_greedy_contextual": {"feature_fn": query_features, "model_factory": _linear_model_factory},
+    "eps_greedy_noncontext": {"feature_fn": _noncontext_features, "model_factory": _linear_model_factory},
+    "logistic_bandit":       {"feature_fn": query_features, "model_factory": _logistic_model_factory},
+}
+
+
+def build_learner(
+    winning_weight: float | None = None,
+    kind: str = "eps_greedy_contextual",
+    **kwargs,
+) -> ContextualBanditLearner:
     """Build the River learner (§6.C). Cold-starts from the AutoML-winning
-    hybrid_weight, loaded from Pair B's run-card with a graceful fallback."""
+    hybrid_weight, loaded from Pair B's run-card with a graceful fallback.
+
+    `kind` selects the C3 variant — see _BUILDER_KINDS for the registered three.
+    Unknown kinds raise KeyError so a typo doesn't silently fall through to
+    the contextual default and mask which variant produced a row in the CSV.
+    """
     if winning_weight is None:
         winning_weight = load_automl_weight()
-    return ContextualBanditLearner(winning_weight=winning_weight, **kwargs)
+    if kind not in _BUILDER_KINDS:
+        raise KeyError(f"unknown learner kind {kind!r}; choose from {sorted(_BUILDER_KINDS)}")
+    config = {**_BUILDER_KINDS[kind], "kind": kind, **kwargs}
+    return ContextualBanditLearner(winning_weight=winning_weight, **config)
 
 
 def build_drift_detector(delta: float = 0.002) -> drift.ADWIN:
@@ -453,9 +516,7 @@ def run_prequential(
         drift_points=drift_points,
     )
 
-    stream = simulate_feedback_stream(queries, n_events, drift_points, seed=seed)
-
-    stream = simulate_feedback_stream(queries, n_events, drift_at, seed=seed)
+    stream = simulate_feedback_stream(queries, n_events, drift_points=drift_points, seed=seed)
 
     for event_idx, q, relevant in stream:
         question = q["question"]
@@ -482,6 +543,12 @@ def run_prequential(
 
     state.current_weight = learner.current_weight
     return state
+
+
+# --------------------------------------------------------------------------- #
+# C3 — 4-variant prequential comparison over a 2000-event multi-drift stream
+# --------------------------------------------------------------------------- #
+
 def run_c3(
     retriever_fn: Callable[[str, int, float], list[str]],
     n_events: int = 2000,
@@ -695,3 +762,34 @@ def run_c3(
     ctx_lift = (ctx - nctx) / (nctx + 1e-9) * 100
     print(f"  contextual vs non-contextual post-drift-1: {ctx_lift:+.1f}%")
     print("  (>=5% on either line above = publishable finding)")
+
+
+def _default_retriever_fn() -> Callable[[str, int, float], list[str]]:
+    """Build the same hybrid retriever Pair B's run_and_record uses. Kept out
+    of the CLI so unit tests can pass a stub retriever_fn into run_c3 without
+    touching the corpus."""
+    from .retrieve import HybridRetriever, RetrieverConfig, load_chunks, make_retriever_fn
+    chunks = load_chunks()
+    config = RetrieverConfig(seed=42)
+    return make_retriever_fn(HybridRetriever(chunks, config))
+
+
+def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Run the C3 4-variant prequential comparison over a 2000-event stream.",
+    )
+    parser.add_argument("--n-events", type=int, default=2000)
+    parser.add_argument("--drift-points", type=int, nargs="+", default=[800, 1500])
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    run_c3(
+        retriever_fn=_default_retriever_fn(),
+        n_events=args.n_events,
+        drift_points=args.drift_points,
+        seed=args.seed,
+    )
+
+
+if __name__ == "__main__":
+    main()
