@@ -90,7 +90,21 @@ ADWIN was recalibrated against the 2000-event stream: `delta=0.002` gives ~2-eve
 
 Mean NDCG@5 per segment (pre-drift / between drifts / post-drift-2), full table in `reports/online_learning_results.csv`:
 
-<!-- C3_RESULTS_TABLE_PLACEHOLDER: replaced post-run with the CSV row data -->
+| Variant                  | Pre-drift | Post-drift-1 | Post-drift-2 | ADWIN firings |
+|---|---:|---:|---:|---:|
+| `static`                 | **0.5902** | **0.2584** | 0.2595 | 1 |
+| `eps_greedy_contextual`  | 0.5660 | 0.2508 | 0.2461 | 1 |
+| `eps_greedy_noncontext`  | 0.5402 | 0.2436 | 0.2467 | 1 |
+| `logistic_bandit`        | 0.5653 | 0.2516 | **0.2615** | 1 |
+
+The headline finding is **negative** and worth saying directly: no bandit variant beats the static AutoML weight on this corpus. The contextual bandit lands −3.0% vs static post-drift-1; non-contextual −5.7%; logistic −2.7%. The §6.C 5% lift bar is not cleared. Two real reasons rather than a bug:
+
+- The static baseline is already an AutoML-tuned `hybrid_weight=0.78`, which is close-to-optimal even on the post-drift segments (BM25-leaning queries still benefit from a strong dense backbone on `bge-small`). The discretised bandit action grid `[0.0, 0.25, 0.5, 0.75, 1.0]` skips past 0.78 — every bandit action is further from the post-drift optimum than the cold-start weight already is.
+- The exploration cost (ε=0.15) is a fixed-rate penalty on every event, whereas adaptation only pays off if the action space contains a meaningfully better point. On this setup it doesn't.
+
+The one positive result is **contextual beats non-contextual by +3.0% post-drift-1** — the query features do add measurable value, even if neither variant clears static. ADWIN fired once per variant: the first drift triggers it (NL → 2-token, a +0.35 → 0.25 reward shift); the second (2-token → 1-token) stays below detection because the probe's reward is already low at that point. Documented as a caveat.
+
+The original D1 reported "+3% adaptive vs static, below 5%." With 10× the data and 4 variants we get **−3% adaptive vs static**, in the opposite direction. The longer stream didn't rescue the bandit — it confirmed that bandit adaptation is the wrong tool when the AutoML cold-start is already strong. Refining the action grid around the AutoML weight is the cleanest D2 follow-up.
 
 ![Prequential NDCG@5 — 4 variants over 2000 events, 2 drifts](prequential.png)
 

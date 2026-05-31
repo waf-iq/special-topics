@@ -1,0 +1,5 @@
+model,pre_drift_ndcg5,post_drift_1_ndcg5,post_drift_2_ndcg5,adwin_firings
+static,0.5902,0.2584,0.2595,1
+eps_greedy_contextual,0.566,0.2508,0.2461,1
+eps_greedy_noncontext,0.5402,0.2436,0.2467,1
+logistic_bandit,0.5653,0.2516,0.2615,1
