@@ -1,0 +1,113 @@
+[21:03:05] hpo_methods full run starting
+  methods       : ['bohb']
+  n_trials      : 80
+  resume        : False
+  blessed_method: bohb
+  write_runcard : True
+
+[21:03:05] starting bohb (n_trials=80)
+C:\Users\waska\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\optuna\_experimental.py:31: ExperimentalWarning: Argument ``multivariate`` is an experimental feature. The interface can change in the future.
+  warnings.warn(
+[I 2026-05-31 21:03:05,949] A new study created in RDB with name: csai415-d1-bohb
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 8652.17it/s]
+[I 2026-05-31 21:03:41,446] Trial 0 finished with value: 0.7175149642473629 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.7080725777960455, 'candidate_k': 5, 'bm25_k1': 2.9247746304049858, 'bm25_b': 0.8324426408004217}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:03:43,767] Trial 1 pruned. 
+[I 2026-05-31 21:03:46,427] Trial 2 pruned. 
+[I 2026-05-31 21:04:12,813] Trial 3 finished with value: 0.6636546103788892 and parameters: {'metric': 'dot', 'svd_dim': 64, 'normalize': False, 'hybrid_weight': 0.5467102793432796, 'candidate_k': 13, 'bm25_k1': 2.9239615694113965, 'bm25_b': 0.7751328233611146}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:04:15,332] Trial 4 pruned. 
+[I 2026-05-31 21:04:17,814] Trial 5 pruned. 
+[I 2026-05-31 21:04:44,043] Trial 6 finished with value: 0.685127300829441 and parameters: {'metric': 'dot', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.6375574713552131, 'candidate_k': 45, 'bm25_k1': 1.6805373129048733, 'bm25_b': 0.1195942459383017}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:04:46,669] Trial 7 pruned. 
+[I 2026-05-31 21:05:12,808] Trial 8 finished with value: 0.7154101292441997 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.808120379564417, 'candidate_k': 34, 'bm25_k1': 2.6786514754692945, 'bm25_b': 0.8036720768991145}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:05:39,132] Trial 9 pruned. 
+[I 2026-05-31 21:06:05,447] Trial 10 pruned. 
+[I 2026-05-31 21:06:07,860] Trial 11 pruned. 
+[I 2026-05-31 21:06:40,725] Trial 12 pruned. 
+[I 2026-05-31 21:07:08,474] Trial 13 finished with value: 0.6856371808503022 and parameters: {'metric': 'l2', 'svd_dim': 128, 'normalize': True, 'hybrid_weight': 0.9367299887367345, 'candidate_k': 11, 'bm25_k1': 1.3526658776256464, 'bm25_b': 0.11347352124058907}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:07:14,428] Trial 14 pruned. 
+[I 2026-05-31 21:07:41,260] Trial 15 finished with value: 0.7076960115232022 and parameters: {'metric': 'dot', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.6064290596595899, 'candidate_k': 5, 'bm25_k1': 0.7536788571650803, 'bm25_b': 0.6635017691080558}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:08:07,813] Trial 16 finished with value: 0.7089280580257873 and parameters: {'metric': 'dot', 'svd_dim': 256, 'normalize': False, 'hybrid_weight': 0.7464914051180241, 'candidate_k': 34, 'bm25_k1': 2.623058526235445, 'bm25_b': 0.6576128923003434}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:08:14,294] Trial 17 pruned. 
+[I 2026-05-31 21:08:20,651] Trial 18 pruned. 
+[I 2026-05-31 21:08:47,482] Trial 19 pruned. 
+[I 2026-05-31 21:09:19,486] Trial 20 finished with value: 0.7124459297426928 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9048535455899149, 'candidate_k': 19, 'bm25_k1': 2.8035850429663807, 'bm25_b': 0.6507308716705821}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:09:50,898] Trial 21 finished with value: 0.7122286813358193 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9706688006272568, 'candidate_k': 9, 'bm25_k1': 2.784638781855377, 'bm25_b': 0.7783971225571029}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:10:18,333] Trial 22 pruned. 
+[I 2026-05-31 21:10:50,676] Trial 23 pruned. 
+[I 2026-05-31 21:10:53,422] Trial 24 pruned. 
+[I 2026-05-31 21:10:55,960] Trial 25 pruned. 
+[I 2026-05-31 21:11:03,030] Trial 26 pruned. 
+[I 2026-05-31 21:11:32,009] Trial 27 finished with value: 0.7073712825534344 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.7411739916626809, 'candidate_k': 46, 'bm25_k1': 2.8224866602133054, 'bm25_b': 0.5976478775927229}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:12:00,328] Trial 28 finished with value: 0.711051873275563 and parameters: {'metric': 'dot', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9971282557657978, 'candidate_k': 16, 'bm25_k1': 2.7432893294755667, 'bm25_b': 0.7228433253858354}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:12:26,698] Trial 29 pruned. 
+[I 2026-05-31 21:12:54,013] Trial 30 pruned. 
+[I 2026-05-31 21:13:26,477] Trial 31 finished with value: 0.7096245425854375 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9906036123751932, 'candidate_k': 15, 'bm25_k1': 2.9822875124812818, 'bm25_b': 0.7714713296745888}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:13:54,177] Trial 32 pruned. 
+[I 2026-05-31 21:14:00,017] Trial 33 pruned. 
+[I 2026-05-31 21:14:34,090] Trial 34 pruned. 
+[I 2026-05-31 21:15:01,367] Trial 35 finished with value: 0.7115902323550841 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9124688481155384, 'candidate_k': 38, 'bm25_k1': 2.7659683004564974, 'bm25_b': 0.7829174512809264}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:15:30,466] Trial 36 finished with value: 0.7127742219757004 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9782993692946296, 'candidate_k': 6, 'bm25_k1': 2.6384347580868175, 'bm25_b': 0.6249194172036634}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:15:36,744] Trial 37 pruned. 
+[I 2026-05-31 21:16:05,339] Trial 38 pruned. 
+[I 2026-05-31 21:16:34,942] Trial 39 finished with value: 0.7090356708922566 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9129548667144658, 'candidate_k': 25, 'bm25_k1': 2.7128776961538508, 'bm25_b': 0.28416745916305874}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:16:37,690] Trial 40 pruned. 
+[I 2026-05-31 21:17:06,711] Trial 41 finished with value: 0.711708587576693 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': True, 'hybrid_weight': 0.9349283773319436, 'candidate_k': 15, 'bm25_k1': 2.643083584994305, 'bm25_b': 0.5912401633330983}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:17:35,449] Trial 42 finished with value: 0.7137078387565713 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9021437411378779, 'candidate_k': 6, 'bm25_k1': 2.381456221603805, 'bm25_b': 0.6914314237640798}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:18:02,847] Trial 43 finished with value: 0.7146327435444145 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.8567595879291532, 'candidate_k': 15, 'bm25_k1': 2.2239954416005476, 'bm25_b': 0.5172349329277837}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:18:31,314] Trial 44 pruned. 
+[I 2026-05-31 21:19:00,991] Trial 45 pruned. 
+[I 2026-05-31 21:19:33,898] Trial 46 finished with value: 0.7139509659978388 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9228422498155032, 'candidate_k': 7, 'bm25_k1': 2.8518041028617396, 'bm25_b': 0.7326756705430633}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:20:05,141] Trial 47 finished with value: 0.711051873275563 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9961973893339391, 'candidate_k': 5, 'bm25_k1': 2.791693366412634, 'bm25_b': 0.8885888023225356}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:20:36,377] Trial 48 pruned. 
+[I 2026-05-31 21:21:03,709] Trial 49 pruned. 
+[I 2026-05-31 21:21:32,779] Trial 50 finished with value: 0.715216990960543 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.793384113331963, 'candidate_k': 14, 'bm25_k1': 2.9809817209689013, 'bm25_b': 0.44702631042264307}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:21:38,838] Trial 51 pruned. 
+[I 2026-05-31 21:22:06,474] Trial 52 finished with value: 0.7109063539716249 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9275286404212257, 'candidate_k': 16, 'bm25_k1': 2.420358709459385, 'bm25_b': 0.45537622661238086}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:22:35,955] Trial 53 pruned. 
+[I 2026-05-31 21:22:42,166] Trial 54 pruned. 
+[I 2026-05-31 21:22:48,883] Trial 55 pruned. 
+[I 2026-05-31 21:23:17,683] Trial 56 finished with value: 0.7143172287328897 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.7464308621571648, 'candidate_k': 9, 'bm25_k1': 2.8900322391886637, 'bm25_b': 0.6831986935821901}. Best is trial 0 with value: 0.7175149642473629.
+[I 2026-05-31 21:23:24,327] Trial 57 pruned. 
+[I 2026-05-31 21:23:27,162] Trial 58 pruned. 
+[I 2026-05-31 21:23:29,601] Trial 59 pruned. 
+[I 2026-05-31 21:23:36,877] Trial 60 pruned. 
+[I 2026-05-31 21:24:10,645] Trial 61 finished with value: 0.7192768806220697 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.7765905795848593, 'candidate_k': 27, 'bm25_k1': 2.9199897374940935, 'bm25_b': 0.34523676127036784}. Best is trial 61 with value: 0.7192768806220697.
+[I 2026-05-31 21:24:47,535] Trial 62 pruned. 
+[I 2026-05-31 21:24:50,728] Trial 63 pruned. 
+[I 2026-05-31 21:25:26,551] Trial 64 finished with value: 0.7110337937572399 and parameters: {'metric': 'l2', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.9510496925001639, 'candidate_k': 40, 'bm25_k1': 2.524006960419248, 'bm25_b': 0.639358360810013}. Best is trial 61 with value: 0.7192768806220697.
+[I 2026-05-31 21:25:56,252] Trial 65 finished with value: 0.716151652100736 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.7392515171482232, 'candidate_k': 9, 'bm25_k1': 2.9758141858606164, 'bm25_b': 0.6760803152722283}. Best is trial 61 with value: 0.7192768806220697.
+[I 2026-05-31 21:26:03,803] Trial 66 pruned. 
+[I 2026-05-31 21:26:11,532] Trial 67 pruned. 
+[I 2026-05-31 21:26:19,664] Trial 68 pruned. 
+[I 2026-05-31 21:26:26,327] Trial 69 pruned. 
+[I 2026-05-31 21:26:32,616] Trial 70 pruned. 
+[I 2026-05-31 21:26:39,202] Trial 71 pruned. 
+[I 2026-05-31 21:27:07,616] Trial 72 pruned. 
+[I 2026-05-31 21:27:36,343] Trial 73 pruned. 
+[I 2026-05-31 21:27:38,933] Trial 74 pruned. 
+[I 2026-05-31 21:27:41,620] Trial 75 pruned. 
+[I 2026-05-31 21:28:10,583] Trial 76 finished with value: 0.7187328445751291 and parameters: {'metric': 'cosine', 'svd_dim': None, 'normalize': False, 'hybrid_weight': 0.8283968728483799, 'candidate_k': 42, 'bm25_k1': 2.985212248838243, 'bm25_b': 0.9724673246652512}. Best is trial 61 with value: 0.7192768806220697.
+[I 2026-05-31 21:28:40,021] Trial 77 pruned. 
+[I 2026-05-31 21:29:09,591] Trial 78 pruned. 
+[I 2026-05-31 21:29:38,826] Trial 79 pruned. 
+[21:29:43] done bohb: tune=0.7193 holdout=0.5611 pruned=53/80 in 26.5 min
+
+[21:29:43] total wall-clock: 26.6 min
+
+Leaderboard (ranked by holdout NDCG@5):
+method             tune  holdout   recall    p95ms  trials  pruned
+------------------------------------------------------------------
+bohb             0.7193   0.5611   0.6489    103.5      27      53
+
+Top by holdout: bohb (holdout NDCG@5 = 0.5611)
+Blessed       : bohb (per memory project-b1-blessed-winner)
+
+[21:29:43] writing blessed runcard (bohb) -> configs\winning_runcard.yaml
+[21:29:56] wrote configs\winning_runcard.yaml
+
+Artifacts:
+  reports\sampler_comparison.csv
+  reports\sampler_comparison.md
+  studies/csai415-d1-*.db
+  configs\winning_runcard.yaml

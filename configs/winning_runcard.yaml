@@ -1,5 +1,5 @@
 schema_version: '3'
-created_utc: '2026-05-30T16:13:20.087610+00:00'
+created_utc: '2026-05-31T17:29:56.357867+00:00'
 deliverable: D1
 track: A-supervised-knn
 seed: 42
@@ -12,7 +12,7 @@ dataset:
   gold_jsonl: data/gold/qa.jsonl
   gold_sha256: 09fe4d20dc9ae4de8ed3c03591d333de81554c36ffa7b950c5c0d9e7bb92d9ca
 code:
-  sha: 69ef23e696163571396630002a7cbf944f797196
+  sha: 05f0133ecfa4c428dcc7d2cff2e7e24e7d6ca69a
   dirty: true
 env:
   python: 3.12.10
@@ -47,111 +47,55 @@ automl:
     - 240
   storage: sqlite:///studies/csai415-d1-bohb.db
   n_trials: 80
-  best_value_ndcg5_tune: 0.7169574562837061
+  best_value_ndcg5_tune: 0.7192768806220697
   best_params:
     metric: l2
     svd_dim: null
     normalize: false
-    hybrid_weight: 0.825010554641318
-    candidate_k: 25
+    hybrid_weight: 0.7765905795848593
+    candidate_k: 27
+    bm25_k1: 2.9199897374940935
+    bm25_b: 0.34523676127036784
   blessed_method: bohb
   comparison:
-  - method: grid
-    best_params:
-      metric: l2
-      svd_dim: null
-      normalize: false
-      hybrid_weight: 0.81
-      candidate_k: 25
-    best_val_score: 0.7164580171329297
-    test_score: 0.5649195404103965
-    holdout_recall5: 0.648888888888889
-    holdout_p95_ms: 106.5966550260782
-    elapsed_s: 791.0231296999846
-    n_evals: 48
-    n_pruned: 0
-    notes: discrete grid, 48 cells, full eval per cell
   - method: bohb
     best_params:
       metric: l2
       svd_dim: null
       normalize: false
-      hybrid_weight: 0.825010554641318
-      candidate_k: 25
-    best_val_score: 0.7169574562837061
-    test_score: 0.5649195404103965
+      hybrid_weight: 0.7765905795848593
+      candidate_k: 27
+      bm25_k1: 2.9199897374940935
+      bm25_b: 0.34523676127036784
+    best_val_score: 0.7192768806220697
+    test_score: 0.56105561312678
     holdout_recall5: 0.648888888888889
-    holdout_p95_ms: 128.4690549073275
-    elapsed_s: 1637.7197153999005
+    holdout_p95_ms: 103.4698500065133
+    elapsed_s: 1592.8597338000543
     n_evals: 27
     n_pruned: 53
     notes: TPE + HyperbandPruner, ladder (30, 60, 120, 240)
-  - method: tpe_bayesian
-    best_params:
-      metric: l2
-      svd_dim: null
-      normalize: false
-      hybrid_weight: 0.8102310529569093
-      candidate_k: 24
-    best_val_score: 0.7166351232738053
-    test_score: 0.5646231643969631
-    holdout_recall5: 0.6322222222222222
-    holdout_p95_ms: 101.97853494901209
-    elapsed_s: 1349.049058999983
-    n_evals: 80
-    n_pruned: 0
-    notes: TPE multivariate, 80 trials (matches original D1 study)
-  - method: random
-    best_params:
-      metric: l2
-      svd_dim: null
-      normalize: false
-      hybrid_weight: 0.7296061783380641
-      candidate_k: 34
-    best_val_score: 0.714085016329575
-    test_score: 0.560972152938028
-    holdout_recall5: 0.6266666666666667
-    holdout_p95_ms: 105.13849996495992
-    elapsed_s: 1435.7973139999667
-    n_evals: 80
-    n_pruned: 0
-    notes: random sampling, 80 trials, full eval per trial
-  - method: hyperband
-    best_params:
-      metric: l2
-      svd_dim: null
-      normalize: false
-      hybrid_weight: 0.7296061783380641
-      candidate_k: 34
-    best_val_score: 0.714085016329575
-    test_score: 0.560972152938028
-    holdout_recall5: 0.6266666666666667
-    holdout_p95_ms: 102.27188490680416
-    elapsed_s: 1111.0811601000603
-    n_evals: 18
-    n_pruned: 62
-    notes: Random + HyperbandPruner, ladder (60, 120, 240)
   comparison_csv: reports/sampler_comparison.csv
 metrics:
   winner_tune:
-    ndcg5: 0.7169574562837061
+    ndcg5: 0.7192768806220697
   winner_holdout:
-    ndcg5: 0.5649195404103965
+    ndcg5: 0.56105561312678
     recall5: 0.648888888888889
-    p95_latency_ms: 128.4690549073275
+    p95_latency_ms: 103.4698500065133
   baselines_holdout:
     bm25_only:
       ndcg5: 0.4163228684869845
       recall5: 0.46499999999999997
-      p95_latency_ms: 108.15454503754152
+      p95_latency_ms: 103.26455501490273
     dense_only:
       ndcg5: 0.5630428724188206
       recall5: 0.648888888888889
-      p95_latency_ms: 115.90659000212325
+      p95_latency_ms: 94.15080990875138
     default_hybrid:
       ndcg5: 0.5341771784871768
       recall5: 0.5933333333333334
-      p95_latency_ms: 110.38789998856373
+      p95_latency_ms: 104.02684994623996
 notes: "D1 rework: bohb blessed after 5-method HPO comparison (Grid / Random / TPE\
   \ / Hyperband / BOHB). Grid and BOHB produce identical NDCG@5 on every holdout query\
   \ (paired bootstrap B=5000, P(tie)=1.0); TPE within the same CI. Picked BOHB for\
