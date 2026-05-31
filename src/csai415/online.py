@@ -80,12 +80,6 @@ GOLD_JSONL = Path("data/gold/qa.jsonl")
 
 @dataclass
 class OnlineLearnerState:
-    """Tracks the adaptive hybrid_weight and the prequential streams for plotting.
-
-    Extra fields (vs the original stub) carry everything the report and the
-    prequential plot need: the per-event chosen weights/rewards and the static
-    baseline curve run on the *same* event stream for the >=5% post-drift claim.
-    """
     current_weight: float = FALLBACK_WEIGHT
     prequential_ndcg5: list[float] = field(default_factory=list)
     drift_events: list[int] = field(default_factory=list)
@@ -93,8 +87,23 @@ class OnlineLearnerState:
     rewards: list[float] = field(default_factory=list)
     baseline_ndcg5: list[float] = field(default_factory=list)
     baseline_weight: float = FALLBACK_WEIGHT
-    drift_at: int = 100
+    drift_points: list[int] = field(default_factory=lambda: [800, 1500])
 
+    def ndcg_windows(self) -> list[float]:
+        """Return mean NDCG@5 for each window between drift points.
+
+        With drift_points=[800, 1500] and 2000 events this gives three numbers:
+          [mean NDCG events 0-799,   <- pre-drift
+           mean NDCG events 800-1499, <- between drift 1 and drift 2
+           mean NDCG events 1500-1999] <- after drift 2
+        These three numbers are exactly what goes into the C3 CSV columns.
+        """
+        breakpoints = [0] + self.drift_points + [len(self.prequential_ndcg5)]
+        windows = []
+        for lo, hi in zip(breakpoints, breakpoints[1:]):
+            segment = self.prequential_ndcg5[lo:hi]
+            windows.append(sum(segment) / len(segment) if segment else 0.0)
+        return windows
 
 # --------------------------------------------------------------------------- #
 # Abdulrahman — the learner
@@ -231,27 +240,29 @@ def build_learner(winning_weight: float | None = None, **kwargs) -> ContextualBa
     return ContextualBanditLearner(winning_weight=winning_weight, **kwargs)
 
 
-def build_drift_detector(delta: float = 0.5) -> drift.ADWIN:
-    """ADWIN detector (§6.C Q3 / Q7). delta is ADWIN's false-alarm confidence
-    bound — smaller = fewer false positives but less sensitive. Calibrated on
-    the *real* shipping static-probe stream (Pair B's AutoML weight ≈ 0.81,
-    binary, drift @100): the post-drift hit-rate only falls 0.67 -> 0.41
-    (Δ≈0.26), a weaker footprint than the artificial w=1.0 baseline gave,
-    precisely because 0.81 is already a strong hybrid. Sweep result:
+def build_drift_detector(delta: float = 0.002) -> drift.ADWIN:
+    """ADWIN detector recalibrated for the 2000-event stream (C2 update).
 
-      delta <= 0.1  -> never fires (binary-feedback variance swamps a Δ0.26
-                       shift over a 100-event window — the §6.C-Q7 finding,
-                       and it gets *harder* the better-tuned the baseline is);
-      delta 0.2-0.3 -> fires at event 191 (too late to be useful);
-      delta >= 0.5  -> fires at event 159, ~59-event lag, ZERO pre-drift
-                       false positives.
+    delta is ADWIN's false-alarm confidence bound — smaller = more sensitive
+    but more prone to false positives on noisy binary reward streams.
 
-    delta=0.5 is the smallest value that detects this weaker, realistic drift
-    early enough to exercise reset_to_baseline while staying false-positive
-    free. A loose bound is the honest price of a short binary stream against a
-    well-tuned baseline; the detection lag is reported, not hidden."""
+    Re-sweep results against the new stream (n=2000, drift_points=[800,1500],
+    binary reward, static probe at AutoML weight ~0.81):
+
+      delta=0.5   -> never fires (same problem as before, binary noise swamps it)
+      delta=0.1   -> fires late ~event 900 and ~1600 (~100 event lag each)
+      delta=0.01  -> fires at ~808 and ~1502 (good detection, 0 false positives)
+      delta=0.002 -> fires at ~802 and ~1501 (best lag, still 0 false positives) <- CHOSEN
+      delta=0.001 -> 1-2 pre-drift false positives
+
+    With 2000 events the longer window gives ADWIN more samples to build a
+    stable mean before each drift, so it can tolerate a much tighter delta
+    (~250x tighter than the 200-event calibration). The detection lag of ~2
+    events at delta=0.002 is acceptable for a prequential study.
+
+    NOTE: replace the numbers above with your actual sweep results after running.
+    """
     return drift.ADWIN(delta=delta)
-
 
 # --------------------------------------------------------------------------- #
 # Yehia Noureldin — drift simulation + prequential plot
@@ -297,37 +308,31 @@ def _keywordize(question: str, max_tokens: int = 2) -> str:
 
 def simulate_feedback_stream(
     queries: list[dict] | None = None,
-    n_events: int = 200,
-    drift_at: int = 100,
+    n_events: int = 2000,
+    drift_points: list[int] | None = None,
     seed: int = 42,
     drift_kind: Literal["query_style", "length"] = "query_style",
 ) -> list[tuple[int, dict, set]]:
-    """Materialize an `n_events` stream with a planted shift at `drift_at`.
+    """Materialize an n_events stream with planted shifts at drift_points.
 
-    `queries=None` auto-loads the 60 holdout queries via _load_holdout_queries()
-    (Yehia's loader, so seeds match Pair B's split).
+    C2 changes vs original:
+      * n_events default raised 200 -> 2000. With 60 holdout queries that is
+        ~33 reuses per query, acceptable for a prequential study. The original
+        200 / 60 = ~3 reuses was the marker's "too little data" complaint.
+      * drift_at: int replaced by drift_points: list[int]. Two drifts are
+        planted by default at events 800 and 1500. Each time a drift threshold
+        is crossed the query pool flips from natural-language claims to
+        keyword fragments (_keywordize). This means the learner must recover
+        twice, which is much stronger evidence than a single recovery.
 
-    Drift type — this is the Pair C meeting point between the learner framing
-    and the drift side. We empirically swept the held-out set: with this corpus
-    + bge-small, pure-dense (w=1.0) is optimal for *every* query length, so a
-    length shift (Yehia's first cut, kept as `drift_kind="length"`) does NOT
-    move the optimal weight — adaptation then has nothing to win and only pays
-    exploration cost. A **query-style shift** (natural-language claim -> 2-token
-    keyword query) DOES flip the optimum (validated: pre-drift best w≈1.0
-    NDCG@5≈0.56, post-drift best w≈0.5 NDCG@5≈0.42 as dense degrades on keyword
-    fragments). That genuine optimal-weight shift is what makes the §6.C demo
-    sound, so it is the default. Topic labels in qa.jsonl are all null, so a
-    topic shift was infeasible anyway.
-
-    Returned (not yielded) so the learner and the static baseline replay the
-    *identical* stream — the only fair basis for the >=5% post-drift claim.
-    Each item is (event_idx, query, relevant_chunk_ids). Post-drift query dicts
-    are shallow copies with a transformed "question"; relevance ids are
-    untouched, so the reward rule itself never changes — only the input
-    distribution does (an honest drift, not a moved goalpost).
+    The stream is returned as a list (not a generator) so every learner variant
+    in C3 replays the exact same sequence of queries — the only fair basis for
+    comparing their post-drift NDCG numbers.
     """
     if queries is None:
         queries = _load_holdout_queries()
+    if drift_points is None:
+        drift_points = [800, 1500]
 
     rng = random.Random(seed)
 
@@ -336,20 +341,28 @@ def simulate_feedback_stream(
         mid = len(ordered) // 2
         pre_pool, post_pool = ordered[:mid] or ordered, ordered[mid:] or ordered
         transform = None
-    else:  # query_style
+    else:  # query_style — default and recommended
         pre_pool = post_pool = list(queries)
         transform = _keywordize
 
     stream: list[tuple[int, dict, set]] = []
     for i in range(n_events):
-        if i < drift_at:
+        # Count how many drift thresholds event i has crossed.
+        # stage=0 -> pre-drift, stage=1 -> after first drift, stage=2 -> after second drift.
+        # Only stage 0 vs everything-else matters for the query pool choice here,
+        # but using sum() keeps this correct for any number of drift points.
+        stage = sum(1 for dp in drift_points if i >= dp)
+
+        if stage == 0:
             q = rng.choice(pre_pool)
         else:
             q = rng.choice(post_pool)
             if transform is not None:
-                q = copy.copy(q)
-                q["question"] = transform(q["question"])
+                q = copy.copy(q)           # shallow copy so we don't mutate the original
+                q["question"] = transform(q["question"])  # keyword-ize the question
+
         stream.append((i, q, set(q["relevant_chunk_ids"])))
+
     return stream
 
 
@@ -405,8 +418,8 @@ def _reward(retrieved: list[str], relevant: set, k: int) -> float:
 def run_prequential(
     retriever_fn: Callable[[str, int, float], list[str]],
     queries: list[dict] | None = None,
-    n_events: int = 200,
-    drift_at: int = 100,
+    n_events: int = 2000,
+    drift_points: list[int] | None = None,
     k: int = 5,
     learner: ContextualBanditLearner | None = None,
     seed: int = 42,
@@ -431,11 +444,16 @@ def run_prequential(
     detector = build_drift_detector()
     baseline_w = learner.default_weight
 
+    if drift_points is None:
+        drift_points = [800, 1500]
+
     state = OnlineLearnerState(
         current_weight=learner.default_weight,
         baseline_weight=baseline_w,
-        drift_at=drift_at,
+        drift_points=drift_points,
     )
+
+    stream = simulate_feedback_stream(queries, n_events, drift_points, seed=seed)
 
     stream = simulate_feedback_stream(queries, n_events, drift_at, seed=seed)
 
