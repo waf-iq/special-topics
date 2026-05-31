@@ -1,0 +1,13 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 9044.35it/s]
+wrote reports\search_space_ablation.csv
+
+  dropped_dim        winner_value default_value  ndcg5  recall5  p95_latency_ms  delta_ndcg5
+none (winner)                   -             - 0.5611   0.6489           85.44       0.0000
+       metric                  l2        cosine 0.5606   0.6489           72.51      -0.0004
+      svd_dim                 NaN           NaN 0.5611   0.6489           89.22       0.0000
+    normalize               False          True 0.5611   0.6489           83.69       0.0000
+hybrid_weight  0.7765905795848593           0.5 0.5352   0.5933           85.76      -0.0259
+  candidate_k                  27            10 0.5600   0.6322          100.11      -0.0010
+      bm25_k1  2.9199897374940935           1.5 0.5628   0.6406           99.60       0.0018
+       bm25_b 0.34523676127036784          0.75 0.5570   0.6489           96.13      -0.0040

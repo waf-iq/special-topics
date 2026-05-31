@@ -1,0 +1,15 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 4853.73it/s]
+  Running static...
+  Running eps_greedy_contextual...
+  Running eps_greedy_noncontext...
+  Running logistic_bandit...
+Saved reports\online_learning_results.csv
+Saved reports\prequential.png
+
+--- Headline claim check ---
+  eps_greedy_contextual vs static post-drift-1: -3.0%
+  eps_greedy_noncontext vs static post-drift-1: -5.7%
+  logistic_bandit vs static post-drift-1: -2.7%
+  contextual vs non-contextual post-drift-1: +3.0%
+  (>=5% on either line above = publishable finding)

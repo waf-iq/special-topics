@@ -181,12 +181,18 @@ def _build_objective(
             }
             config = RetrieverConfig(**params, seed=42)
         else:
+            # B2 expanded the search space from 5 dims to 7 by adding BM25's
+            # k1/b (the term-frequency saturation and length-normalisation
+            # knobs). Grid stays 5-D because adding two more dims explodes the
+            # cell count; the continuous-space methods absorb them for free.
             config = RetrieverConfig(
                 metric=trial.suggest_categorical("metric", ["cosine", "l2", "dot"]),
                 svd_dim=trial.suggest_categorical("svd_dim", [None, 64, 128, 256]),
                 normalize=trial.suggest_categorical("normalize", [True, False]),
                 hybrid_weight=trial.suggest_float("hybrid_weight", 0.0, 1.0),
                 candidate_k=trial.suggest_int("candidate_k", 5, 50),
+                bm25_k1=trial.suggest_float("bm25_k1", 0.5, 3.0),
+                bm25_b=trial.suggest_float("bm25_b", 0.0, 1.0),
                 seed=42,
             )
 
@@ -634,8 +640,13 @@ _BLESSED_NOTES: dict[str, str] = {
         "identical NDCG@5 on every holdout query (paired bootstrap B=5000, "
         "P(tie)=1.0); TPE within the same CI. Picked BOHB for narrative — "
         "continuous-space search + multi-fidelity pruning landed on the same "
-        "optimum the prof's lab method ladder predicts. See "
-        "reports/sampler_comparison.{csv,md} for the full table."
+        "optimum the prof's lab method ladder predicts. "
+        "Two-stage search space (B1+B2): the 5-method comparison ran over the "
+        "canonical 5 dims (metric, svd_dim, normalize, hybrid_weight, candidate_k); "
+        "BOHB was then re-tuned over the expanded 7 dims (adds BM25 k1/b) so the "
+        "top-level best_params and the search_space_ablation are coherent. Grid "
+        "stayed 5-D because two more dims would explode the cell count. See "
+        "reports/sampler_comparison.{csv,md} and reports/search_space_ablation.csv."
     ),
 }
 

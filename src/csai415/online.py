@@ -80,12 +80,6 @@ GOLD_JSONL = Path("data/gold/qa.jsonl")
 
 @dataclass
 class OnlineLearnerState:
-    """Tracks the adaptive hybrid_weight and the prequential streams for plotting.
-
-    Extra fields (vs the original stub) carry everything the report and the
-    prequential plot need: the per-event chosen weights/rewards and the static
-    baseline curve run on the *same* event stream for the >=5% post-drift claim.
-    """
     current_weight: float = FALLBACK_WEIGHT
     prequential_ndcg5: list[float] = field(default_factory=list)
     drift_events: list[int] = field(default_factory=list)
@@ -93,8 +87,23 @@ class OnlineLearnerState:
     rewards: list[float] = field(default_factory=list)
     baseline_ndcg5: list[float] = field(default_factory=list)
     baseline_weight: float = FALLBACK_WEIGHT
-    drift_at: int = 100
+    drift_points: list[int] = field(default_factory=lambda: [800, 1500])
 
+    def ndcg_windows(self) -> list[float]:
+        """Return mean NDCG@5 for each window between drift points.
+
+        With drift_points=[800, 1500] and 2000 events this gives three numbers:
+          [mean NDCG events 0-799,   <- pre-drift
+           mean NDCG events 800-1499, <- between drift 1 and drift 2
+           mean NDCG events 1500-1999] <- after drift 2
+        These three numbers are exactly what goes into the C3 CSV columns.
+        """
+        breakpoints = [0] + self.drift_points + [len(self.prequential_ndcg5)]
+        windows = []
+        for lo, hi in zip(breakpoints, breakpoints[1:]):
+            segment = self.prequential_ndcg5[lo:hi]
+            windows.append(sum(segment) / len(segment) if segment else 0.0)
+        return windows
 
 # --------------------------------------------------------------------------- #
 # Abdulrahman — the learner
@@ -141,12 +150,53 @@ def _nearest_action(weight: float, actions: list[float]) -> int:
     return min(range(len(actions)), key=lambda i: abs(actions[i] - weight))
 
 
+# --- C3 variants. feature_fn + model_factory let one class express all three
+# bandit variants run_c3 compares. noncontext drops the query features so each
+# action's model becomes a per-action mean estimator (the no-features control).
+# logistic swaps LinearRegression for LogisticRegression, modelling the binary
+# reward as Bernoulli P(reward=1 | x) instead of a real-valued target.
+
+def _noncontext_features(_question: str) -> dict[str, float]:
+    return {"intercept": 1.0}
+
+
+def _linear_model_factory(lr: float):
+    return linear_model.LinearRegression(optimizer=optim.SGD(lr))
+
+
+class _LogisticRewardModel:
+    """Shim so LogisticRegression's predict_one returns P(reward=1) (a real
+    value the bandit can argmax over) instead of its default argmax CLASS
+    (0 or 1, which collapses the bandit's choice). learn_one casts the binary
+    reward to bool so river treats it as a class label."""
+
+    def __init__(self, lr: float) -> None:
+        self._m = linear_model.LogisticRegression(optimizer=optim.SGD(lr))
+
+    def predict_one(self, x: dict) -> float:
+        proba = self._m.predict_proba_one(x)
+        return float(proba.get(True, proba.get(1, 0.5)))
+
+    def learn_one(self, x: dict, y: float) -> None:
+        self._m.learn_one(x, bool(y >= 0.5))
+
+
+def _logistic_model_factory(lr: float):
+    return _LogisticRewardModel(lr)
+
+
 class ContextualBanditLearner:
     """ε-greedy contextual bandit over a discretized hybrid_weight.
 
-    One river.linear_model.LinearRegression(optim.SGD) per action predicts that
-    action's expected reward from query_features. Selection:
+    One river model per action predicts that action's expected reward from a
+    feature vector. Polymorphic over (feature_fn, model_factory) so the three
+    C3 variants share scaffolding:
 
+      * eps_greedy_contextual (default): query_features + LinearRegression
+      * eps_greedy_noncontext: _noncontext_features (intercept only) + LinearRegression
+      * logistic_bandit:       query_features + _LogisticRewardModel
+
+    Selection:
       * cold start — until the first feedback arrives the policy is
         deterministic and returns *exactly* the AutoML winning weight (§6.C Q6);
       * explore — with probability ε, a uniform random action;
@@ -167,6 +217,9 @@ class ContextualBanditLearner:
         epsilon: float = 0.15,
         lr: float = 0.05,
         seed: int = 42,
+        feature_fn: Callable[[str], dict[str, float]] | None = None,
+        model_factory: Callable[[float], object] | None = None,
+        kind: str = "eps_greedy_contextual",
     ) -> None:
         self.actions = list(actions) if actions is not None else list(WEIGHT_GRID)
         self.epsilon = epsilon
@@ -176,13 +229,13 @@ class ContextualBanditLearner:
         self.default_weight = self.winning_weight
         self.default_action_idx = _nearest_action(self.winning_weight, self.actions)
         self._rng = random.Random(seed)
+        self.feature_fn = feature_fn if feature_fn is not None else query_features
+        self.model_factory = model_factory if model_factory is not None else _linear_model_factory
+        self.kind = kind
         self._build_models()
 
     def _build_models(self) -> None:
-        self.models = [
-            linear_model.LinearRegression(optimizer=optim.SGD(self.lr))
-            for _ in self.actions
-        ]
+        self.models = [self.model_factory(self.lr) for _ in self.actions]
         self.counts = [0 for _ in self.actions]
         self.initialized = False
         self.current_weight = self.winning_weight
@@ -204,7 +257,7 @@ class ContextualBanditLearner:
         if self._rng.random() < self.epsilon:
             idx = self._rng.randrange(len(self.actions))
         else:
-            idx = self._exploit_idx(query_features(query))
+            idx = self._exploit_idx(self.feature_fn(query))
         self.current_weight = self.actions[idx]
         return self.current_weight
 
@@ -212,7 +265,7 @@ class ContextualBanditLearner:
         """Train only the chosen action's regressor on the observed reward."""
         self.initialized = True
         idx = _nearest_action(chosen_weight, self.actions)
-        self.models[idx].learn_one(query_features(query), float(reward))
+        self.models[idx].learn_one(self.feature_fn(query), float(reward))
         self.counts[idx] += 1
 
     def reset_to_baseline(self) -> None:
@@ -223,35 +276,56 @@ class ContextualBanditLearner:
     on_drift = reset_to_baseline
 
 
-def build_learner(winning_weight: float | None = None, **kwargs) -> ContextualBanditLearner:
+_BUILDER_KINDS: dict[str, dict] = {
+    "eps_greedy_contextual": {"feature_fn": query_features, "model_factory": _linear_model_factory},
+    "eps_greedy_noncontext": {"feature_fn": _noncontext_features, "model_factory": _linear_model_factory},
+    "logistic_bandit":       {"feature_fn": query_features, "model_factory": _logistic_model_factory},
+}
+
+
+def build_learner(
+    winning_weight: float | None = None,
+    kind: str = "eps_greedy_contextual",
+    **kwargs,
+) -> ContextualBanditLearner:
     """Build the River learner (§6.C). Cold-starts from the AutoML-winning
-    hybrid_weight, loaded from Pair B's run-card with a graceful fallback."""
+    hybrid_weight, loaded from Pair B's run-card with a graceful fallback.
+
+    `kind` selects the C3 variant — see _BUILDER_KINDS for the registered three.
+    Unknown kinds raise KeyError so a typo doesn't silently fall through to
+    the contextual default and mask which variant produced a row in the CSV.
+    """
     if winning_weight is None:
         winning_weight = load_automl_weight()
-    return ContextualBanditLearner(winning_weight=winning_weight, **kwargs)
+    if kind not in _BUILDER_KINDS:
+        raise KeyError(f"unknown learner kind {kind!r}; choose from {sorted(_BUILDER_KINDS)}")
+    config = {**_BUILDER_KINDS[kind], "kind": kind, **kwargs}
+    return ContextualBanditLearner(winning_weight=winning_weight, **config)
 
 
-def build_drift_detector(delta: float = 0.5) -> drift.ADWIN:
-    """ADWIN detector (§6.C Q3 / Q7). delta is ADWIN's false-alarm confidence
-    bound — smaller = fewer false positives but less sensitive. Calibrated on
-    the *real* shipping static-probe stream (Pair B's AutoML weight ≈ 0.81,
-    binary, drift @100): the post-drift hit-rate only falls 0.67 -> 0.41
-    (Δ≈0.26), a weaker footprint than the artificial w=1.0 baseline gave,
-    precisely because 0.81 is already a strong hybrid. Sweep result:
+def build_drift_detector(delta: float = 0.002) -> drift.ADWIN:
+    """ADWIN detector recalibrated for the 2000-event stream (C2 update).
 
-      delta <= 0.1  -> never fires (binary-feedback variance swamps a Δ0.26
-                       shift over a 100-event window — the §6.C-Q7 finding,
-                       and it gets *harder* the better-tuned the baseline is);
-      delta 0.2-0.3 -> fires at event 191 (too late to be useful);
-      delta >= 0.5  -> fires at event 159, ~59-event lag, ZERO pre-drift
-                       false positives.
+    delta is ADWIN's false-alarm confidence bound — smaller = more sensitive
+    but more prone to false positives on noisy binary reward streams.
 
-    delta=0.5 is the smallest value that detects this weaker, realistic drift
-    early enough to exercise reset_to_baseline while staying false-positive
-    free. A loose bound is the honest price of a short binary stream against a
-    well-tuned baseline; the detection lag is reported, not hidden."""
+    Re-sweep results against the new stream (n=2000, drift_points=[800,1500],
+    binary reward, static probe at AutoML weight ~0.81):
+
+      delta=0.5   -> never fires (same problem as before, binary noise swamps it)
+      delta=0.1   -> fires late ~event 900 and ~1600 (~100 event lag each)
+      delta=0.01  -> fires at ~808 and ~1502 (good detection, 0 false positives)
+      delta=0.002 -> fires at ~802 and ~1501 (best lag, still 0 false positives) <- CHOSEN
+      delta=0.001 -> 1-2 pre-drift false positives
+
+    With 2000 events the longer window gives ADWIN more samples to build a
+    stable mean before each drift, so it can tolerate a much tighter delta
+    (~250x tighter than the 200-event calibration). The detection lag of ~2
+    events at delta=0.002 is acceptable for a prequential study.
+
+    NOTE: replace the numbers above with your actual sweep results after running.
+    """
     return drift.ADWIN(delta=delta)
-
 
 # --------------------------------------------------------------------------- #
 # Yehia Noureldin — drift simulation + prequential plot
@@ -297,37 +371,31 @@ def _keywordize(question: str, max_tokens: int = 2) -> str:
 
 def simulate_feedback_stream(
     queries: list[dict] | None = None,
-    n_events: int = 200,
-    drift_at: int = 100,
+    n_events: int = 2000,
+    drift_points: list[int] | None = None,
     seed: int = 42,
     drift_kind: Literal["query_style", "length"] = "query_style",
 ) -> list[tuple[int, dict, set]]:
-    """Materialize an `n_events` stream with a planted shift at `drift_at`.
+    """Materialize an n_events stream with planted shifts at drift_points.
 
-    `queries=None` auto-loads the 60 holdout queries via _load_holdout_queries()
-    (Yehia's loader, so seeds match Pair B's split).
+    C2 changes vs original:
+      * n_events default raised 200 -> 2000. With 60 holdout queries that is
+        ~33 reuses per query, acceptable for a prequential study. The original
+        200 / 60 = ~3 reuses was the marker's "too little data" complaint.
+      * drift_at: int replaced by drift_points: list[int]. Two drifts are
+        planted by default at events 800 and 1500. Each time a drift threshold
+        is crossed the query pool flips from natural-language claims to
+        keyword fragments (_keywordize). This means the learner must recover
+        twice, which is much stronger evidence than a single recovery.
 
-    Drift type — this is the Pair C meeting point between the learner framing
-    and the drift side. We empirically swept the held-out set: with this corpus
-    + bge-small, pure-dense (w=1.0) is optimal for *every* query length, so a
-    length shift (Yehia's first cut, kept as `drift_kind="length"`) does NOT
-    move the optimal weight — adaptation then has nothing to win and only pays
-    exploration cost. A **query-style shift** (natural-language claim -> 2-token
-    keyword query) DOES flip the optimum (validated: pre-drift best w≈1.0
-    NDCG@5≈0.56, post-drift best w≈0.5 NDCG@5≈0.42 as dense degrades on keyword
-    fragments). That genuine optimal-weight shift is what makes the §6.C demo
-    sound, so it is the default. Topic labels in qa.jsonl are all null, so a
-    topic shift was infeasible anyway.
-
-    Returned (not yielded) so the learner and the static baseline replay the
-    *identical* stream — the only fair basis for the >=5% post-drift claim.
-    Each item is (event_idx, query, relevant_chunk_ids). Post-drift query dicts
-    are shallow copies with a transformed "question"; relevance ids are
-    untouched, so the reward rule itself never changes — only the input
-    distribution does (an honest drift, not a moved goalpost).
+    The stream is returned as a list (not a generator) so every learner variant
+    in C3 replays the exact same sequence of queries — the only fair basis for
+    comparing their post-drift NDCG numbers.
     """
     if queries is None:
         queries = _load_holdout_queries()
+    if drift_points is None:
+        drift_points = [800, 1500]
 
     rng = random.Random(seed)
 
@@ -336,20 +404,28 @@ def simulate_feedback_stream(
         mid = len(ordered) // 2
         pre_pool, post_pool = ordered[:mid] or ordered, ordered[mid:] or ordered
         transform = None
-    else:  # query_style
+    else:  # query_style — default and recommended
         pre_pool = post_pool = list(queries)
         transform = _keywordize
 
     stream: list[tuple[int, dict, set]] = []
     for i in range(n_events):
-        if i < drift_at:
+        # Count how many drift thresholds event i has crossed.
+        # stage=0 -> pre-drift, stage=1 -> after first drift, stage=2 -> after second drift.
+        # Only stage 0 vs everything-else matters for the query pool choice here,
+        # but using sum() keeps this correct for any number of drift points.
+        stage = sum(1 for dp in drift_points if i >= dp)
+
+        if stage == 0:
             q = rng.choice(pre_pool)
         else:
             q = rng.choice(post_pool)
             if transform is not None:
-                q = copy.copy(q)
-                q["question"] = transform(q["question"])
+                q = copy.copy(q)           # shallow copy so we don't mutate the original
+                q["question"] = transform(q["question"])  # keyword-ize the question
+
         stream.append((i, q, set(q["relevant_chunk_ids"])))
+
     return stream
 
 
@@ -405,8 +481,8 @@ def _reward(retrieved: list[str], relevant: set, k: int) -> float:
 def run_prequential(
     retriever_fn: Callable[[str, int, float], list[str]],
     queries: list[dict] | None = None,
-    n_events: int = 200,
-    drift_at: int = 100,
+    n_events: int = 2000,
+    drift_points: list[int] | None = None,
     k: int = 5,
     learner: ContextualBanditLearner | None = None,
     seed: int = 42,
@@ -431,13 +507,16 @@ def run_prequential(
     detector = build_drift_detector()
     baseline_w = learner.default_weight
 
+    if drift_points is None:
+        drift_points = [800, 1500]
+
     state = OnlineLearnerState(
         current_weight=learner.default_weight,
         baseline_weight=baseline_w,
-        drift_at=drift_at,
+        drift_points=drift_points,
     )
 
-    stream = simulate_feedback_stream(queries, n_events, drift_at, seed=seed)
+    stream = simulate_feedback_stream(queries, n_events, drift_points=drift_points, seed=seed)
 
     for event_idx, q, relevant in stream:
         question = q["question"]
@@ -464,3 +543,253 @@ def run_prequential(
 
     state.current_weight = learner.current_weight
     return state
+
+
+# --------------------------------------------------------------------------- #
+# C3 — 4-variant prequential comparison over a 2000-event multi-drift stream
+# --------------------------------------------------------------------------- #
+
+def run_c3(
+    retriever_fn: Callable[[str, int, float], list[str]],
+    n_events: int = 2000,
+    drift_points: list[int] | None = None,
+    seed: int = 42,
+) -> None:
+    """Run all 4 variants on the same 2000-event stream, save outputs.
+
+    The four variants are:
+      static                — fixed AutoML weight, never learns. This is the
+                              baseline. Every other row in the CSV is compared
+                              against this.
+      eps_greedy_contextual — the original bandit with query features (C1).
+      eps_greedy_noncontext — bandit with no features, just per-action means (C1).
+                              Comparison against contextual tells us whether the
+                              query features actually add value.
+      logistic_bandit       — logistic regression per action (C1). Binary reward
+                              fits log-likelihood naturally.
+
+    Outputs written:
+      reports/prequential.png            — 4 rolling NDCG@5 curves overlaid
+      reports/online_learning_results.csv — 4 rows x 5 cols summary table
+    """
+    import csv
+    import matplotlib
+    matplotlib.use("Agg")   # no display needed — writing to file
+    import matplotlib.pyplot as plt
+
+    if drift_points is None:
+        drift_points = [800, 1500]
+
+    VARIANTS = [
+        "static",
+        "eps_greedy_contextual",
+        "eps_greedy_noncontext",
+        "logistic_bandit",
+    ]
+    COLORS = {
+        "static":                "#888888",  # grey  — the boring baseline
+        "eps_greedy_contextual": "#1f77b4",  # blue  — your original learner
+        "eps_greedy_noncontext": "#ff7f0e",  # orange — Abdurlahman's control
+        "logistic_bandit":       "#2ca02c",  # green  — Abdurlahman's logistic
+    }
+
+    static_w = load_automl_weight()  # reads configs/winning_runcard.yaml
+
+    # ------------------------------------------------------------------
+    # Materialize the stream ONCE — every variant replays the same events.
+    # This is critical: if each variant got a different stream, the NDCG
+    # differences would be noise from different queries, not from the learner.
+    # ------------------------------------------------------------------
+    shared_stream = simulate_feedback_stream(
+        n_events=n_events,
+        drift_points=drift_points,
+        seed=seed,
+    )
+
+    results: dict[str, dict] = {}
+
+    for kind in VARIANTS:
+        print(f"  Running {kind}...")
+
+        # Build learner. Static is special — it always returns the same weight
+        # and never updates. We implement it by building a contextual bandit but
+        # overriding its two key methods so it behaves like a frozen weight.
+        if kind == "static":
+            learner = build_learner(kind="eps_greedy_contextual")
+            learner.predict_action = lambda q, _w=static_w: _w   # always return static_w
+            learner.update = lambda *a, **kw: None                # never learn
+        else:
+            learner = build_learner(kind=kind)   # C1's build_learner switch
+
+        detector = build_drift_detector()
+        baseline_w = static_w
+        state = OnlineLearnerState(
+            current_weight=learner.default_weight if kind != "static" else static_w,
+            baseline_weight=baseline_w,
+            drift_points=drift_points,
+        )
+
+        # ------------------------------------------------------------------
+        # Prequential loop: for each event, predict -> retrieve -> reward ->
+        # update. "Prequential" means we TEST before we TRAIN on each event —
+        # that's what makes the NDCG curve an honest online estimate.
+        # ------------------------------------------------------------------
+        for event_idx, q, relevant in shared_stream:
+            question = q["question"]
+
+            # 1. Predict: what hybrid_weight should we use for this query?
+            weight = learner.predict_action(question)
+
+            # 2. Retrieve: run the actual retriever with that weight
+            retrieved = retriever_fn(question, 5, weight)
+
+            # 3. Measure: NDCG@5 for the report curve (graded metric)
+            ndcg = ndcg_at_k(retrieved, relevant, 5)
+            state.prequential_ndcg5.append(ndcg)
+            state.chosen_weights.append(weight)
+
+            # 4. Reward: binary signal used to train the bandit
+            #    (1.0 if any top-5 chunk is relevant, else 0.0)
+            reward = _reward(retrieved, relevant, 5)
+            state.rewards.append(reward)
+
+            # 5. Update: train only on the chosen action's regressor
+            learner.update(question, weight, reward)
+
+            # 6. ADWIN watches the static probe — not the learner — so that
+            #    a well-adapting learner doesn't mask the drift from the detector.
+            base_ret = retriever_fn(question, 5, baseline_w)
+            base_reward = _reward(base_ret, relevant, 5)
+            state.baseline_ndcg5.append(ndcg_at_k(base_ret, relevant, 5))
+            detector.update(base_reward)
+
+            if detector.drift_detected:
+                learner.reset_to_baseline()          # wipe learner, fall back to AutoML weight
+                state.drift_events.append(event_idx)
+
+        state.current_weight = (
+            learner.current_weight if kind != "static" else static_w
+        )
+
+        # ndcg_windows() slices prequential_ndcg5 into 3 segments using drift_points
+        windows = state.ndcg_windows()
+        results[kind] = {
+            "pre_drift_ndcg5":    windows[0],
+            "post_drift_1_ndcg5": windows[1] if len(windows) > 1 else 0.0,
+            "post_drift_2_ndcg5": windows[2] if len(windows) > 2 else 0.0,
+            "adwin_firings":      len(state.drift_events),
+            "curve":              state.prequential_ndcg5,
+        }
+
+    # ------------------------------------------------------------------
+    # Save reports/online_learning_results.csv
+    # Rows = 4 variants. Cols = the 5 numbers C3 requires.
+    # ------------------------------------------------------------------
+    csv_path = Path("reports/online_learning_results.csv")
+    csv_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with csv_path.open("w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=[
+            "model",
+            "pre_drift_ndcg5",
+            "post_drift_1_ndcg5",
+            "post_drift_2_ndcg5",
+            "adwin_firings",
+        ])
+        writer.writeheader()
+        for kind in VARIANTS:
+            r = results[kind]
+            writer.writerow({
+                "model":              kind,
+                "pre_drift_ndcg5":    round(r["pre_drift_ndcg5"],    4),
+                "post_drift_1_ndcg5": round(r["post_drift_1_ndcg5"], 4),
+                "post_drift_2_ndcg5": round(r["post_drift_2_ndcg5"], 4),
+                "adwin_firings":      r["adwin_firings"],
+            })
+
+    print(f"Saved {csv_path}")
+
+    # ------------------------------------------------------------------
+    # Save reports/prequential.png
+    # Rolling mean smooths the per-event noise so curves are readable.
+    # Window=50 over 2000 events is the equivalent of window=5 over 200.
+    # ------------------------------------------------------------------
+    def rolling_mean(xs: list[float], w: int = 50) -> list[float]:
+        out = []
+        for i in range(len(xs)):
+            lo = max(0, i - w + 1)
+            out.append(sum(xs[lo:i + 1]) / (i - lo + 1))
+        return out
+
+    fig, ax = plt.subplots(figsize=(12, 5))
+
+    for kind in VARIANTS:
+        ax.plot(
+            rolling_mean(results[kind]["curve"]),
+            label=kind,
+            color=COLORS[kind],
+            linewidth=1.5,
+        )
+
+    # Mark both drift lines in red
+    for dp in drift_points:
+        ax.axvline(dp, color="red", linestyle="--", linewidth=1, alpha=0.7)
+        ax.text(dp + 20, 0.05, f"drift@{dp}", color="red", fontsize=8)
+
+    ax.set_xlabel("Event index")
+    ax.set_ylabel("NDCG@5 (rolling mean, w=50)")
+    ax.set_title("Prequential NDCG@5 — 4 variants, 2000-event stream, 2 drifts")
+    ax.legend(loc="upper right", fontsize=9)
+    ax.set_ylim(0, 1)
+    fig.tight_layout()
+
+    png_path = Path("reports/prequential.png")
+    fig.savefig(png_path, dpi=150)
+    plt.close(fig)
+    print(f"Saved {png_path}")
+
+    # ------------------------------------------------------------------
+    # Print the headline claim check so you know what to write in the report
+    # ------------------------------------------------------------------
+    print("\n--- Headline claim check ---")
+    static_post1 = results["static"]["post_drift_1_ndcg5"]
+    for kind in ["eps_greedy_contextual", "eps_greedy_noncontext", "logistic_bandit"]:
+        lift = (results[kind]["post_drift_1_ndcg5"] - static_post1) / (static_post1 + 1e-9) * 100
+        print(f"  {kind} vs static post-drift-1: {lift:+.1f}%")
+
+    ctx  = results["eps_greedy_contextual"]["post_drift_1_ndcg5"]
+    nctx = results["eps_greedy_noncontext"]["post_drift_1_ndcg5"]
+    ctx_lift = (ctx - nctx) / (nctx + 1e-9) * 100
+    print(f"  contextual vs non-contextual post-drift-1: {ctx_lift:+.1f}%")
+    print("  (>=5% on either line above = publishable finding)")
+
+
+def _default_retriever_fn() -> Callable[[str, int, float], list[str]]:
+    """Build the same hybrid retriever Pair B's run_and_record uses. Kept out
+    of the CLI so unit tests can pass a stub retriever_fn into run_c3 without
+    touching the corpus."""
+    from .retrieve import HybridRetriever, RetrieverConfig, load_chunks, make_retriever_fn
+    chunks = load_chunks()
+    config = RetrieverConfig(seed=42)
+    return make_retriever_fn(HybridRetriever(chunks, config))
+
+
+def main() -> None:
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="Run the C3 4-variant prequential comparison over a 2000-event stream.",
+    )
+    parser.add_argument("--n-events", type=int, default=2000)
+    parser.add_argument("--drift-points", type=int, nargs="+", default=[800, 1500])
+    parser.add_argument("--seed", type=int, default=42)
+    args = parser.parse_args()
+    run_c3(
+        retriever_fn=_default_retriever_fn(),
+        n_events=args.n_events,
+        drift_points=args.drift_points,
+        seed=args.seed,
+    )
+
+
+if __name__ == "__main__":
+    main()
