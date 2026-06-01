@@ -276,6 +276,198 @@ def parse_arxiv_pdfs(pdf_paths: list[Path], chunk_tokens: int = 220, overlap: in
     )
 
 
+ARXIV_BATCH_META_JSON = DATA_RAW / "arxiv_batch_meta.json"
+ARXIV_BATCH_ERRORS_JSON = DATA_RAW / "arxiv_batch_errors.json"
+
+
+def _existing_arxiv_paper_ids() -> set[str]:
+    """paper_ids already in chunks.parquet from any prior arxiv ingest (demo or batch).
+
+    Used by :func:`ingest_arxiv_batch` to make the download loop resumable —
+    a crashed batch can restart and pick up where it left off without
+    re-downloading or re-embedding work already on disk.
+    """
+    if not CHUNKS_PARQUET.exists():
+        return set()
+    import pandas as pd
+
+    df = pd.read_parquet(CHUNKS_PARQUET, columns=["paper_id", "source"])
+    return set(df[df["source"].isin({"arxiv", "arxiv-demo"})]["paper_id"].unique())
+
+
+def ingest_arxiv_batch(
+    max_results: int = 150,
+    query: str = "cat:cs.CL",
+    sleep_seconds: float = 5.0,
+    chunk_tokens: int = 220,
+    overlap: int = 40,
+    embed_batch_size: int = 32,
+) -> dict:
+    """D2-A1: resumable end-to-end arxiv batch ingest. Returns a stats dict.
+
+    Pipeline per paper: arxiv API search -> download PDF -> parse with PyMuPDF
+    -> chunk with page tracking -> embed -> append to ``chunks.parquet`` with
+    ``source="arxiv"`` and real authors / year / primary_category.
+
+    Resumable: skips ``paper_id``s already present in ``chunks.parquet``
+    (either ``source="arxiv"`` from a previous batch run or ``source="arxiv-demo"``
+    from the D1 5-PDF demo). Safe to re-run after a crash or partial download.
+
+    Fault-tolerant: per-paper failures (download timeout, PDF parse error, empty
+    chunk list) are logged to ``data/raw_pdfs/arxiv_batch_errors.json`` and the
+    batch continues. We aim for >=80% success across ``max_results``.
+
+    Polite: ``sleep_seconds`` between downloads keeps us under arxiv's rate
+    limits. Default 5s -> 150 papers ~= 12.5 min of pure throttling on top of
+    the actual download + parse + embed cost.
+
+    Metadata is merged into ``arxiv_batch_meta.json`` rather than the demo's
+    ``arxiv_meta.json`` so the two ingestion paths don't clobber each other.
+    """
+    import json
+    import time
+    import traceback
+
+    import arxiv
+    import fitz
+    import pandas as pd
+
+    DATA_RAW.mkdir(parents=True, exist_ok=True)
+    DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+
+    already = _existing_arxiv_paper_ids()
+    print(f"ingest_arxiv_batch: {len(already)} arxiv paper_ids already in parquet — will skip")
+
+    existing_meta: dict[str, dict] = {}
+    if ARXIV_BATCH_META_JSON.exists():
+        for entry in json.loads(ARXIV_BATCH_META_JSON.read_text(encoding="utf-8")):
+            existing_meta[entry["paper_id"]] = entry
+
+    errors: list[dict] = []
+    if ARXIV_BATCH_ERRORS_JSON.exists():
+        errors = json.loads(ARXIV_BATCH_ERRORS_JSON.read_text(encoding="utf-8"))
+
+    client = arxiv.Client(page_size=50, delay_seconds=3.0, num_retries=5)
+    # Over-fetch: arxiv may return papers we already have. Cap at 3x to avoid
+    # an unbounded loop if `query` happens to match a corpus we mostly own.
+    search = arxiv.Search(
+        query=query,
+        max_results=max_results * 3,
+        sort_by=arxiv.SortCriterion.SubmittedDate,
+        sort_order=arxiv.SortOrder.Descending,
+    )
+
+    new_rows: list[dict] = []
+    new_meta: list[dict] = []
+    n_attempted = 0
+    n_new = 0
+
+    for result in client.results(search):
+        if n_new >= max_results:
+            break
+
+        paper_id = result.get_short_id().replace("/", "_")
+        if paper_id in already:
+            continue
+
+        n_attempted += 1
+        title = (result.title or "").strip()
+        authors = [a.name for a in result.authors]
+        year = result.published.year if result.published else None
+        categories = list(result.categories) if result.categories else []
+        primary = categories[0] if categories else "cs.CL"
+
+        try:
+            filename = f"{paper_id}.pdf"
+            pdf_path = DATA_RAW / filename
+            if not pdf_path.exists():
+                result.download_pdf(dirpath=str(DATA_RAW), filename=filename)
+
+            doc = fitz.open(pdf_path)
+            try:
+                pages = [page.get_text("text") for page in doc]
+            finally:
+                doc.close()
+
+            chunks = _chunk_pages(pages, chunk_tokens, overlap)
+            if not chunks:
+                raise RuntimeError("PDF parsed to 0 chunks (empty text?)")
+
+            for i, (text, page_start, page_end) in enumerate(chunks):
+                new_rows.append({
+                    "paper_id": paper_id,
+                    "chunk_id": f"arxiv:{paper_id}:{i}",
+                    "text": text,
+                    "page_start": page_start,
+                    "page_end": page_end,
+                    "title": title,
+                    "authors": authors,
+                    "year": year,
+                    "topic": primary,
+                    "source": "arxiv",
+                })
+
+            new_meta.append({
+                "paper_id": paper_id,
+                "title": title,
+                "authors": authors,
+                "year": year,
+                "categories": categories,
+            })
+            already.add(paper_id)
+            n_new += 1
+            print(f"  [{n_new}/{max_results}] {paper_id}  pages={len(pages)} chunks={len(chunks)}  {title[:60]}")
+
+        except Exception as exc:
+            errors.append({
+                "paper_id": paper_id,
+                "error": str(exc),
+                "traceback": traceback.format_exc(),
+                "title": title,
+            })
+            print(f"  [SKIP] {paper_id}: {exc}")
+
+        # Persist meta + errors incrementally so a crash doesn't lose progress
+        merged_meta = list(existing_meta.values()) + new_meta
+        ARXIV_BATCH_META_JSON.write_text(
+            json.dumps(merged_meta, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+        ARXIV_BATCH_ERRORS_JSON.write_text(
+            json.dumps(errors, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        time.sleep(sleep_seconds)
+
+    print(f"ingest_arxiv_batch: download+parse done — {n_new} new papers, {n_attempted - n_new} failures")
+
+    if not new_rows:
+        print("ingest_arxiv_batch: no new chunks to embed — exiting")
+        return {"new_papers": 0, "new_chunks": 0, "failures": len(errors)}
+
+    new_df = pd.DataFrame(new_rows, columns=[
+        "paper_id", "chunk_id", "text", "page_start", "page_end",
+        "title", "authors", "year", "topic", "source",
+    ])
+
+    print(f"ingest_arxiv_batch: embedding {len(new_df)} new chunks...")
+    new_df = embed_chunks(new_df)
+
+    if CHUNKS_PARQUET.exists():
+        existing_df = pd.read_parquet(CHUNKS_PARQUET)
+        combined = pd.concat([existing_df, new_df], ignore_index=True)
+    else:
+        combined = new_df
+    combined.to_parquet(CHUNKS_PARQUET)
+
+    print(f"ingest_arxiv_batch: wrote {len(combined)} total chunks ({len(new_df)} new) to {CHUNKS_PARQUET}")
+    return {
+        "new_papers": n_new,
+        "new_chunks": len(new_df),
+        "failures": len(errors),
+        "total_chunks": len(combined),
+    }
+
+
 def embed_chunks(df: "pd.DataFrame", model_name: str = EMBED_MODEL) -> "pd.DataFrame":
     """Add 'embedding' column (list[float], 384-dim) using the named SBERT model. Batch=32.
 

@@ -11,6 +11,7 @@ torch>=2.1
 # Retrieval
 scikit-learn>=1.4
 rank-bm25>=0.2.2
+qdrant-client>=1.9
 
 # AutoML
 optuna>=3.5
