@@ -1,0 +1,4974 @@
+[
+  {
+    "paper_id": "2605.30348v1",
+    "title": "LLMSurgeon: Diagnosing Data Mixture of Large Language Models",
+    "authors": [
+      "Yaxin Luo",
+      "Jiacheng Cui",
+      "Xiaohan Zhao",
+      "Xinyi Shang",
+      "Jiacheng Liu",
+      "Xinyue Bi",
+      "Zhaoyi Li",
+      "Zhiqiang Shen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30345v1",
+    "title": "SchGen: PCB Schematic Generation with Semantic-Grounded Code Representations",
+    "authors": [
+      "Qinpei Luo",
+      "Ruichun Ma",
+      "Xinyu Zhang",
+      "Lili Qiu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30343v1",
+    "title": "Unlocking the Working Memory of Large Language Models for Latent Reasoning",
+    "authors": [
+      "Lukas Aichberger",
+      "Sepp Hochreiter"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30335v1",
+    "title": "Locally Coherent, Globally Incoherent: Bounding Compositional Incoherence in Multi-Component LLM Agents",
+    "authors": [
+      "Anany Kotawala"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30334v1",
+    "title": "Demystifying Data Organization for Enhanced LLM Training",
+    "authors": [
+      "Yalun Dai",
+      "Yangyu Huang",
+      "Tongshen Yang",
+      "Yonghan Wang",
+      "Xin Zhang",
+      "Wenshan Wu",
+      "Qihao Zhao",
+      "Hao Li",
+      "Yuanyuan Gao",
+      "Kim-Hui Yap",
+      "Scarlett Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30333v1",
+    "title": "COMPOSE: Composing Future Theorems from Citations and Formal Structure",
+    "authors": [
+      "David Busbib",
+      "Michael Werman"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30327v1",
+    "title": "Reasoning with Sampling: Cutting at Decision Points",
+    "authors": [
+      "Felix Zhou",
+      "Anay Mehrotra",
+      "Quanquan C. Liu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL",
+      "math.ST",
+      "stat.ML"
+    ]
+  },
+  {
+    "paper_id": "2605.30324v1",
+    "title": "On Language Generation in the Limit with Bounded Memory",
+    "authors": [
+      "Jon Kleinberg",
+      "Anay Mehrotra",
+      "Amin Saberi",
+      "Grigoris Velegkas"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.DS",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "stat.ML"
+    ]
+  },
+  {
+    "paper_id": "2605.30315v1",
+    "title": "Resolution Diagnostics for Paired LLM Evaluation",
+    "authors": [
+      "Anany Kotawala"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30295v1",
+    "title": "MedCase-Structured: A Text-to-FHIR Dataset for Benchmarking Diagnostic Reasoning in Clinically Realistic EHR Settings",
+    "authors": [
+      "Valentina Bui Muti",
+      "Eugénie Dulout",
+      "Ziquan Fu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30290v1",
+    "title": "Self-Trained Verification for Training- and Test-Time Self-Improvement",
+    "authors": [
+      "Chen Henry Wu",
+      "Aditi Raghunathan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30280v1",
+    "title": "Qwen-VLA: Unifying Vision-Language-Action Modeling across Tasks, Environments, and Robot Embodiments",
+    "authors": [
+      "Qiuyue Wang",
+      "Mingsheng Li",
+      "Jian Guan",
+      "Jinhui Ye",
+      "Sicheng Xie",
+      "Yitao Liu",
+      "Junhao Chen",
+      "Zhixuan Liang",
+      "Jie Zhang",
+      "Xintong Hu",
+      "Xuhong Huang",
+      "Pei Lin",
+      "Junyang Lin",
+      "Dayiheng Liu",
+      "Shuai Bai",
+      "Jingren Zhou",
+      "Jiazhao Zhang",
+      "Haoqi Yuan",
+      "Gengze Zhou",
+      "Hang Yin",
+      "Ye Wang",
+      "Yiyang Huang",
+      "Zixing Lei",
+      "Wujian Peng",
+      "Delin Chen",
+      "Yingming Zheng",
+      "Jingyang Fan",
+      "Xianwei Zhuang",
+      "Xin Zhou",
+      "Haoyang Li",
+      "Anzhe Chen",
+      "Tong Zhang",
+      "Xuejing Liu",
+      "Yuchong Sun",
+      "Ruizhe Chen",
+      "Zhaohai Li",
+      "Chenxu Lü",
+      "Zhibo Yang",
+      "Tao Yu",
+      "Xionghui Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.RO",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30274v1",
+    "title": "Loong: A Human-Like Long Document Translation Agent with Observe-and-Act Adaptive Context Selection",
+    "authors": [
+      "Yutong Wang",
+      "Xuebo Liu",
+      "Derek F. Wong",
+      "Zhilin Li",
+      "Rongqing Jiang",
+      "Min Zhang",
+      "Shimin Tao",
+      "Daimeng Wei",
+      "Min Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30273v1",
+    "title": "LLUMI: Improving LLM Writing Assistance for Mental Health Support with Online Community Feedback",
+    "authors": [
+      "Jiwon Kim",
+      "Maya Ajit",
+      "Sherry Gong",
+      "Soorya Ram Shimgekar",
+      "Dong Whi Yoo",
+      "Eshwar Chandrasekharan",
+      "Koustuv Saha"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.HC",
+      "cs.AI",
+      "cs.CL",
+      "cs.CY",
+      "cs.SI"
+    ]
+  },
+  {
+    "paper_id": "2605.30265v1",
+    "title": "LoMo: Local Modality Substitution for Deeper Vision-Language Fusion",
+    "authors": [
+      "Feng Han",
+      "Zhixiong Zhang",
+      "Zheming Liang",
+      "Yibin Wang",
+      "Jiaqi Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30260v1",
+    "title": "How LoRA Remembers? A Parametric Memory Law for LLM Finetuning",
+    "authors": [
+      "Ziwen Xu",
+      "Haiwen Hong",
+      "Linsong Yu",
+      "Benglei Cui",
+      "Longtao Huang",
+      "Hui Xue",
+      "Ningyu Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CV",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30256v1",
+    "title": "VideoFDB: Evaluating Full-Duplex Vision-Speech Capabilities in Conversational Agents",
+    "authors": [
+      "Amrita Mazumdar",
+      "Seonwook Park",
+      "Rajarshi Roy",
+      "Nikhil Srihari",
+      "Shengze Wang",
+      "Yuhao Zhou",
+      "Julia Wang",
+      "Koki Nagano",
+      "Shalini De Mello"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.30251v1",
+    "title": "Same Evidence, Different Answers: Canonical-Context On-Policy Distillation for Multi-Turn Language Models",
+    "authors": [
+      "Zizhuo Lin",
+      "Quanling Liu",
+      "Jinsheng Quan",
+      "Chao Zhang",
+      "Yifan Zhu",
+      "Xing Shi",
+      "Jingtao Xu",
+      "Zhihui Li",
+      "Yawei Luo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30245v1",
+    "title": "Knowing What to Solve Before How: Preplan Empowered LLM Mathematical Reasoning",
+    "authors": [
+      "Shaojie Wang",
+      "Liang Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30241v1",
+    "title": "CommunityFact: A Dynamic, Multilingual, Multi-domain Benchmark for Misinformation Detection in the Wild",
+    "authors": [
+      "Sahajpreet Singh",
+      "Insyirah Mujtahid",
+      "Min-Yen Kan",
+      "Kokil Jaidka"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CY",
+      "cs.SI"
+    ]
+  },
+  {
+    "paper_id": "2605.30237v1",
+    "title": "GRASP: Plan-Guided Graph Retrieval with Adaptive Fusion and Reranking on Semi-Structured Knowledge Bases",
+    "authors": [
+      "Yicheng Tao",
+      "Yiqun Wang",
+      "Xiangchen Song",
+      "Xin Luo",
+      "Kai Liu",
+      "Jie Liu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.IR",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30233v1",
+    "title": "Do Language Models Track Entities Across State Changes?",
+    "authors": [
+      "Zilu Tang",
+      "Qiao Zhao",
+      "Gabriel Franco",
+      "Derry Wijaya",
+      "Aaron Mueller",
+      "Sebastian Schuster",
+      "Najoung Kim"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30232v1",
+    "title": "How's it going? Reinforcement learning in language models recruits a functional welfare axis",
+    "authors": [
+      "Andy Q Han",
+      "David J. Chalmers",
+      "Pavel Izmailov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30219v1",
+    "title": "When Should Models Change Their Minds? Contextual Belief Management in Large Language Models",
+    "authors": [
+      "Haoming Xu",
+      "Weihong Xu",
+      "Zongrui Li",
+      "Mengru Wang",
+      "Yunzhi Yao",
+      "Chiyu Wu",
+      "Jin Shang",
+      "Yu Gong",
+      "Shumin Deng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30214v1",
+    "title": "GRUFF: LLM Pronoun Fidelity, Reasoning, and Biases in German",
+    "authors": [
+      "Fabian Mewes",
+      "Anne Lauscher",
+      "Vagrant Gautam"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30202v1",
+    "title": "A Dual-Path Architecture for Scaling Compute and Capacity in LLMs",
+    "authors": [
+      "Markus Frey",
+      "Behzad Shomali",
+      "Joachim Koehler",
+      "Mehdi Ali"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30189v1",
+    "title": "Token-Level Generalization in LoRA Adapter Backdoors: Attack Characterization and Behavioral Detection",
+    "authors": [
+      "Travis Lelle"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30152v1",
+    "title": "Do Proactive Agents Really Need an LLM to Decide When to Wake and What to Anchor?",
+    "authors": [
+      "Xiaoze Liu",
+      "Ruowang Zhang",
+      "Amir H. Abdi",
+      "Michel Galley",
+      "Zhikai Chen",
+      "Siheng Xiong",
+      "Xiaoqian Wang",
+      "Jing Gao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.30133v1",
+    "title": "CorPipe at CRAC 2026: Empty Nodes and Cross-Lingual Transfer in Multilingual Coreference Resolution",
+    "authors": [
+      "Milan Straka"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30131v1",
+    "title": "CCS: Clinical Consensus Selection for Radiology Report Generation",
+    "authors": [
+      "Xi Zhang",
+      "Yingshu Li",
+      "Zaiqiao Meng",
+      "Jake Lever",
+      "Edmond S. L. Ho"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.30126v1",
+    "title": "PARCEL: Pool-Anchored Resampling with Conditioned Elastic Queries for Efficient Vision-Language Understanding",
+    "authors": [
+      "Selim Kuzucu",
+      "Alessio Tonioni",
+      "Vasile Lup",
+      "Bernt Schiele",
+      "Federico Tombari",
+      "Muhammad Ferjad Naeem"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30107v1",
+    "title": "Dial HEALTHDIAL for Advice: A Multilingual and Multi-Parallel Spoken Dialogue Dataset for Knowledge-Grounded Information Seeking",
+    "authors": [
+      "Songbo Hu",
+      "Yinhong Liu",
+      "Ej Zhou",
+      "Evgeniia Razumovskaia",
+      "Xiaobin Wang",
+      "Alexander Fraser",
+      "Ivan Vulić",
+      "Anna Korhonen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30104v1",
+    "title": "SEAL: Can Saturated Benchmarks Be Revived by LLM-as-a-Meta-Judge?",
+    "authors": [
+      "Jiamin Chen",
+      "Yidi Wu",
+      "Qiexiang Wang",
+      "Qianben Chen",
+      "Yuchen Li",
+      "Yansen Zhang",
+      "Xiaokun Zhang",
+      "Wangchunshu Zhou",
+      "Chen Ma"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30090v1",
+    "title": "DirectorBench: Diagnosing Long-Form Video Generation with Personalized Multi-Agent Evaluation",
+    "authors": [
+      "Jiamin Chen",
+      "Qianben Chen",
+      "Jiawen Zhang",
+      "Yidi Wu",
+      "Yuchen Li",
+      "Xiaokun Zhang",
+      "Wangchunshu Zhou",
+      "Chen Ma"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.30085v1",
+    "title": "Conformal Certification of Reasoning Trace Prefixes",
+    "authors": [
+      "Matt Y. Cheung",
+      "Ashok Veeraraghavan",
+      "Hanjie Chen",
+      "Guha Balakrishnan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "stat.ML"
+    ]
+  },
+  {
+    "paper_id": "2605.30080v1",
+    "title": "Adaptive Targeted Dynamic Chunking for Tokenization-Free Hierarchical Model",
+    "authors": [
+      "Thang Dang",
+      "Akira Nakagawa",
+      "Kenichi Kobayashi",
+      "Koichi Shirahata"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30076v1",
+    "title": "UniSteer: Text-Guided Flow Matching in Activation Space for Versatile LLM Steering",
+    "authors": [
+      "Yingdong Shi",
+      "Ruiming Zhang",
+      "Changming Li",
+      "Zhiyu Yang",
+      "Kaixing Zhang",
+      "Jingyi Yu",
+      "Kan Ren"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30058v1",
+    "title": "HEART-Bench: Do LLM Agents Exhibit Human-like Psychology?",
+    "authors": [
+      "Weihan Peng",
+      "Chenxu Zhang",
+      "Qianao Wang",
+      "Yuling Shi",
+      "Heng Lian",
+      "Qihong Mao",
+      "Jiahao Pang",
+      "Chunliang Feng",
+      "Bowen Li",
+      "Xiaodong Gu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30052v1",
+    "title": "REPOT: Recoverable Program-of-Thought via Checkpoint Repair",
+    "authors": [
+      "Parsa Mazaheri"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SE",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30051v1",
+    "title": "Who Am I? History-Aware Profiles for Student Simulation in Tutoring Dialogues",
+    "authors": [
+      "Zhangqi Duan",
+      "Shuyan Huang",
+      "Alexander Scarlatos",
+      "Jaewook Lee",
+      "Simon Woodhead",
+      "Andrew Lan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CY"
+    ]
+  },
+  {
+    "paper_id": "2605.30040v1",
+    "title": "Token Inflation: How Dishonest Providers Can Overcharge for Large Language Model Usage",
+    "authors": [
+      "Shahinul Hoque",
+      "Jinghuai Zhang",
+      "Jinyuan Sun",
+      "Fnu Suya"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30036v1",
+    "title": "Teaching Values to Machines: Simulating Human-Like Behavior in LLMs",
+    "authors": [
+      "Asaf Yehudai",
+      "Naama Rozen",
+      "Ariel Gera"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30031v1",
+    "title": "Audio Jailbreaks in Large Audio-Language Models: Taxonomy, Attack-Defense Analysis, and Cost-Aware Evaluation",
+    "authors": [
+      "Bo-Han Feng",
+      "Yu-Hsuan Li Liang",
+      "Chien-Feng Liu",
+      "You-Hsuan Chang",
+      "Yun-Nung Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SD",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30022v1",
+    "title": "Give it Space! Explicit Disentangling of Positional and Semantic Representations in Encoders",
+    "authors": [
+      "Pierre-Antoine Lequeu",
+      "Camille Barboule",
+      "Benjamin Piwowarski"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30021v1",
+    "title": "Recovering Diversity Without Losing Alignment: A DPO Recipe for Post-Trained LLMs",
+    "authors": [
+      "Vinay Samuel",
+      "Yapei Chang",
+      "Mohit Iyyer"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30018v1",
+    "title": "Latent Performance Profiling of Large Language Models",
+    "authors": [
+      "Tanmoy Chakraborty",
+      "Ayan Sengupta",
+      "Suparna Bhattacharya",
+      "Partha Pratim Chakrabarti",
+      "Amlan Chakrabarti",
+      "Supratik Chakraborty",
+      "Partha Pratim Das",
+      "Lipika Dey",
+      "Richa Singh",
+      "Mayank Vatsa"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29992v1",
+    "title": "Adapting Multilingual Embedding Models to Turkish via Cross-Lingual Tokenizer Surgery and Offline Distillation",
+    "authors": [
+      "M. Ali Bayram",
+      "Banu Diri",
+      "Savaş Yıldırım"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29987v1",
+    "title": "MIC: Maximizing Informational Capacity in Adaptive Representations via Isotropic Subspace Alignment",
+    "authors": [
+      "Dang Hong Nguyen",
+      "Nhi Ngoc-Yen Nguyen",
+      "Huy-Hieu Pham"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29971v1",
+    "title": "Causal Interventions on Continuous Variables: A Case Study on Verb Bias in Steering Vectors for In-Context Learning",
+    "authors": [
+      "Zhenghao Herbert Zhou",
+      "R. Thomas McCoy",
+      "Robert Frank"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29951v1",
+    "title": "MuPHI: Learning Implicit Multimodal Harm Reasoning via Semantically Grounded Reward Optimization",
+    "authors": [
+      "Anisha Saha",
+      "Varsha Suresh",
+      "Teodora Kamova",
+      "Sophia Wiedmann",
+      "Timothy Hospedales",
+      "Vera Demberg"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "cs.MM"
+    ]
+  },
+  {
+    "paper_id": "2605.29927v1",
+    "title": "Does The Way You Plan Matter? An Empirical Study of Planning Representations for LLM Web Agents",
+    "authors": [
+      "Alejandra Zambrano",
+      "Sara Vera Marjanovic",
+      "Imene Kerboua",
+      "Xing Han Lù",
+      "Leila Kosseim"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29897v1",
+    "title": "ExCAM: Explainable Cultural Awareness Metrics",
+    "authors": [
+      "Christoph Leiter",
+      "Haiyue Song",
+      "Hour Kaing",
+      "Jin Tei",
+      "Hideki Tanaka",
+      "Masao Utiyama",
+      "Steffen Eger"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29889v1",
+    "title": "Internal Representation, Not Clinical Knowledge: Where Apparent LLM Triage Failures Originate",
+    "authors": [
+      "David Fraile Navarro",
+      "Berardino Como",
+      "Jialei Sheng",
+      "Soundariya Ananthan",
+      "Shlomo Berkovsky"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29886v1",
+    "title": "CRITIC-R1: Learning Structured Critics for Retrieval-Augmented Generation",
+    "authors": [
+      "Wenhan Xiao",
+      "Ziwei Zhang",
+      "Chuanyue Yu",
+      "Xingcheng Fu",
+      "Qingyun Sun",
+      "Runhua Xu",
+      "Jianxin Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29861v1",
+    "title": "Towards Verifiable Multimodal Deep Research: A Multi-Agent Harness for Interleaved Report Generation",
+    "authors": [
+      "Chenghao Zhang",
+      "Guanting Dong",
+      "Yufan Liu",
+      "Tong Zhao",
+      "Zhicheng Dou"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29859v1",
+    "title": "MELD: Mel-Spectrogram-Based Speech Language Modeling with Discrete Latent Variables",
+    "authors": [
+      "Sung-Lin Yeh",
+      "Wei Zhou",
+      "Gil Keren",
+      "Duc Le",
+      "Zhong Meng",
+      "Hao Tang",
+      "Jay Mahadeokar",
+      "Ozlem Kalinli",
+      "Alexandre Mourachko"
+    ],
+    "year": 2026,
+    "categories": [
+      "eess.AS",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29847v1",
+    "title": "EvoRubric: Self-Evolving Rubric-Driven RL for Open-Ended Generation",
+    "authors": [
+      "Xin Guan",
+      "Xiaomeng Hu",
+      "Shen Huang",
+      "Zhenyi Wang",
+      "Bo Zhang",
+      "Zijian Li",
+      "Pengjun Xie",
+      "Bo Liu",
+      "Jiuxin Cao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29826v1",
+    "title": "Towards Localized and Disentangled Knowledge Editing for Multimodal Large Language Models",
+    "authors": [
+      "Leijiang Gu",
+      "Zhen Zeng",
+      "Feng Li",
+      "Xinjian Gao",
+      "Zenglin Shi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29815v1",
+    "title": "PRAIB: Peer Review AI Benchmark of Behaviour of LLM-Assisted Reviewing",
+    "authors": [
+      "Krzysztof Żurawicki",
+      "Julia Farganus",
+      "Arkadiusz Gaweł",
+      "Mateusz Bystroński",
+      "Tomasz Jan Kajdanowicz"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29807v1",
+    "title": "Data filtering methods for training language models",
+    "authors": [
+      "Egor Shevchenko",
+      "Elena Bruches"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29801v1",
+    "title": "AgentDoG 1.5: A Lightweight and Scalable Alignment Framework for AI Agent Safety and Security",
+    "authors": [
+      "Dongrui Liu",
+      "Yu Li",
+      "Zhonghao Yang",
+      "Peng Wang",
+      "Guanxu Chen",
+      "Yuejin Xie",
+      "Qinghua Mao",
+      "Wanying Qu",
+      "Yanxu Zhu",
+      "Tianyi Zhou",
+      "Leitao Yuan",
+      "Zhijie Zheng",
+      "Qihao Lin",
+      "Yimin Wang",
+      "Haoyu Luo",
+      "Shuai Shao",
+      "Chen Qian",
+      "Qingyu Liu",
+      "Ling Tang",
+      "Ruiyang Qin",
+      "Qihan Ren",
+      "Junxiao Yang",
+      "Kun Wang",
+      "Zhiheng Xi",
+      "Linfeng Zhang",
+      "Ranjie Duan",
+      "Bo Zhang",
+      "Wenjie Wang",
+      "Wen Shen",
+      "Qiaosheng Zhang",
+      "Yan Teng",
+      "Chaochao Lu",
+      "Rui Mei",
+      "Man Li",
+      "Jialing Tao",
+      "Xi Lin",
+      "Tianhang Zheng",
+      "Yong Liu",
+      "Quanshi Zhang",
+      "Lei Zhu",
+      "Xingjun Ma",
+      "Junhua Liu",
+      "Hui Xue",
+      "Xiaoxiang Zuo",
+      "Xiangnan He",
+      "Chao Shen",
+      "Xianglong Liu",
+      "Minlie Huang",
+      "Jing Shao",
+      "Xia Hu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.CR",
+      "cs.CV",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29800v1",
+    "title": "Nine Judges, Two Effective Votes: Correlated Errors Undermine LLM Evaluation Panels",
+    "authors": [
+      "Guneet Kohli"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29797v1",
+    "title": "Metric-Dependent Annotation Saturation for Learning from Label Distributions",
+    "authors": [
+      "Guneet Kohli"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29796v1",
+    "title": "SAAS: Self-Aware Reinforcement Learning for Over-Search Mitigation in Agentic Search",
+    "authors": [
+      "Yunbo Tang",
+      "Chengyi Yang",
+      "Shiyu Liu",
+      "Zhishang Xiang",
+      "Zerui Chen",
+      "Qinggang Zhang",
+      "Jinsong Su"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29791v1",
+    "title": "ActTraitBench: Quantifying the Knowledge-Decision Gap in Large Language Models via Human-Grounded Behavioral Validation",
+    "authors": [
+      "Yutong Yang",
+      "Chenxi Miao",
+      "Weikang Li",
+      "Yunfang Wu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29782v1",
+    "title": "Hista and Numca: Estimate State Value Effectively for LLM Reinforcement Learning",
+    "authors": [
+      "Zizhe Chen",
+      "Jiqian Dong",
+      "Yizhou Tian",
+      "Garry Yang",
+      "Yongqiang Chen",
+      "Zhitang Chen",
+      "James Cheng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29751v1",
+    "title": "DySem: Uncovering Dynamic Semantic Components via Multilingual Consensus for Calculating Semantic Textual Similarity",
+    "authors": [
+      "Kaijie Zheng",
+      "Weiqin Wang",
+      "Yile Wang",
+      "Hui Huang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29744v1",
+    "title": "Why Specialist Models Still Matter: A Heterogeneous Multi-Agent Paradigm for Medical Artificial Intelligence",
+    "authors": [
+      "Yanan Wang",
+      "Shuaicong Hu",
+      "Jian Liu",
+      "Guohui Zhou",
+      "Aiguo Wang",
+      "Cuiwei Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "cs.MA"
+    ]
+  },
+  {
+    "paper_id": "2605.29741v1",
+    "title": "AfriScience-MT: Towards Decolonizing Science in Africa through Text Translation",
+    "authors": [
+      "Idris Abdulmumin",
+      "Tajuddeen Gwadabe",
+      "Shamsuddeen Hassan Muhammad",
+      "David Ifeoluwa Adelani",
+      "Nomonde Khalo",
+      "Ibrahim Said Ahmad",
+      "Abiodun Modupe",
+      "Anina Mumm",
+      "Sibusiso Biyela",
+      "Michelle Rabie",
+      "Johanna Havemann",
+      "Marek Rei",
+      "Jade Abbott",
+      "Vukosi Marivate"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29738v1",
+    "title": "Multi-Legal-Bench: Evaluating LLMs on Legal Reasoning Across Jurisdictions, Languages, and Legal Traditions",
+    "authors": [
+      "Volodymyr Ovcharov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29737v1",
+    "title": "Minimal Prompt Perturbations Lead to Code Vulnerabilities: Prompt Fragility and Hidden-State Signals in Coding LLMs",
+    "authors": [
+      "Alexander Sternfeld",
+      "Andrei Kucharavy",
+      "Ljiljana Dolamic"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.CL",
+      "cs.SE"
+    ]
+  },
+  {
+    "paper_id": "2605.29734v1",
+    "title": "HTAM: Hierarchical Transition-Attended Memory for Operator Optimization",
+    "authors": [
+      "Yining Zhang",
+      "Mingyang Yi",
+      "Chen Wang",
+      "Xuwen Xiang",
+      "Tianhe Jia",
+      "Zedong Dan",
+      "Chengqing Zong",
+      "Yue Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29715v1",
+    "title": "User-Aware Active Knowledge Acquisition for Emotional Support Dialogue",
+    "authors": [
+      "Mufan Xu",
+      "Kehai Chen",
+      "Jiahao Hu",
+      "Xinchao Xu",
+      "Muyun Yang",
+      "Tiejun Zhao",
+      "Min Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29714v1",
+    "title": "Leveraging Routing Dynamics in Mixture-of-Experts Models for Efficient Language Adaptation",
+    "authors": [
+      "Aditi Khandelwal",
+      "Marius Mosbach",
+      "Verna Dankers",
+      "Siva Reddy",
+      "Golnoosh Farnadi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29712v1",
+    "title": "Teaching Language Models to Check Grounded Claim Factuality with Human Test-Taking Strategies",
+    "authors": [
+      "Yuxuan Ye",
+      "Raul Santos-Rodriguez",
+      "Edwin Simpson"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29711v1",
+    "title": "Personalized Turn-Level User Conversation Satisfaction Benchmark",
+    "authors": [
+      "Zhefan Wang",
+      "Zhiqiang Guo",
+      "Weizhi Ma",
+      "Min Zhang",
+      "Quanjia Yan",
+      "Hengliang Luo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29708v1",
+    "title": "Understanding Safety-Sensitive Expert Behavior in Mixture-of-Experts LLMs",
+    "authors": [
+      "Zhibo Zhang",
+      "Yuxi Li",
+      "Zhen Ouyang",
+      "Ling Shi",
+      "Kailong Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29707v1",
+    "title": "Domino: Decoupling Causal Modeling from Autoregressive Drafting in Speculative Decoding",
+    "authors": [
+      "Jianuo Huang",
+      "Yaojie Zhang",
+      "Qituan Zhang",
+      "Hao Lin",
+      "Hanlin Xu",
+      "Linfeng Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29682v1",
+    "title": "Scaling Laws for Agent Harnesses via Effective Feedback Compute",
+    "authors": [
+      "Xuanliang Zhang",
+      "Dingzirui Wang",
+      "Keyan Xu",
+      "Qingfu Zhu",
+      "Wanxiang Che"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29678v1",
+    "title": "Spurious Prompts: Can Irrelevant Prompts Steer Large Language Models?",
+    "authors": [
+      "Pawel Batorski",
+      "Abtin Pourhadi",
+      "Jerzy Sarosiek",
+      "Przemyslaw Spurek",
+      "Paul Swoboda"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29676v1",
+    "title": "Notation Matters: A Benchmark Study of Token-Optimized Formats in Agentic AI Systems",
+    "authors": [
+      "Lorenz Kutschka",
+      "Bernhard Geiger"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29670v1",
+    "title": "EviLink: Multi-Path Schema Linking with Uncertainty-Guided Evidence Acquisition for Large-Scale Text-to-SQL",
+    "authors": [
+      "Huawei Zheng",
+      "Sen Yang",
+      "Zhaorui Yang",
+      "Yuhui Zhang",
+      "Haozhe Feng",
+      "Haoxuan Li",
+      "Xuan Yi",
+      "Chao Hu",
+      "Defeng Xie",
+      "Chen Hou",
+      "Danqing Huang",
+      "Wei Chen",
+      "Yingcai Wu",
+      "Peng Chen",
+      "Dazhen Deng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29668v1",
+    "title": "GRASP: Gated Regression-Aware Skill Proposer for Self-Improving LLM Agents",
+    "authors": [
+      "Johannes Moll",
+      "Jean-Philippe Corbeil",
+      "Jiazhen Pan",
+      "Martin Hadamitzky",
+      "Daniel Rueckert",
+      "Lisa Adams",
+      "Keno Bressem"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29667v1",
+    "title": "Beyond English and Evasion: A Human-Annotated Multi-Domain Benchmark for High-Stakes LLM Safety Evaluation in Chinese",
+    "authors": [
+      "Wajdi Zaghouani",
+      "Kholoud K. Aldous",
+      "Yicheng Gao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29659v1",
+    "title": "Opir: Efficient Multi-Task Safety Classification for Toxicity, Jailbreaks, Hate Speech, and Harmful Content",
+    "authors": [
+      "Ihor Stepanov",
+      "Aleksandr Smechov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29648v1",
+    "title": "Verifiable Rewards Beyond Math and Code: Lightweight Corpus-Grounded Process Supervision for Factual Question Answering",
+    "authors": [
+      "Shicheng Fan",
+      "Haochang Hao",
+      "Dehai Min",
+      "Weihao Liu",
+      "Philip S. Yu",
+      "Lu Cheng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29638v1",
+    "title": "Classification of non-analyzable word types in web documents to implement an effective Korean e-learning system",
+    "authors": [
+      "Sang-Taek Park",
+      "Ae-Lim Ahn",
+      "Eric Laporte",
+      "Jee-Sun Nam"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29637v1",
+    "title": "Evaluating Cross-lingual Knowledge Consistency in Code-Mixed vis-a-vis Indian Languages using IndicKLAR",
+    "authors": [
+      "Debajyoti Mazumder",
+      "Divyansh Pathak",
+      "Prashant Kodali",
+      "Aditya Joshi",
+      "Akshay Agarwal",
+      "Jasabanta Patro"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29631v1",
+    "title": "Predicting Causal Effects from Natural Language Queries using Structured Representations",
+    "authors": [
+      "Giuliano Martinelli",
+      "Piriyakorn Piriyatamwong",
+      "Abelardo Carlos Martinez Lorenzo",
+      "Jasmin Baier",
+      "Riccardo Orlando",
+      "Satvik Garg",
+      "Sharif Kazemi",
+      "Linxi Wang",
+      "Arianna Legovini",
+      "Samuel Fraiberger"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29630v1",
+    "title": "Entity-Collision: A Stratified Protocol for Attributing Retrieval Lift in Agent Memory",
+    "authors": [
+      "Youwang Deng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.29628v1",
+    "title": "COMET: Concept Space Dissection of the Modality Gap in Audio-Text Multimodal Contrastive Embeddings",
+    "authors": [
+      "Yonggang Zhu",
+      "Liting Gao",
+      "Aidong Men",
+      "Wenwu Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SD",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG",
+      "eess.AS"
+    ]
+  },
+  {
+    "paper_id": "2605.29626v1",
+    "title": "DLM-SWAI: Steering Diffusion Language Models Before They Unmask",
+    "authors": [
+      "Hyeseon An",
+      "Yo-Sub Han"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29615v1",
+    "title": "DiffSpot: Can VLMs Spot Fine-Grained Visual Differences in Web Interfaces?",
+    "authors": [
+      "Linhao Zhang",
+      "Aiwei Liu",
+      "Yuan Liu",
+      "Xiao Zhou"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29612v1",
+    "title": "CONCAT: Consensus- and Confidence-Driven Ad Hoc Teaming for Efficient LLM-Based Multi-Agent Systems",
+    "authors": [
+      "Ziyang Ma",
+      "Dingyi Zhang",
+      "Sichu Liang",
+      "Jiajia Chu",
+      "Pengfei Xia",
+      "Hui Zang",
+      "Deyu Zhou"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.MA",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29601v1",
+    "title": "Training Deliberative Monitors for Black-Box Scheming Detection",
+    "authors": [
+      "Aditya Sinha",
+      "Akshat Naik",
+      "Victor Gillioz",
+      "Simon Storf",
+      "Kilian Merkelbach",
+      "Rich Barton-Cooper",
+      "Axel Højmark",
+      "Marius Hobbhahn"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29585v1",
+    "title": "World Models in Words: Auditing Physical State-Transition Commitments in Vision-Language Models",
+    "authors": [
+      "Emmanuelle Bourigault"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29584v1",
+    "title": "GAPD: Gold-Action Policy Distillation for Agentic Reinforcement Learning in Knowledge Base Question Answering",
+    "authors": [
+      "Xin Sun",
+      "Jianan Xie",
+      "Zhongqi Chen",
+      "Qiang Liu",
+      "Shu Wu",
+      "Bowen Song",
+      "Weiqiang Wang",
+      "Zilei Wang",
+      "Liang Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29582v1",
+    "title": "PEARL: Training Socratic Tutors with Pedagogically Aligned Reinforcement Learning",
+    "authors": [
+      "Qikai Chang",
+      "Zhenrong Zhang",
+      "Linbo Chen",
+      "Pengfei Hu",
+      "Jianshu Zhang",
+      "Youhui Guo",
+      "Jun Du"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29559v1",
+    "title": "LiteCoder-Terminal: Scaling Long-Horizon Terminal Environments for Learning Language Agents",
+    "authors": [
+      "Xiaoxuan Peng",
+      "Kaiqi Zhang",
+      "Xinyu Lu",
+      "Boxi Cao",
+      "Yaojie Lu",
+      "Hongyu Lin",
+      "Xianpei Han",
+      "Le Sun"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29555v1",
+    "title": "From Blind Guess to Informed Judgment: Teaching LLMs to Evaluate Materials by Building Knowledge-Augmented Preference Signals",
+    "authors": [
+      "Yeyong Yu",
+      "Wenya Hu",
+      "Xing Wu",
+      "Quan Qian"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29543v1",
+    "title": "SCOPE: A Lightweight-training LLM Framework for Air Traffic Control Readback Monitoring",
+    "authors": [
+      "Qihan Deng",
+      "Minghua Zhang",
+      "Yang Yang",
+      "Zhenyu Gao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL",
+      "cs.HC",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.29511v1",
+    "title": "DynaGraph: Lightweight Multi-Model Interaction Framework via Dynamic Topological Reconfiguration",
+    "authors": [
+      "Yanxing Guo",
+      "Zihao Zheng",
+      "Fangzhou Wu",
+      "Ling Liang",
+      "Lin Bao",
+      "Zongwei Wang",
+      "Yimao Cai"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.MA",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29502v1",
+    "title": "Source-Grounded Semantic Reinforcement Learning for Low-Resource Target-Language Generation",
+    "authors": [
+      "Zeli Su",
+      "Ziyin Zhang",
+      "Zewei Pan",
+      "Zhou Liu",
+      "Dingcheng Huang",
+      "Dehan Li",
+      "Zhankai Xu",
+      "Longfei Zheng",
+      "Xiaolu Zhang",
+      "Jun Zhou",
+      "Wentao Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29498v1",
+    "title": "Mask the Target: A Plug-and-Play Regularizer Against LoRA Forgetting",
+    "authors": [
+      "Runze Xu",
+      "Arpit Garg",
+      "Hemanth Saratchandran",
+      "Simon Lucey"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.29496v1",
+    "title": "On Asymmetric Optimization of Reasoning and Perception in Vision-Language Model Post-Training",
+    "authors": [
+      "Xueqing Wu",
+      "Yu-Chi Lin",
+      "Kai-Wei Chang",
+      "Nanyun Peng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.29486v1",
+    "title": "PhoneWorld: Scaling Phone-Use Agent Environments",
+    "authors": [
+      "Zhengyang Tang",
+      "Yuxuan Liu",
+      "Xin Lai",
+      "Junyi Li",
+      "Pengyuan Lyu",
+      "Jason",
+      "Yiduo Guo",
+      "Zhengyao Fang",
+      "Yang Ding",
+      "Yi Zhang",
+      "Weinong Wang",
+      "Huawen Shen",
+      "Xingran Zhou",
+      "Liang Wu",
+      "Fei Tang",
+      "Sunqi Fan",
+      "Shangpin Peng",
+      "Zheng Ruan",
+      "Anran Zhang",
+      "Benyou Wang",
+      "Rui Yan",
+      "Ji-Rong Wen",
+      "Chengquan Zhang",
+      "Han Hu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29476v1",
+    "title": "Comparative Evaluation of Machine Translation Systems on Images with Text",
+    "authors": [
+      "Blai Puchol",
+      "Sergio Gómez González",
+      "Miguel Domingo",
+      "Francisco Casacuberta"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29475v1",
+    "title": "MOOSE-Copilot: A Web-Based Interactive Assistant for Unified Exploratory and Fine-Grained Scientific Hypothesis Discovery",
+    "authors": [
+      "Hongran An",
+      "Zonglin Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CE",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.29473v1",
+    "title": "Inform, Coach, Relate, Listen: Auditing LLM Caregiving Support Roles",
+    "authors": [
+      "Drishti Goel",
+      "Agam Goyal",
+      "Veda Duddu",
+      "Olivia Pal",
+      "Jeongah Lee",
+      "Qiuyue Joy Zhong",
+      "Violeta J. Rodriguez",
+      "Daniel S. Brown",
+      "Dong Whi Yoo",
+      "Ravi Karkar",
+      "Koustuv Saha"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.HC",
+      "cs.AI",
+      "cs.CL",
+      "cs.CY",
+      "cs.SI"
+    ]
+  },
+  {
+    "paper_id": "2605.29459v1",
+    "title": "Kronecker Embeddings: Byte-Level Structured Token Representations for Parameter-Efficient Language Models",
+    "authors": [
+      "Rohan Shravan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29458v1",
+    "title": "Adaptive Interviewing for Persona Simulation in LLMs: Evidence-Grounded Reasoning Improves Decision Alignment",
+    "authors": [
+      "Ruoxi Su",
+      "Yuhan Liu",
+      "Jingyu Hu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29447v1",
+    "title": "Recovering Policy-Induced Errors: Benchmarking and Trajectory Synthesis for Robust GUI Agents",
+    "authors": [
+      "Tianpeng Bu",
+      "Xin Liu",
+      "Qihua Chen",
+      "Hao Jiang",
+      "Shurui Li",
+      "Hongtao Duan",
+      "Lu Jiang",
+      "Lulu Hu",
+      "Bin Yang",
+      "Minying Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29440v1",
+    "title": "SkillBrew: Multi-Objective Curation of Skill Banks for LLM Agents",
+    "authors": [
+      "Wentao Hu",
+      "Zhendong Chu",
+      "Yiming Zhang",
+      "Junda Wu",
+      "Ming Jin",
+      "Xiangyu Zhao",
+      "Yilei Shao",
+      "Yanfeng Wang",
+      "Qingsong Wen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.29434v1",
+    "title": "AliMark: Enhancing Robustness of Sentence-Level Watermarking Against Text Paraphrasing",
+    "authors": [
+      "Yuexin Li",
+      "Wenjie Qu",
+      "Linyu Wu",
+      "Yulin Chen",
+      "Yufei He",
+      "Tri Cao",
+      "Bryan Hooi",
+      "Jiaheng Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29430v1",
+    "title": "Towards Human-Like Interactive Speech Recognition With Agentic Correction and Semantic Evaluation",
+    "authors": [
+      "Zixuan Jiang",
+      "Yanqiao Zhu",
+      "Peng Wang",
+      "Qinyuan Chen",
+      "Xinjian Zhao",
+      "Xipeng Qiu",
+      "Wupeng Wang",
+      "Zhifu Gao",
+      "Xiangang Li",
+      "Kai Yu",
+      "Xie Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29427v1",
+    "title": "FinGuard: Detecting Financial Regulatory Non-Compliance in LLM Interactions",
+    "authors": [
+      "Huaixia Dou",
+      "Jie Zhu",
+      "Minghao Wu",
+      "Shuo Jiang",
+      "Junhui Li",
+      "Lifan Guo",
+      "Feng Chen",
+      "Chi Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29421v1",
+    "title": "Learning Design Skills as Memory Policies for Agentic Photonic Inverse Design",
+    "authors": [
+      "Shengchao Chen",
+      "Ting Shu",
+      "Sufen Ren"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29414v1",
+    "title": "Beyond Bilingual Transfer: Multilingual Code-Switching in Instruction Tuning",
+    "authors": [
+      "Shunta Asano",
+      "Jeonghun Baek",
+      "Toshihiko Yamasaki"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29400v1",
+    "title": "Architecture-Sensitive Supervised Fine-Tuning for Screen-Conditioned Action Prediction: A PiSAR Benchmark",
+    "authors": [
+      "Rahul Bissa",
+      "Abhishek Vyas",
+      "Yash Jain"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.29397v1",
+    "title": "Revisiting Observation Reduction for Web Agents: Comprehensive Evaluation with a Lightweight Framework",
+    "authors": [
+      "Masafumi Enomoto",
+      "Ryoma Obara",
+      "Haochen Zhang",
+      "Masafumi Oyamada"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29392v1",
+    "title": "Offloading Score: Measuring AI Reliance Through Counterfactual Workflows",
+    "authors": [
+      "Vishakh Padmakumar",
+      "Lujain Ibrahim",
+      "Zora Zhiruo Wang",
+      "Jennifer Wang",
+      "Q. Vera Liao",
+      "Diyi Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SE",
+      "cs.CL",
+      "cs.CY",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.29384v1",
+    "title": "Latent Terms: Dense Retrievers Contain Trivially Extractable BM25-ready Zipfian Vocabularies",
+    "authors": [
+      "Benjamin Clavié",
+      "Sean Lee",
+      "Aamir Shakir",
+      "Makoto P. Kato"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.IR",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29379v1",
+    "title": "BrahmicTokenizer-131K: An Indic-Capable Drop-In Replacement for o200k_base",
+    "authors": [
+      "Rohan Shravan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29368v1",
+    "title": "SURGENT: A Surgical Multi-Agent Assistance System Across the Perioperative Workflow",
+    "authors": [
+      "Dongsheng Shi",
+      "Yue Li",
+      "Xin Yi",
+      "Yongyi Cui",
+      "Huawei Feng",
+      "Linlin Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29367v1",
+    "title": "Attention Asymmetry in AI Layoff Discourse on X: A Computational Analysis of Capital vs Labour Amplification",
+    "authors": [
+      "Joy Bose"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CY",
+      "cs.SI"
+    ]
+  },
+  {
+    "paper_id": "2605.29365v1",
+    "title": "Casual as an Anchor: Resolving Supervision Misalignment in Formality Transfer Dataset",
+    "authors": [
+      "Hyojeong Yu",
+      "Hyukhun Koh",
+      "Minsung Kim",
+      "Kyomin Jung"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29343v1",
+    "title": "Draft-OPD: On-Policy Distillation for Speculative Draft Models",
+    "authors": [
+      "Haodi Lei",
+      "Yafy Li",
+      "Haoran Zhang",
+      "Shunkai Zhang",
+      "Qianjia Cheng",
+      "Xiaoye Qu",
+      "Ganqu Cui",
+      "Bowen Zhou",
+      "Ning Ding",
+      "Yun Luo",
+      "Yu Cheng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29341v1",
+    "title": "WorldMemArena: Evaluating Multimodal Agent Memory Through Action-World Interaction",
+    "authors": [
+      "Chengzhi Liu",
+      "Yuzhe Yang",
+      "Sophia Xiao Pu",
+      "Yepeng Liu",
+      "Lin Long",
+      "Yichen Guo",
+      "Nuo Chen",
+      "Zhaotian Weng",
+      "Elena Kochkina",
+      "Simerjot Kaur",
+      "Charese Smiley",
+      "Xiaomo Liu",
+      "James Zou",
+      "Sheng Liu",
+      "Yuheng Bu",
+      "Songyou Peng",
+      "Xin Eric Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29340v1",
+    "title": "A Study on Question-Answer Dataset for LLM Safety Evaluation with a Focus on Illegal Activities",
+    "authors": [
+      "Kenji Imamura",
+      "Masao Ideuchi",
+      "Atsushi Fujita"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29336v1",
+    "title": "Enhancing Factuality through Consensus and Consistency in Summarization Using Minimum Bayes Risk Decoding",
+    "authors": [
+      "Riza Setiawan Soetedjo",
+      "Yusuke Sakai",
+      "Hidetaka Kamigaito",
+      "Jingun Kwon",
+      "Manabu Okumura",
+      "Taro Watanabe"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29327v1",
+    "title": "Reasoning-preserved Efficient Distillation of Large Language Models via Activation-aware Initialization",
+    "authors": [
+      "Junlin He",
+      "Yihong Tang",
+      "Tong Nie",
+      "Guilong Li",
+      "Binyu Yang",
+      "Jinxiao Du",
+      "Lijun Sun",
+      "Wei Ma"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29324v1",
+    "title": "STAMP: Training Explicit Memory for Mobile GUI Agents in Controllable and Scalable Virtual Environments",
+    "authors": [
+      "Junyang Wang",
+      "Haiyang Xu",
+      "Xi Zhang",
+      "Zhaoqing Zhu",
+      "Ming Yan",
+      "Jieping Ye",
+      "Jitao Sang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.29319v1",
+    "title": "Rethinking Stepwise Model Routing: A Cost-Efficient Table Reasoning Perspective",
+    "authors": [
+      "Shenghao Ye",
+      "Yuxiang Wang",
+      "Yu Guo",
+      "Dong Jin",
+      "Shuangwu Chen",
+      "Jian Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29317v1",
+    "title": "FoRA: Fisher-orthogonal Rank Adaptation for Parameter-Efficient Fine-Tuning",
+    "authors": [
+      "Juneyoung Park",
+      "Seongbae Lee",
+      "Han-Sang Lee",
+      "Kyuho Lee",
+      "Minjae Kim",
+      "Seungheon Hyeon",
+      "Kiduk Kwon",
+      "Seongwan Kim",
+      "Jaeho Lee"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29313v1",
+    "title": "PatchBoard: Schema-Grounded State Mutation for Reliable and Auditable LLM Multi-Agent Collaboration",
+    "authors": [
+      "Shuyu Zhang",
+      "Yaqi Shi",
+      "Lu Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29310v1",
+    "title": "Rubric-Guided Process Reward for Stepwise Model Routing",
+    "authors": [
+      "Shenghao Ye",
+      "Yu Guo",
+      "Zhengheng Li",
+      "Shuangwu Chen",
+      "Jian Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29307v1",
+    "title": "GrepSeek: Training Search Agents for Direct Corpus Interaction",
+    "authors": [
+      "Alireza Salemi",
+      "Chang Zeng",
+      "Atharva Nijasure",
+      "Jui-Hui Chung",
+      "Razieh Rahimi",
+      "Fernando Diaz",
+      "Hamed Zamani"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.IR",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29300v1",
+    "title": "MusTBENCH: Benchmarking and Advancing Temporal Grounding in Music LLMs",
+    "authors": [
+      "Daeyong Kwon",
+      "Qiyu Wu",
+      "Shinobu Kuriya",
+      "Junghyun Koo",
+      "Shuyang Cui",
+      "Zhi Zhong",
+      "Wei-Hsiang Liao",
+      "Hiromi Wakaki",
+      "Yuki Mitsufuji"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.SD"
+    ]
+  },
+  {
+    "paper_id": "2605.29278v1",
+    "title": "Accommodation Goes Both Ways: Studying Linguistic Convergence Between Humans and Language Models",
+    "authors": [
+      "Terra Blevins"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29275v1",
+    "title": "Prompt-Level Reward Specifications for Open-Ended Post-Training",
+    "authors": [
+      "Zijun Weng",
+      "Xiaohui Hu",
+      "Shuangyong Song",
+      "Yongxiang Li",
+      "Kaidong Yu",
+      "Xuanjing Huang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29274v1",
+    "title": "Learnable Assessment Skills for LLM-based Automated Scoring: Rubric Construction via Iterative Optimization",
+    "authors": [
+      "Yun Wang",
+      "Xin Xia",
+      "Xuansheng Wu",
+      "Xiaoming Zhai",
+      "Ninghao Liu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.29268v1",
+    "title": "Compute Allocation in Evolutionary Search: From Depth-Breadth to Multi-Armed Bandits",
+    "authors": [
+      "Sixue Xing",
+      "Haoyu He",
+      "Kerui Wu",
+      "Zhuo Yang",
+      "Haozheng Luo",
+      "Tianfan Fu",
+      "Aarthy Nagarajan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG",
+      "cs.NE"
+    ]
+  },
+  {
+    "paper_id": "2605.29256v1",
+    "title": "DynSess: Dynamic Session-Level Evaluation and Optimization Framework for Role-Playing Agents",
+    "authors": [
+      "Rongsheng Zhang",
+      "Jiji Tang",
+      "Junnan Ren",
+      "Zuyi Bao",
+      "Weijie Chen",
+      "Ruofan Hu",
+      "Zhou Zhao",
+      "Tangjie Lv",
+      "Yan Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.29250v1",
+    "title": "OmniRetrieval: Unified Retrieval across Heterogeneous Knowledge Sources",
+    "authors": [
+      "Jinheon Baek",
+      "Soyeong Jeong",
+      "Sangwoo Park",
+      "Woongyeong Yeo",
+      "Minki Kang",
+      "Patara Trirat",
+      "Heejun Lee",
+      "Sung Ju Hwang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.IR",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29247v1",
+    "title": "DenseSteer: Steering Small Language Models towards Dense Math Reasoning",
+    "authors": [
+      "Yang Ouyang",
+      "Shuhang Lin",
+      "Jung-Eun Kim"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29245v1",
+    "title": "Implicit Identity Technologies for LLMs: Fingerprinting and Watermarking across Datasets, Models, and Generated Content",
+    "authors": [
+      "Bing Liu",
+      "Shunping Wang",
+      "Yufan Zhu",
+      "Xinyi Yu",
+      "Jing Huang",
+      "Linkang Du",
+      "Hongbin Pei",
+      "Wei Luo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.29243v1",
+    "title": "Wait! There's a Way Out: A Decision Mechanism for Forecasting Conversational Derailment",
+    "authors": [
+      "Laerdon Kim",
+      "Vivian Nguyen",
+      "Cristian Danescu-Niculescu-Mizil"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CY"
+    ]
+  },
+  {
+    "paper_id": "2605.29240v1",
+    "title": "Surfacing Isolated Learners with Outcome-Independent Mediation of Feedback between Teachers and Students Using AI",
+    "authors": [
+      "Junsoo Park",
+      "Youssef Medhat",
+      "Htet Phyo Wai",
+      "Ploy Thajchayapong",
+      "Ashok K. Goel"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.HC",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.29224v1",
+    "title": "Relevance as a Vulnerability: How Web Retrieval Degrades Safety Alignment in LLM Agents",
+    "authors": [
+      "Aditya Nawal",
+      "Manit Baser",
+      "Mohan Gurusamy"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CR"
+    ]
+  },
+  {
+    "paper_id": "2605.29218v1",
+    "title": "GTA: Generating Long-Horizon Tasks for Web Agents at Scale",
+    "authors": [
+      "Tenghao Huang",
+      "Kung-Hsiang Huang",
+      "Prafulla Kumar Choubey",
+      "Yilun Zhou",
+      "Muhao Chen",
+      "Jonathan May",
+      "Chien-Sheng Wu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31586v1",
+    "title": "Language Models Learn Constructional Semantics, Not To Mention Syntax: Investigating LM Understanding of Paired-Focus Constructions",
+    "authors": [
+      "Wesley Scivetti",
+      "Ethan Wilcox",
+      "Nathan Schneider",
+      "Kanishka Misra",
+      "Leonie Weissweiler"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31584v1",
+    "title": "LongTraceRL: Learning Long-Context Reasoning from Search Agent Trajectories with Rubric Rewards",
+    "authors": [
+      "Nianyi Lin",
+      "Jiajie Zhang",
+      "Lei Hou",
+      "Juanzi Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31564v1",
+    "title": "What Gets Unmasked First? Trajectory Analysis of Diffusion Models for Graph-to-Text Generation",
+    "authors": [
+      "Qing Wang",
+      "Jacob Devasier",
+      "Chengkai Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31563v1",
+    "title": "Disagreeing Rationales: Rethinking Classification and Explainability Evaluation in Hate Speech Detection",
+    "authors": [
+      "Benedetta Muscato",
+      "Beiduo Chen",
+      "Gizem Gezici",
+      "Barbara Plank",
+      "Fosca Giannotti"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31561v1",
+    "title": "What Am I Missing? Question-Answering as Hidden State Probing",
+    "authors": [
+      "Chu Fei Luo",
+      "Samuel Dahan",
+      "Xiaodan Zhu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31556v1",
+    "title": "Vision-Language Models Suppress Female Representations Under Ambiguous Input",
+    "authors": [
+      "Arnau Marin-Llobet",
+      "Simon Henniger",
+      "Mahzarin R. Banaji"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL",
+      "cs.CY",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.31550v1",
+    "title": "Semantic Triplet Restoration: A Novel Protocol for Hierarchical Table Understanding in Large Language Models",
+    "authors": [
+      "Yibin Zhao",
+      "Fangxin Shang",
+      "Dingrui Yang",
+      "Yuqi Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31545v1",
+    "title": "Preference-Aware Rubric Learning for Personalized Evaluation",
+    "authors": [
+      "Yilun Qiu",
+      "Xiaoyan Zhao",
+      "Yang Zhang",
+      "Yuxin Chen",
+      "Cilin Yan",
+      "Jiayin Cai",
+      "Xiaolong Jiang",
+      "Yao Hu",
+      "Yoko Yamakata",
+      "Tat-Seng Chua"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31521v1",
+    "title": "UniAudio-Token: Empowering Semantic Speech Tokenizers with General Audio Perception",
+    "authors": [
+      "Yuhan Song",
+      "Linhao Zhang",
+      "Aiwei Liu",
+      "Chuhan Wu",
+      "Sijun Zhang",
+      "Wei Jia",
+      "Yuan Liu",
+      "Houfeng Wang",
+      "Xiao Zhou"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.SD"
+    ]
+  },
+  {
+    "paper_id": "2605.31514v1",
+    "title": "If LLMs Have Human-Like Attributes, Then So Does Age of Empires II",
+    "authors": [
+      "Adrian de Wynter"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CY"
+    ]
+  },
+  {
+    "paper_id": "2605.31512v1",
+    "title": "Reliable Multilingual Orthopedic Decision Support from Clinical Narratives: Language-Aware Adaptation and Verification-Guided Deferral",
+    "authors": [
+      "Danish Ali",
+      "Li Xiaojian",
+      "Sundas Iqbal",
+      "Farrukh Zaidi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31506v1",
+    "title": "Evaluating Factual Density in Multi-Source RAG: A Study in Medical AI Accuracy",
+    "authors": [
+      "Michael R. DeMarco"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.IR",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31494v1",
+    "title": "Consolidating Rewarded Perturbations for LLM Post-Training",
+    "authors": [
+      "Zheyu Zhang",
+      "Shuo Yang",
+      "Gjergji Kasneci"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31490v1",
+    "title": "Are Full Rollouts Necessary for On-Policy Distillation?",
+    "authors": [
+      "Yaocheng Zhang",
+      "Jiajun Chai",
+      "Songjun Tu",
+      "Yuqian Fu",
+      "Xiaohan Wang",
+      "Wei Lin",
+      "Guojun Yin",
+      "Qichao Zhang",
+      "Yuanheng Zhu",
+      "Dongbin Zhao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31483v1",
+    "title": "BenHalluEval: A Multi-Task Hallucination Evaluation Framework for Large Language Models on Bengali",
+    "authors": [
+      "Shefayat E Shams Adib",
+      "Ahmed Alfey Sani",
+      "Ekramul Alam Esham",
+      "Ajwad Abrar",
+      "Ishmam Tashdeed",
+      "Md Taukir Azam Chowdhury"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31480v1",
+    "title": "Language Models Can Resolve Reference Compositionally, But It's Not Their Native Strength: The Case of the Personal Relation Task",
+    "authors": [
+      "Bart Evelo",
+      "Meaghan Fowlie",
+      "Denis Paperno"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31478v1",
+    "title": "Knowledge Boundary Probing and Demand-Guided Intervention for LLM-Based Power System Code Generation",
+    "authors": [
+      "Hui Wu",
+      "Xiaoyang Wang",
+      "Zhong Fan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SE",
+      "cs.CL",
+      "eess.SY"
+    ]
+  },
+  {
+    "paper_id": "2605.31469v1",
+    "title": "Scaling Conversational Hungarian ASR: The BEA-Dialogue+ Corpus",
+    "authors": [
+      "Máté Gedeon",
+      "Piroska Zsófia Barta",
+      "Péter Mihajlik",
+      "Katalin Mády"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.SD",
+      "eess.AS"
+    ]
+  },
+  {
+    "paper_id": "2605.31463v1",
+    "title": "PithTrain: A Compact and Agent-Native MoE Training System",
+    "authors": [
+      "Ruihang Lai",
+      "Hao Kang",
+      "Haozhan Tang",
+      "Akaash R. Parthasarathy",
+      "Zichun Yu",
+      "Junru Shao",
+      "Todd C. Mowry",
+      "Chenyan Xiong",
+      "Tianqi Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL",
+      "cs.DC"
+    ]
+  },
+  {
+    "paper_id": "2605.31455v1",
+    "title": "DRIFT: Decoupled Rollouts and Importance-Weighted Fine-Tuning for Efficient Multi-Turn Optimization",
+    "authors": [
+      "Jian Mu",
+      "Tianyi Lin",
+      "Chengwei Qin",
+      "Zhongxiang Dai",
+      "Yao Shu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31452v1",
+    "title": "Translation Analytics for Freelancers II: Benchmarking Local LLMs for Confidential Translation Workflows",
+    "authors": [
+      "Yuri Balashov",
+      "Rex VanHorn",
+      "Mingxi Xu",
+      "Austin Downes"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.31446v1",
+    "title": "Fine-grained Verification via Diagnostic Reasoning Supervision for Aspect Sentiment Triplet Extraction",
+    "authors": [
+      "Wenna Lai",
+      "Haoran Xie",
+      "Guandong Xu",
+      "Qing Li",
+      "S. Joe Qin"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31445v1",
+    "title": "Used Car Salesbots? Honesty and Credulity of LLMs as Bargaining Agents under Partial Information",
+    "authors": [
+      "Antonio Valerio Miceli-Barone",
+      "Vaishak Belle",
+      "Shay B. Cohen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.GT",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31433v1",
+    "title": "SCOPE: Self-Play via Co-Evolving Policies for Open-Ended Tasks",
+    "authors": [
+      "Wai-Chung Kwan",
+      "Aryo Pradipta Gema",
+      "Joshua Ong Jun Leang",
+      "Pasquale Minervini"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31432v1",
+    "title": "DOA: Training-Free Decoder-Only Attention Policy for Long-Form Simultaneous Translation with SpeechLLMs",
+    "authors": [
+      "Sara Papi",
+      "Luisa Bentivogli"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.SD"
+    ]
+  },
+  {
+    "paper_id": "2605.31421v1",
+    "title": "Neuro-symbolic Syntactic Parsing: Shaping a Neural Network with the CYK Algorithm",
+    "authors": [
+      "Fabio Massimo Zanzotto",
+      "Federico Ranaldi",
+      "Giorgio Satta"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.DS"
+    ]
+  },
+  {
+    "paper_id": "2605.31408v1",
+    "title": "Skill Availability and Presentation Granularity in Large-Language-Model Agents: A Controlled SkillsBench Study",
+    "authors": [
+      "Xiaonan Xu",
+      "Wenjing Wu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31404v1",
+    "title": "The Sword, Shield, and Achilles' Heel: Characterizing the Linguistic Inductive Bias of Large Language Models for Spatial Reasoning in Navigation Planning",
+    "authors": [
+      "Xudong Zhang",
+      "Jian Yang",
+      "Shengkai Wang",
+      "Jiangpeng Tian",
+      "Shaowen Chen",
+      "Xian Wei",
+      "Ke Li",
+      "Xiong You"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31401v1",
+    "title": "\"Intelegi Româneşte?'' A Recipe for Romanian Vision-Language Models",
+    "authors": [
+      "Mihai Masala",
+      "Marius Leordeanu",
+      "Mihai Dascalu",
+      "Traian Rebedea"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31393v1",
+    "title": "Target-Side Paraphrase Augmentation for Sign Language Translation with Large Language Models",
+    "authors": [
+      "Pedro Dal Bianco",
+      "Jean Paul Nunes Reinhold",
+      "Oscar Stanchi",
+      "Facundo Quiroga",
+      "Franco Ronchetti",
+      "Ulisses Brisolara Corrêa"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31387v1",
+    "title": "Multi-Turn Multi-Agent Dialogue for Collaborative Reconstruction Improves VLM Performance on Spatial Reasoning, But Only Barely",
+    "authors": [
+      "Chalamalasetti Kranti",
+      "Sherzod Hakimov",
+      "David Schlangen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.RO"
+    ]
+  },
+  {
+    "paper_id": "2605.31381v1",
+    "title": "LLM Judges Inconsistently Disagree Across Safety Criteria and Harm Categories",
+    "authors": [
+      "Krishnapriya Vishnubhotla",
+      "Soumya Vajjala",
+      "Akriti Vij",
+      "Isar Nejadgholi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31378v1",
+    "title": "Unlocking Fine-Grained Translation Quality Estimation in LRMs through Synergistically Evolving Implicit and Explicit Reasoning",
+    "authors": [
+      "Renfei Dang",
+      "Xinye Wang",
+      "Zhejian Lai",
+      "Weilu Xu",
+      "Shimin Tao",
+      "Daimeng Wei",
+      "Min Zhang",
+      "Shujian Huang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31367v1",
+    "title": "Trading Complexity for Expressivity Through Structured Generalized Linear Token Mixing",
+    "authors": [
+      "Erwan Fagnou",
+      "Paul Caillon",
+      "Blaise Delattre",
+      "Alexandre Allauzen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31363v1",
+    "title": "The Latin Substrate: How Language Models Represent and Mediate Script Choice",
+    "authors": [
+      "Daniil Gurgurov",
+      "Alan Saji",
+      "Katharina Trinley",
+      "Josef van Genabith",
+      "Simon Ostermann"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31351v1",
+    "title": "A Visually Impaired Assistance Benchmark for VLM-as-a-Judge Evaluation",
+    "authors": [
+      "Yi Zhao",
+      "Siqi Wang",
+      "Zhe Hu",
+      "Yushi Li",
+      "Jing Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.CV"
+    ]
+  },
+  {
+    "paper_id": "2605.31349v1",
+    "title": "FBHM: Functional Benchmarking and Steering of VLMs for Hateful Meme Detection",
+    "authors": [
+      "Paramananda Bhaskar",
+      "Naquee Rizwan",
+      "Daksh Jogchand",
+      "Saurabh Kumar Pandey",
+      "Animesh Mukherjee"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CV",
+      "cs.MM"
+    ]
+  },
+  {
+    "paper_id": "2605.31338v1",
+    "title": "Bundesrecht: An Open Library and Corpus for German Statutory Reference Processing",
+    "authors": [
+      "Harshil Darji",
+      "Martin Heckelmann",
+      "Christina Kratsch",
+      "Gerard de Melo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31328v1",
+    "title": "Reinforcement Learning Amplifies Emergent Misalignment from Harmless Rewards",
+    "authors": [
+      "Magnus Jørgenvåg",
+      "David Kaczér",
+      "Lasse Ruttert",
+      "Marvin Gülhan",
+      "Lucie Flek",
+      "Florian Mai"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31312v1",
+    "title": "Learning from Fine-Grained Visual Discrepancies: Mitigating Multimodal Hallucinations via In-Context Visual Contrastive Optimization",
+    "authors": [
+      "Haolin Deng",
+      "Xin Zou",
+      "Zhiwei Jin",
+      "Chen Chen",
+      "Haonan Lu",
+      "Xuming Hu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31293v1",
+    "title": "Divergence Decoding: Inference-Time Unlearning via Auxiliary Models",
+    "authors": [
+      "Humzah Merchant",
+      "Bradford Levy"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31281v1",
+    "title": "Wind Turbine Maintenance Log Labelling Framework: LLM-Driven Data Correction and Enrichment via Semantic Extraction of Reliability Intelligence",
+    "authors": [
+      "Max Malyi",
+      "Jonathan Shek",
+      "Alasdair McDonald",
+      "Andre Biscaya"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31268v1",
+    "title": "Mellum2 Technical Report",
+    "authors": [
+      "Marko Kojic",
+      "Ivan Bondyrev",
+      "Aral de Moor",
+      "Joseph Shtok",
+      "Petr Borovlev",
+      "Kseniia Lysaniuk",
+      "Madeeswaran Kannan",
+      "Ivan Dolgov",
+      "Nikita Pavlichenko"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31264v1",
+    "title": "COLLEAGUE.SKILL: Automated AI Skill Generation via Expert Knowledge Distillation",
+    "authors": [
+      "Tianyi Zhou",
+      "Dongrui Liu",
+      "Leitao Yuan",
+      "Jing Shao",
+      "Xia Hu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31238v1",
+    "title": "Scaling Multi-Hop Training Data via Graph-Constrained Path Selection",
+    "authors": [
+      "Pengyu Chen",
+      "Yonggang Zhang",
+      "Mingming Chen",
+      "Jun Song",
+      "Wei Xue",
+      "Yike Guo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31220v1",
+    "title": "Shared Doubt: Zero-shot Cross-Lingual Confidence Estimation for Language Models",
+    "authors": [
+      "Athina Kyriakou",
+      "Dennis Ulmer",
+      "Ivan Titov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31212v1",
+    "title": "Benchmarking and Enhancing Text-to-Image Models for Generating Visual Representations in Early Arithmetic Education",
+    "authors": [
+      "Junling Wang",
+      "Boqi Chen",
+      "Heejin Do",
+      "Mubashara Akhtar",
+      "April Yi Wang",
+      "Mrinmaya Sachan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31201v1",
+    "title": "Learning Whom to Trust: Market-Feedback Adaptive Retrieval for Frozen LLMs in Event-Driven Financial RAG",
+    "authors": [
+      "Zijie Zhao",
+      "Roy E. Welsch"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31196v1",
+    "title": "Probing Collision Grounding in Vision-Language Models for Safe Human-Robot Collaboration",
+    "authors": [
+      "Jun Wang",
+      "Xiaohao Xu",
+      "Xiaonan Huang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL",
+      "cs.RO"
+    ]
+  },
+  {
+    "paper_id": "2605.31183v1",
+    "title": "Steering LLMs? Actually, Sparse Autoencoders can outperform simple baselines",
+    "authors": [
+      "Mikkel Godsk Jørgensen",
+      "Lars Kai Hansen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31175v1",
+    "title": "Towards Efficient LLMs Annealing with Principled Sample Selection",
+    "authors": [
+      "Yuanjian Xu",
+      "Jianing Hao",
+      "Wanbo Zhang",
+      "Zhong Li",
+      "Guang Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31170v1",
+    "title": "Emergent Languages in Populations of Language Model Agents: From Token Efficiency to Oversight Evasion",
+    "authors": [
+      "Stine Lyngsø Beltoft",
+      "William Brach",
+      "Federico Torrielli",
+      "Jacob Nielsen",
+      "Annemette Brok Pirchert",
+      "Filippo Tonini",
+      "Peter Schneider-Kamp",
+      "Lukas Galke Poech"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31164v1",
+    "title": "D$^3$: Dynamic Directional Graph-Constrained Data Scheduling for LLM Training",
+    "authors": [
+      "Yuanjian Xu",
+      "Jianing Hao",
+      "Guang Zhang",
+      "Zhong Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31148v1",
+    "title": "SpatialAct: Probing Spatial Reasoning-to-Action Capabilities of VLM Agents in 3D Scenes",
+    "authors": [
+      "Tianhui Liu",
+      "Jie Feng",
+      "Zhiheng Zheng",
+      "Shengyuan Wang",
+      "Yiming Guo",
+      "Yanxin Xi",
+      "Hangyu Fan",
+      "Yong Li",
+      "Pan Hui"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31142v1",
+    "title": "On the Robustness of Multilingual Text Embedding Rankings Across Learning Tasks, Languages, and Benchmark Datasets",
+    "authors": [
+      "Ana Gjorgjevikj",
+      "Barbara Koroušić Seljak",
+      "Tome Eftimov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31140v1",
+    "title": "EvoDefense: Co-Evolving Black-Box Defense with Large Language Models",
+    "authors": [
+      "Yu Li",
+      "Yuenan Hou",
+      "Yingmei Wei",
+      "Yanming Guo",
+      "Chaochao Lu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31136v1",
+    "title": "Multilingual and Cross-Lingual Citation Needed Detection on Wikipedia for Lower-Resource Languages",
+    "authors": [
+      "Gerrit Quaremba",
+      "Amy Rechkemmer",
+      "Elizabeth Black",
+      "Denny Vrandečić",
+      "Elena Simperl"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31126v1",
+    "title": "Not All Synthetic Data Is Yours to Learn From",
+    "authors": [
+      "Sina Alemohammad",
+      "Li Chen",
+      "Richard G. Baraniuk",
+      "Zhangyang Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31113v1",
+    "title": "TSM-Bench: Detecting LLM-Generated Text in Real-World Wikipedia Editing Practices",
+    "authors": [
+      "Gerrit Quaremba",
+      "Elizabeth Black",
+      "Denny Vrandečić",
+      "Elena Simperl"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31105v1",
+    "title": "GRKV: Global Regression for Training-Free KV Cache Compression in Long-Context LLMs",
+    "authors": [
+      "Junjie Peng",
+      "You Wu",
+      "Haoyi Wu",
+      "Jialong Han",
+      "Xiaohua Xie",
+      "Kewei Tu",
+      "Jianhuang Lai"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31099v1",
+    "title": "KnowledgeGain: Evaluating and Optimizing Science News Generation for Reader Learning",
+    "authors": [
+      "Dominik Soós",
+      "Meng Jiang",
+      "Jian Wu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.31086v1",
+    "title": "Beyond Static Dialogues: Benchmarking Realistic, Heterogeneous, and Evolving Long-Term Memory",
+    "authors": [
+      "Han Zhang",
+      "Zihao Tang",
+      "Xin Yu",
+      "Xiao Liu",
+      "Yeyun Gong",
+      "Haizhen Huang",
+      "Yan Lu",
+      "Weiwei Deng",
+      "Feng Sun",
+      "Qi Zhang",
+      "Hanfang Yang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.31080v1",
+    "title": "A Pilot Study on Curator-Guided Multilingual Art Description for Blind and Low-Vision Audiences with Small Vision-Language Models",
+    "authors": [
+      "Iosif Tsangko",
+      "Andreas Triantafyllopoulos",
+      "George Margetis",
+      "Ioana Crihana",
+      "Björn W. Schuller"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.MM",
+      "cs.AI",
+      "cs.CL",
+      "cs.CV",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.31073v1",
+    "title": "ConsisGuard: Aligning Safety Deliberation with Policy Enforcement in LLM Guardrails",
+    "authors": [
+      "Yan Wang",
+      "Zhixuan Chu",
+      "Zihao Xue",
+      "Zhen Bi",
+      "Bingyu Zhu",
+      "YueFeng Chen",
+      "Zeyu Yang",
+      "Jungang Lou",
+      "Longtao Huang",
+      "Ningyu Zhang",
+      "Kui Ren",
+      "Hui Xue"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31069v1",
+    "title": "Towards Effective Long-Video Event Prediction via Multi-Level Event Semantics Mining",
+    "authors": [
+      "Bo Peng",
+      "YuanJie Lyu",
+      "PengGang Qin",
+      "Tong Xu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31062v1",
+    "title": "AdaptR1: Reinforcement Learning Based Adaptive Interleaved Thinking in Multi-hop Question Answering",
+    "authors": [
+      "Yuxin Wang",
+      "Jiahao Lu",
+      "Qifeng Wu",
+      "Shicheng Fang",
+      "Chuanyuan Tan",
+      "Yining Zheng",
+      "Xuanjing Huang",
+      "Xipeng Qiu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31058v1",
+    "title": "Combinatorial Synthesis: Scaling Code RLVR via Atomic Decomposition and Recombination",
+    "authors": [
+      "Jiasheng Zheng",
+      "Boxi Cao",
+      "Boxi Yu",
+      "Yuzhong Zhang",
+      "Jialun Cao",
+      "Yaojie Lu",
+      "Hongyu Lin",
+      "Xianpei Han",
+      "Le Sun"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.SE"
+    ]
+  },
+  {
+    "paper_id": "2605.31056v1",
+    "title": "How Much Do LLMs Know About Chinese Zero Pronouns?",
+    "authors": [
+      "Yifei Li",
+      "Guanyi Chen",
+      "Tingting He"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31042v1",
+    "title": "From Prompt Injection to Persistent Control: Defending Agentic Harness Against Trojan Backdoors",
+    "authors": [
+      "Jiejun Tan",
+      "Zhicheng Dou",
+      "Xinyu Yang",
+      "Yuyang Hu",
+      "Yiruo Cheng",
+      "Xiaoxi Li",
+      "Ji-Rong Wen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31025v1",
+    "title": "TRACE: Discovering Task-Specific Parameter via Adaptation-Aware Probing for Continual Fine-Tuning",
+    "authors": [
+      "Xiaosong Han",
+      "Ke Chen",
+      "Xindi Dai",
+      "Di Liang",
+      "Minlong Peng",
+      "Wei Pang",
+      "Fausto Giunchiglia",
+      "Xiaoyue Feng",
+      "Yonghao Liu",
+      "Renchu Guan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.31021v1",
+    "title": "A Persona-Based Evaluation Framework for Pluralistic Alignment in Generative AI",
+    "authors": [
+      "Atahan Karagoz"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.31010v1",
+    "title": "MoG: Mixture of Experts for Graph-based Retrieval-Augmented Generation",
+    "authors": [
+      "Zheng Yuan",
+      "Chuang Zhou",
+      "Linhao Luo",
+      "Siyu An",
+      "Di Yin",
+      "Xing Sun",
+      "Xiao Huang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30995v1",
+    "title": "Traceable by Design: An LLM Pipeline and Dashboard for EU Regulatory Consultation Analysis",
+    "authors": [
+      "Thales Bertaglia",
+      "Haoyang Gui",
+      "Catalina Goanta",
+      "Gerasimos Spanakis"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CY",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30984v1",
+    "title": "Generating Reports or Repeating Templates? Measuring and Mitigating Template Collapse in 3D CT Report Generation",
+    "authors": [
+      "Tom Maye-Lasserre",
+      "Yitong Li",
+      "Bailiang Jian",
+      "Morteza Ghahremani",
+      "Benedikt Wiestler",
+      "Christian Wachinger"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30981v1",
+    "title": "Cognitive Fatigue in Autoregressive Transformers: Formalization and Measurement",
+    "authors": [
+      "Riju Marwah",
+      "Ritvik Garimella",
+      "Vishal Pallagani",
+      "Atishay Jain",
+      "Michael Stewart",
+      "Amit Sheth"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30966v1",
+    "title": "Reading Between the Citations: A Typed Claim Network for Scientific Literature",
+    "authors": [
+      "Ning Ding",
+      "Sergio J. Rodríguez Méndez",
+      "Pouya G. Omran"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.IR",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30965v1",
+    "title": "ImmersiveTTS: Environment-Aware Text-to-Speech with Multimodal Diffusion Transformer and Domain-Specific Representation Alignment",
+    "authors": [
+      "Jun-Hak Yun",
+      "Seung-Bin Kim",
+      "Seong-Whan Lee"
+    ],
+    "year": 2026,
+    "categories": [
+      "eess.AS",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30961v1",
+    "title": "EvoGens: A Population-Based Heuristic Search Framework for Scientific Idea Generation",
+    "authors": [
+      "Xu Li",
+      "Hanzhe Tu",
+      "Xinyi Li",
+      "Kuncheng Zhao",
+      "Xun Han",
+      "Zhonghui Liu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30947v1",
+    "title": "Extending AI for Research to the Humanities: A Multi-Agent Framework for Evidence-Grounded Scholarship",
+    "authors": [
+      "Yating Pan",
+      "Jiajun Zhang",
+      "Jun Wang",
+      "Qi Su"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30934v1",
+    "title": "Do Large Language Models Encode Institutional Experience? Evidence from Cross-Linguistic Moral Reasoning Under Ambiguity",
+    "authors": [
+      "Nattavudh Powdthavee"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30931v1",
+    "title": "MineExplorer: Evaluating Open-World Exploration of MLLM Agents in Minecraft",
+    "authors": [
+      "Tianjie Ju",
+      "Yueqing Sun",
+      "Zheng Wu",
+      "Wei Zhang",
+      "Yaqi Huo",
+      "Xi Su",
+      "Qi Gu",
+      "Xunliang Cai",
+      "Gongshen Liu",
+      "Zhuosheng Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30930v1",
+    "title": "TUX: Measuring Human--AI Tacit Understanding",
+    "authors": [
+      "Yueshen Li",
+      "Hanyi Min",
+      "Vedant Das Swain",
+      "Koustuv Saha"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.HC",
+      "cs.AI",
+      "cs.CL",
+      "cs.CY"
+    ]
+  },
+  {
+    "paper_id": "2605.30924v1",
+    "title": "EMBGuard: Constructing Hazard-Aware Guardrails for Safe Planning in Embodied Agents",
+    "authors": [
+      "Dongwook Choi",
+      "Taeyoon Kwon",
+      "Bogyung Jeong",
+      "Minju Kim",
+      "Yeonjun Hwang",
+      "Hyojun Kim",
+      "Byungchul Kim",
+      "Young Kyun Jang",
+      "Jinyoung Yeo"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30913v1",
+    "title": "Toxic HallucinAItions: Perturbing Prompts and Tracing LLM Circuits",
+    "authors": [
+      "Soorya Ram Shimgekar",
+      "Agam Goyal",
+      "Amruta Parulekar",
+      "Joshua Chen",
+      "Yian Wang",
+      "Navin Kumar",
+      "Hari Sundaram",
+      "Eshwar Chandrasekharan",
+      "Koustuv Saha"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CY",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.30912v1",
+    "title": "Attend to Evidence: Evidence-Anchored Spatial Attention Supervision for Multimodal RLVR",
+    "authors": [
+      "Ruina Hu",
+      "Chen Wang",
+      "Lai Wei",
+      "Jionghao Bai",
+      "Bin Yu",
+      "Weiran Huang",
+      "Kai Wang",
+      "Yue Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30907v1",
+    "title": "BlueFin: Benchmarking LLM Agents on Financial Spreadsheets",
+    "authors": [
+      "Srivatsa Kundurthy",
+      "Clara Na",
+      "Colton Moraine",
+      "Anoushka Mohta",
+      "Case Winter",
+      "George Fang",
+      "John Ling",
+      "Emma Strubell",
+      "Zach Kirshner"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SE",
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30898v1",
+    "title": "UniScale: Adaptive Unified Inference Scaling via Online Joint Optimization of Model Routing and Test-Time Scaling",
+    "authors": [
+      "Kaiyu Huang",
+      "Xingyu Wang",
+      "Mingze Kong",
+      "Zhubo Shi",
+      "Yuqian Hou",
+      "Hong Xu",
+      "Zhongxiang Dai",
+      "Minchen Yu",
+      "Qingjiang Shi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30888v1",
+    "title": "The Flip Side of RLHF: On-Policy Feedback for Reward Model Self-Supervised Improvement",
+    "authors": [
+      "Xiaobo Wang",
+      "Tong Wu",
+      "Min Tang",
+      "Jiaqi Li",
+      "Qi Liu",
+      "Zilong Zheng"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30880v1",
+    "title": "PatchWorld: Gradient-Free Optimization of Executable World Models",
+    "authors": [
+      "Jiaxin Bai",
+      "Yue Guo",
+      "Yifei Dong",
+      "Jiaxuan Xiong",
+      "Tianshi Zheng",
+      "Yixia Li",
+      "Tianqing Fang",
+      "Yufei Li",
+      "Yisen Gao",
+      "Haoyu Huang",
+      "Zhongwei Xie",
+      "Hong Ting Tsang",
+      "Zihao Wang",
+      "Lihui Liu",
+      "Jeff Pan",
+      "Yangqiu Song"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30876v1",
+    "title": "dMoE: dLLMs with Learnable Block Experts",
+    "authors": [
+      "Sicheng Feng",
+      "Zigeng Chen",
+      "Gongfan Fang",
+      "Xinyin Ma",
+      "Xinchao Wang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30857v1",
+    "title": "MADS: Model-Aware Diverse Core Set Selection for Instruction Tuning",
+    "authors": [
+      "Yi Bai",
+      "Wenhao Zhang",
+      "Yao Chen",
+      "Jiao Xue",
+      "Zhumin Chen",
+      "Pengjie Ren"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30852v1",
+    "title": "Speculative Pipeline Decoding: Higher-Accruacy and Zero-Bubble Speculation via Pipeline Parallelism",
+    "authors": [
+      "Yijiong Yu",
+      "Huazheng Wang",
+      "Shuai Yuan",
+      "Ruilong Ren",
+      "Ji Pei"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30848v1",
+    "title": "LLM Anonymization Against Agentic Re-Identificatio",
+    "authors": [
+      "Ziwen Li",
+      "Jianing Wen",
+      "Tianshi Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30844v1",
+    "title": "Fine-Tuning Improves Information Conveyance in Language Models",
+    "authors": [
+      "Yuwei Cheng",
+      "Weiyi Tian",
+      "Haifeng Xu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "stat.ML"
+    ]
+  },
+  {
+    "paper_id": "2605.30833v1",
+    "title": "Your Teacher Can't Help You Here: Combating Supervision Fidelity Decay in On-Policy Distillation",
+    "authors": [
+      "Yanjiang Liu",
+      "Jie Lou",
+      "Xinyan Guan",
+      "Yuqiu Ji",
+      "Hongyu Lin",
+      "Ben He",
+      "Xianpei Han",
+      "Le Sun",
+      "Xing Yu",
+      "Yaojie Lu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30826v1",
+    "title": "Beyond Agreement: Scoring Panel-Surfaced Biomedical Entity Candidates for Curator Triage",
+    "authors": [
+      "Shuheng Cao",
+      "Ruiqi Chen",
+      "Renjie Cao",
+      "Zhenhao Zhang",
+      "Siyu Zhang",
+      "Tingting Dan"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30813v1",
+    "title": "Incremental BPE Tokenization",
+    "authors": [
+      "Shenghu Jiang",
+      "Ruihao Gong"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.DS"
+    ]
+  },
+  {
+    "paper_id": "2605.30804v1",
+    "title": "Anchoring LLM Gender Bias to Human Baselines: A Cross-Lingual Audit",
+    "authors": [
+      "Jiwoo Choi",
+      "Seonwoo Ahn",
+      "Tongxin Zhang",
+      "Seohyon Jung"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30790v1",
+    "title": "On the impact of retrieved content representations in RAG Pipelines",
+    "authors": [
+      "Jonathan J Ross",
+      "Bevan Koopman",
+      "Anton van der Vegt",
+      "Guido Zuccon"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.IR",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30788v1",
+    "title": "XLGoBench: Detecting cross-lingual skill gaps with algorithmic tasks",
+    "authors": [
+      "Purvam Jain",
+      "Preethi Jyothi",
+      "Vihari Piratla",
+      "Suvrat Raju"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30771v1",
+    "title": "Eywa: Provenance-Grounded Long-Term Memory for AI Agents",
+    "authors": [
+      "Resham Joshi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30758v1",
+    "title": "Pairwise Reference Alignment as a Model-Level Ordinal Observable",
+    "authors": [
+      "Mujing Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30753v1",
+    "title": "Efficient Diffusion LLMs via Temporal-Spatial Parallel Decoding and Confidence Extrapolation",
+    "authors": [
+      "Zekai Li",
+      "Ji Liu",
+      "Yiqing Huang",
+      "Ziqiong Liu",
+      "Dong Li",
+      "Emad Barsoum"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30743v1",
+    "title": "A Padding Method for Enhanced Encoding of Inorganic Structures with Varying Chemical Compositions",
+    "authors": [
+      "Thang Dang",
+      "Haderbache Amir",
+      "Tzanakakis Alexandros",
+      "Yoshimoto Yuta"
+    ],
+    "year": 2026,
+    "categories": [
+      "cond-mat.mtrl-sci",
+      "cs.CE",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30736v1",
+    "title": "OrcaRouter: A Production-Oriented LLM Router with Hybrid Offline-Online Learning",
+    "authors": [
+      "Zhenghua Bao",
+      "Fengya Tian",
+      "Chris Zhang",
+      "Zhenjun Chen",
+      "Xile Ma",
+      "Yi Shi"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30727v1",
+    "title": "MosaicLeaks:Privacy Risks in Querying-in-the-Open for Deep Research Agents",
+    "authors": [
+      "Alexander Gurung",
+      "Spandana Gella",
+      "Alexandre Drouin",
+      "Issam H. Laradji",
+      "Perouz Taslakian",
+      "Rafael Pardinas"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30723v1",
+    "title": "Skill is Not One-Size-Fits-All: Model-Aware Skill Alignment for LLM Agents",
+    "authors": [
+      "Jianxiang Yu",
+      "Jiapeng Zhu",
+      "Bochen Lin",
+      "Qier Cui",
+      "Zichen Ding",
+      "Xiang Li"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30717v1",
+    "title": "Neuron-Level Interventions for Gendered and Gender-Neutral Generation in Language Models",
+    "authors": [
+      "Zhiwen You",
+      "Nafiseh Nikeghbal",
+      "Jana Diesner"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30712v1",
+    "title": "ExpGraph: Model-Agnostic Experience Learning with Graph-Structured Memory for LLM Agents",
+    "authors": [
+      "Tao Feng",
+      "Chongrui Ye",
+      "Tianyang Luo",
+      "Jingjun Xu",
+      "Xueqiang Xu",
+      "Haozhen Zhang",
+      "Zhigang Hua",
+      "Yan Xie",
+      "Shuang Yang",
+      "Ge Liu",
+      "Jiaxuan You"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30711v1",
+    "title": "SAGE: A Novelty Gate for Efficient Memory Evolution in Agentic LLMs",
+    "authors": [
+      "Sijia Wang",
+      "Dhanajit Brahma",
+      "Ricardo Henao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG",
+      "stat.ML"
+    ]
+  },
+  {
+    "paper_id": "2605.30693v1",
+    "title": "Triaging Threats to Specialized Guardrails",
+    "authors": [
+      "Wenjie Jacky Mo",
+      "Xiaofei Wen",
+      "Rui Cai",
+      "Boyu Zhu",
+      "Sicong Jiang",
+      "Zihan Wang",
+      "Minglai Yang",
+      "Zhe Zhao",
+      "Muhao Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30690v1",
+    "title": "ElasticMem: Latent Memory as a Learnable Resource for LLM Agents",
+    "authors": [
+      "Tao Feng",
+      "Chongrui Ye",
+      "Tianyang Luo",
+      "Jingjun Xu",
+      "Xueqiang Xu",
+      "Haozhen Zhang",
+      "Ge Liu",
+      "Jiaxuan You"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30685v1",
+    "title": "How Early Adopters Used Generative AI Worldwide: Variation by Country Income and Language",
+    "authors": [
+      "Madeleine I. G. Daepp",
+      "Isaac Slaughter"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CY",
+      "cs.AI",
+      "cs.CL",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.30675v1",
+    "title": "Human-Alignment, Calibration, and Activation Patterns in Large Language Model Uncertainty",
+    "authors": [
+      "Kyle Moore",
+      "Jesse Roberts",
+      "Daryl Watson",
+      "William Ward",
+      "Grayson Heyboer"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30673v1",
+    "title": "TeachObs: A Human-Validated Benchmark for Multimodal Teaching Observation and Model Evaluation",
+    "authors": [
+      "Yeil Jeong",
+      "Youngjin Yoo",
+      "Seobin Sohn",
+      "Hyejin Han",
+      "Jinseo Lee",
+      "Scott Howard",
+      "Unggi Lee"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30668v1",
+    "title": "CobSeg: Coherence Boundary Modeling for Dialogue Topic Segmentation",
+    "authors": [
+      "Sijin Sun",
+      "Liangbin Zhao",
+      "Jiaxiang Cai",
+      "Ming Deng",
+      "Mingyu Luo",
+      "Xiuju Fu"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30654v1",
+    "title": "EUDAIMONIA: Evaluating Undesirable Dynamics in AI",
+    "authors": [
+      "Jun Rui Huang",
+      "Wang Bill Zhu",
+      "Ziyi Liu",
+      "Nathanael Fast",
+      "Ravi Iyer",
+      "Robin Jia"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.HC"
+    ]
+  },
+  {
+    "paper_id": "2605.30653v1",
+    "title": "Counterfactual Graph for Multi-Agent LLM Calibration",
+    "authors": [
+      "Jiatan Huang",
+      "Mingchen Li",
+      "Ziming Li",
+      "Sunjae Kwon",
+      "Hong Yu",
+      "Chuxu Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30646v1",
+    "title": "Same Patient, Different Words, Different Diagnosis? Evaluating Semantic Stability in Clinical LLMs",
+    "authors": [
+      "Mahdi Alkaeed",
+      "Adnan Qayyum",
+      "Nabeel Abo Kashreef",
+      "Muhammad Bilal",
+      "Junaid Qadir"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30641v1",
+    "title": "COFT: Counterfactual-Conformal Decoding for Fair Chain-of-Thought Reasoning in Large Language Models",
+    "authors": [
+      "Arya Fayyazi",
+      "Mehdi Kamal",
+      "Massoud Pedram"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30640v1",
+    "title": "CSULoRA: Closest Safe Update Low-Rank Adaptation",
+    "authors": [
+      "Oleksandr Marchenko Breneur",
+      "Adelaide Danilov",
+      "Aria Nourbakhsh",
+      "Salima Lamsiyah"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30628v1",
+    "title": "The Architecture of Errors: From Universal Impossibility to Patch-Local LLM Reliability",
+    "authors": [
+      "Mikhail L. Arbuzov",
+      "Lee Mosbacker",
+      "Sisong Bei",
+      "Ziwei Dong",
+      "Dmitri Kalaev",
+      "Alexey Shvets"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30611v1",
+    "title": "Crafter: A Multi-Agent Harness for Editable Scientific Figure Generation from Diverse Inputs",
+    "authors": [
+      "Haozhe Zhao",
+      "Shuzheng Si",
+      "Zhenhailong Wang",
+      "Zheng Wang",
+      "Liang Chen",
+      "Xiaotong Li",
+      "Zhixiang Liang",
+      "Maosong Sun",
+      "Minjia Zhang"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30608v1",
+    "title": "Semantic Motion Anchors: Bridging Motion and Meaning in Co-Speech Gestures",
+    "authors": [
+      "Varsha Suresh",
+      "Mohammad Mahdi Abootorabi",
+      "Mohamed Salman",
+      "M. Hamza Mughal",
+      "Christian Theobalt",
+      "Ashwin Ram",
+      "Jürgen Steimle",
+      "Vera Demberg"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30604v1",
+    "title": "An Organization-Scoped LLM Agent Runtime Architecture for Regulated Cybersecurity Operations",
+    "authors": [
+      "George Fatouros",
+      "Georgios Makridis",
+      "George Kousiouris",
+      "John Soldatos",
+      "Dimosthenis Kyriazis"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CR",
+      "cs.AI",
+      "cs.CL",
+      "cs.IR"
+    ]
+  },
+  {
+    "paper_id": "2605.30599v1",
+    "title": "AMNESIA: A Large Scale Medical Unlearning Benchmark Suite with Disease-Informed Analysis",
+    "authors": [
+      "Saeedeh Davoudi",
+      "Reihaneh Iranmanesh",
+      "Ophir Frieder",
+      "Nazli Goharian"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30590v1",
+    "title": "Counterfactual Evaluation Reveals Hidden Capability Profiles in Clinical LLMs and Agents",
+    "authors": [
+      "Matt Turk"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30589v1",
+    "title": "ImmigrationQA: A Source-Grounded Dataset and Small-Model Adaptation for U.S. Immigration Law",
+    "authors": [
+      "Nazarii Shportun"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI"
+    ]
+  },
+  {
+    "paper_id": "2605.30582v1",
+    "title": "AI for Monitoring and Classifying Data Used in Research Literature",
+    "authors": [
+      "Rafael Macalaba",
+      "Aivin V. Solatorio"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30580v1",
+    "title": "Speculative Decoding Across Languages",
+    "authors": [
+      "Nirajan Paudel",
+      "Michael Ginn",
+      "Luc De Nardi",
+      "Alexis Palmer"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30574v1",
+    "title": "Probing the Prompt KV Cache: Where It Becomes Dispensable",
+    "authors": [
+      "Vinayshekhar Bannihatti Kumar",
+      "Manoj Ghuhan Arivazhagan",
+      "Disha Makhija",
+      "Rashmi Gangadharaiah"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30568v1",
+    "title": "Generating and Refining Dynamic Evaluation Rubrics for LLM-as-a-Judge",
+    "authors": [
+      "Zijie Wang",
+      "Eduardo Blanco"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30557v1",
+    "title": "Seeing Isn't Knowing: Do VLMs Know When Not to Answer Spatial Questions (and Why)?",
+    "authors": [
+      "Yue Zhang",
+      "Zun Wang",
+      "Han Lin",
+      "Yonatan Bitton",
+      "Idan Szpektor",
+      "Mohit Bansal"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CV",
+      "cs.AI",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30545v1",
+    "title": "Refining Word-Based Grammatical Error Annotation for L2 Korean",
+    "authors": [
+      "Jungyeul Park",
+      "Kyungtae Lim",
+      "Wonjun Oh",
+      "Benjamin Nguyen",
+      "Zihao Huang",
+      "Mengyang Qiu",
+      "Jayoung Song"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30529v1",
+    "title": "Generalistic or Specific Embeddings, Which is Better? An Empirical Study on Search for Clinical Coding in Non-English Languages",
+    "authors": [
+      "David Rey-Blanco",
+      "Roberto Cruz"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.LG"
+    ]
+  },
+  {
+    "paper_id": "2605.30526v1",
+    "title": "Measuring, Localizing, and Ablating Alignment Signatures in LLMs",
+    "authors": [
+      "Aniket Anand",
+      "Janvijay Singh",
+      "Zhewei Sun",
+      "Dilek Hakkani-Tür",
+      "Nick Feamster"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30523v1",
+    "title": "Revisiting Padded Transformer Expressivity: Which Architectural Choices Matter and Which Don't",
+    "authors": [
+      "Anej Svete",
+      "William Merrill",
+      "Ryan Cotterell",
+      "Ashish Sabharwal"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.AI",
+      "cs.CC",
+      "cs.CL",
+      "cs.FL"
+    ]
+  },
+  {
+    "paper_id": "2605.30521v1",
+    "title": "Evaluating using Mock Tool Calls to Quarantine Untrusted Prompt Inputs",
+    "authors": [
+      "David Gros",
+      "Adam Gleave"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30514v1",
+    "title": "MAAT: Multi-phase Adapter-Aware Targeted Unlearning",
+    "authors": [
+      "Suryash Yagnik",
+      "Shubham Gaur",
+      "Saksham Thakur",
+      "Vinija Jain",
+      "Aman Chadha",
+      "Amitava Das"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30504v1",
+    "title": "Auditing LLM Benchmarks with Item Response Theory",
+    "authors": [
+      "Sander Land",
+      "Daniel M. Bikel"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30501v1",
+    "title": "Linear Ensembles Wash Away Watermarks: On the Fragility of Distributional Perturbations in LLMs",
+    "authors": [
+      "Zhihao Wu",
+      "Gracia Gong",
+      "Qinglin Zhu",
+      "Yudong Chen",
+      "Runcong Zhao"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30497v1",
+    "title": "CanLegalRAGBench: Evaluating Retrieval-Augmented Generation on Canadian Case Law",
+    "authors": [
+      "Ethan Zhao",
+      "Maksym Taranukhin",
+      "Wei Cui",
+      "Moira Aikenhead",
+      "Vered Shwartz"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30487v1",
+    "title": "Configurable Reward Model for Balanced Safety Alignment",
+    "authors": [
+      "Zhengping Jiang",
+      "Mehran Khodabandeh",
+      "Akash Bharadwaj",
+      "Manik Bhandari",
+      "Mayur Srungarapu",
+      "Anqi Liu",
+      "Benjamin Van Durme",
+      "Li Chen"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30481v1",
+    "title": "When English Rewrites Local Knowledge: Global Narrative Dominance in Large Language Models",
+    "authors": [
+      "Md Arid Hasan",
+      "Ruwad Naswan",
+      "Farhan Samir",
+      "Sharifa Sultana",
+      "Syed Ishtiaque Ahmed"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30478v1",
+    "title": "Improving Small Language Models for Code Generation with Reinforcement Learning from Verification Feedback",
+    "authors": [
+      "Egor Skopin",
+      "Evgeny Kotelnikov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.SE",
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30472v1",
+    "title": "Your Multimodal Speech Model Says I Have a Face for Radio",
+    "authors": [
+      "Maya K. Nachesa",
+      "Vlad Niculae",
+      "Vagrant Gautam"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30465v1",
+    "title": "Knowledge Graph-Enhanced Zero-Shot Topic Classification: A Multi-Strategy Comparative Study",
+    "authors": [
+      "Shahana Akter",
+      "Yatharth Vohra",
+      "Ankita Shukla",
+      "Souvika Sarkar"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  },
+  {
+    "paper_id": "2605.30459v1",
+    "title": "Can LLM Teams Play What? Where? When?",
+    "authors": [
+      "Anastasia Kotelnikova",
+      "Viktor Byzov",
+      "Maria Dolzhenkova",
+      "Evgeny Kotelnikov"
+    ],
+    "year": 2026,
+    "categories": [
+      "cs.CL"
+    ]
+  }
+]

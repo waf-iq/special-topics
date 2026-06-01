@@ -416,7 +416,10 @@ def ingest_arxiv_batch(
             })
             already.add(paper_id)
             n_new += 1
-            print(f"  [{n_new}/{max_results}] {paper_id}  pages={len(pages)} chunks={len(chunks)}  {title[:60]}")
+            # Sanitize title for the Windows console (cp1252) — a single
+            # non-encodable character used to crash the whole iteration.
+            safe_title = title[:60].encode("ascii", "replace").decode("ascii")
+            print(f"  [{n_new}/{max_results}] {paper_id}  pages={len(pages)} chunks={len(chunks)}  {safe_title}")
 
         except Exception as exc:
             errors.append({

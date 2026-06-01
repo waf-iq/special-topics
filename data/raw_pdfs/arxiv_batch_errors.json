@@ -1,0 +1,8 @@
+[
+  {
+    "paper_id": "2605.31401v1",
+    "error": "'charmap' codec can't encode character '\\u015f' in position 61: character maps to <undefined>",
+    "traceback": "Traceback (most recent call last):\n  File \"C:\\Users\\waska\\Projects\\special-topics\\src\\csai415\\ingest.py\", line 419, in ingest_arxiv_batch\n    print(f\"  [{n_new}/{max_results}] {paper_id}  pages={len(pages)} chunks={len(chunks)}  {title[:60]}\")\n  File \"C:\\Program Files\\WindowsApps\\PythonSoftwareFoundation.Python.3.12_3.12.2800.0_x64__qbz5n2kfra8p0\\Lib\\encodings\\cp1252.py\", line 19, in encode\n    return codecs.charmap_encode(input,self.errors,encoding_table)[0]\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nUnicodeEncodeError: 'charmap' codec can't encode character '\\u015f' in position 61: character maps to <undefined>\n",
+    "title": "\"Intelegi Româneşte?'' A Recipe for Romanian Vision-Language Models"
+  }
+]
