@@ -60,8 +60,23 @@ def _to_int(v):
 
 
 def _to_list(v):
-    v = _clean(v)
-    return v if isinstance(v, list) else []
+    """Coerce None / NaN / numpy array / scalar into a clean list of strings.
+
+    Parquet stores authors as a numpy ndarray, not a Python list, so the old
+    ``isinstance(v, list)`` check dropped every author. Handle ndarrays (via
+    ``tolist``) and bare scalars too.
+    """
+    if v is None:
+        return []
+    if isinstance(v, float) and math.isnan(v):
+        return []
+    if isinstance(v, str):
+        return [v]
+    if hasattr(v, "tolist"):  # numpy array / pandas array
+        v = v.tolist()
+    if isinstance(v, (list, tuple)):
+        return [str(x).strip() for x in v if x is not None and str(x).strip()]
+    return []
 
 
 def _load_topics_map() -> dict[str, list[str]]:
@@ -91,13 +106,21 @@ def _build_paper_doc(row, topics_map: dict, now: datetime) -> dict:
     pid = row["paper_id"]
     source = row["source"]
     is_arxiv = source in ("arxiv", "arxiv-demo")
+    # Prefer the full categories list from the arXiv meta JSON; fall back to the
+    # single `topic` column in the parquet when that meta file isn't present
+    # (otherwise arXiv papers land with no Topic nodes and the topic-based
+    # Cypher queries return nothing).
+    topics = topics_map.get(pid)
+    if not topics:
+        t = _clean(row.get("topic"))
+        topics = [t] if t else []
     return {
         "_id": pid,
         "title": _clean(row.get("title")) or "",
         "authors": _to_list(row.get("authors")),
         "year": _to_int(row.get("year")),
         "venue": None,
-        "topics": topics_map.get(pid, []),
+        "topics": topics,
         "source": source,
         "pdf_path": f"data/raw_pdfs/{pid}.pdf" if is_arxiv else None,
         "ingested_at": now,
