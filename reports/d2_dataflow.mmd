@@ -1,0 +1,24 @@
+%% D2 dataflow — ingest to /search. Dashed edges are the D3 GraphRAG path.
+flowchart LR
+    subgraph sources[Sources]
+        A[arXiv cs.CL PDFs]
+        S[SciFact corpus]
+    end
+
+    A --> I[Ingest: parse + chunk + embed<br/>PyMuPDF + BGE-small-en 384-d]
+    S --> I
+
+    I --> M[(MongoDB<br/>papers + chunks)]
+    I --> Q[(Qdrant<br/>chunks_bge384 HNSW)]
+    M --> N[(Neo4j<br/>Author / Paper / Topic)]
+
+    Q --> API[FastAPI POST /search<br/>hybrid BM25 + dense, blessed BOHB]
+    M --> API
+    API --> U([User])
+
+    N -. D3 GraphRAG .-> API
+    API -. D3 GraphRAG .-> N
+
+    classDef store fill:#e8f0fe,stroke:#4285f4;
+    classDef d3 fill:#fff,stroke:#999,stroke-dasharray:4 3;
+    class M,Q,N store;
