@@ -145,10 +145,10 @@ Blessed BOHB config (`hybrid_weight=0.777, candidate_k=27, metric=l2, bm25_k1=2.
 ## Wave 2 — runs at H5 after Wave 1 lands (~30 min total)
 
 ### Task D2-INT1 — Reseed against expanded corpus
-**Owner:** Yousef (Mongo + Qdrant) → Abdurlahman (Neo4j)
-**Depends on:** D2-A1, D2-A2, D2-C1
+**Owner:** Musab (full chain — Mongo + Qdrant + Neo4j)
+**Depends on:** D2-A1 ✅, D2-A2 ✅, D2-C1 ✅, D2-M1 ✅
 
-Once Ahmad's arXiv expansion (D2-A1) finishes, Yousef reruns D2-A2's seed scripts against the new parquet, then Abdurlahman reseeds Neo4j from the now-populated Mongo. Total wall-clock ~30 min.
+Natural fit for Musab: he owns the docker-compose stack (D2-M1) and is the right person to bring it up + run the seeders end-to-end. Concretely: `docker compose up -d`, then `python scripts/seed_mongo.py`, `python scripts/seed_qdrant.py`, `python scripts/seed_neo4j.py`. Verify all three stores populate by spot-checking row/point/node counts. Frees Yousef to focus on D2-A3 (the 2-page report) earlier. Total wall-clock ~30 min.
 
 ### Task D2-INT2 — Swap `/search` to Qdrant-backed dense
 **Owner:** WAFIQ
@@ -225,7 +225,7 @@ If D2-A1 slips past H6, the fallback is to seed Mongo + Qdrant + Neo4j with just
 |---|---|
 | **H0** (0:30) | Whole team: lock contracts in this doc, split work, every member starts their Wave 1 task. |
 | **H0.5–H5** | D2-A1 runs in background. Everyone else: build against fixtures / D1 parquet. |
-| **H5** (0:30) | D2-INT1: Yousef reseeds Mongo + Qdrant, Abdurlahman reseeds Neo4j. |
+| **H5** (0:30) | D2-INT1: Musab brings up `docker compose up -d` and runs all three seed scripts (Mongo + Qdrant + Neo4j). |
 | **H5.5** (0:15) | D2-INT2: WAFIQ swaps `/search` dense backend to Qdrant. |
 | **H6** (1:00) | D2-B3 metrics + D2-C3 cypher capture in parallel. Musab finalizes README + compose polish. |
 | **H7** (1:30) | D2-A3 drafts the 2-page report. D2-A4 adds the D2 smoke test. |
