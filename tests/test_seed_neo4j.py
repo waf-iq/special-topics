@@ -71,6 +71,21 @@ def test_normalize_paper_scifact_is_empty_and_skipped():
     assert seed_neo4j.should_load(p) is False
 
 
+def test_normalize_paper_uses_mongo_id_field():
+    # Mongo `papers` (D2-A2) stores the id in `_id`, not `paper_id`.
+    raw = {
+        "_id": "2605.30345v1",
+        "title": "T",
+        "authors": ["Qinpei Luo"],
+        "year": 2026,
+        "topics": ["cs.AI"],
+        "source": "arxiv",
+    }
+    p = seed_neo4j.normalize_paper(raw)
+    assert p["paper_id"] == "2605.30345v1"
+    assert seed_neo4j.should_load(p) is True
+
+
 def test_topics_list_from_contract_shape():
     # Mongo contract carries "topics" as a list; loader accepts it directly.
     raw = {"paper_id": "x", "authors": ["A"], "topics": ["cs.CL", "cs.AI", "cs.CL"]}

@@ -106,8 +106,11 @@ def normalize_paper(raw: dict) -> dict:
     topics = list(dict.fromkeys(_clean_list(topics_raw)))
     source = _SOURCE_ALIASES.get(raw.get("source"), raw.get("source"))
     title = raw.get("title")
+    # Mongo `papers` stores the id in `_id` (D2-A2 contract); parquet uses
+    # `paper_id`. Accept either.
+    pid = raw.get("paper_id", raw.get("_id"))
     return {
-        "paper_id": str(raw["paper_id"]),
+        "paper_id": str(pid),
         "title": str(title) if title is not None else "",
         "year": _clean_year(raw.get("year")),
         "source": source,
@@ -136,7 +139,11 @@ def iter_papers_from_mongo(
 
     client = MongoClient(mongo_url)
     query: dict = {}
-    if source != "all":
+    if source == "arxiv":
+        # Mongo keeps both "arxiv" and "arxiv-demo" (seed_mongo doesn't collapse
+        # them); match both so --source arxiv doesn't drop the demo papers.
+        query["source"] = {"$in": ["arxiv", "arxiv-demo"]}
+    elif source != "all":
         query["source"] = source
     try:
         for doc in client[db]["papers"].find(query):
