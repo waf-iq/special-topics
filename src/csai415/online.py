@@ -451,7 +451,9 @@ def plot_prequential(state: OnlineLearnerState, out_path: Path = Path("reports/p
     if state.baseline_ndcg5:
         ax.plot(roll(state.baseline_ndcg5),
                 label=f"static w={state.baseline_weight:.2f}", color="C1", linestyle="--")
-    ax.axvline(state.drift_at, color="grey", linestyle=":", label=f"planted drift @{state.drift_at}")
+    for j, dp in enumerate(state.drift_points):
+        ax.axvline(dp, color="grey", linestyle=":",
+                   label=f"planted drifts @{state.drift_points}" if j == 0 else None)
     for j, ev in enumerate(state.drift_events):
         ax.axvline(ev, color="red", alpha=0.5, linewidth=1,
                    label="ADWIN fired" if j == 0 else None)

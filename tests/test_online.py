@@ -100,7 +100,7 @@ def test_simulate_stream_query_style_drift_transforms_post():
     claims = [{"qid": f"q{i}",
                "question": "the role of protein kinase signalling in tumour growth regulation",
                "relevant_chunk_ids": [f"c{i}"], "topic": None} for i in range(6)]
-    stream = simulate_feedback_stream(claims, n_events=20, drift_at=10, seed=42)
+    stream = simulate_feedback_stream(claims, n_events=20, drift_points=[10], seed=42)
     assert len(stream) == 20
     pre_q = {q["question"] for _, q, _ in stream[:10]}
     post_q = {q["question"] for _, q, _ in stream[10:]}
@@ -111,7 +111,7 @@ def test_simulate_stream_query_style_drift_transforms_post():
 
 
 def test_simulate_stream_length_mode_still_available():
-    stream = simulate_feedback_stream(QUERIES, n_events=20, drift_at=10, seed=42,
+    stream = simulate_feedback_stream(QUERIES, n_events=20, drift_points=[10], seed=42,
                                       drift_kind="length")
     pre_len = sum(len(q["question"].split()) for _, q, _ in stream[:10]) / 10
     post_len = sum(len(q["question"].split()) for _, q, _ in stream[10:]) / 10
@@ -119,7 +119,7 @@ def test_simulate_stream_length_mode_still_available():
 
 
 def test_run_prequential_populates_state():
-    state = run_prequential(_fake_retriever, QUERIES, n_events=40, drift_at=20)
+    state = run_prequential(_fake_retriever, QUERIES, n_events=40, drift_points=[20])
     assert isinstance(state, OnlineLearnerState)
     assert len(state.prequential_ndcg5) == 40
     assert len(state.baseline_ndcg5) == 40
@@ -132,11 +132,11 @@ def test_run_prequential_populates_state():
     assert all(w in WEIGHT_GRID or w == cold for w in state.chosen_weights)
     assert all(0.0 <= n <= 1.0 for n in state.prequential_ndcg5)
     assert all(r in (0.0, 1.0) for r in state.rewards)   # strictly binary
-    assert state.drift_at == 20
+    assert state.drift_points == [20]
 
 
 def test_run_prequential_is_reproducible():
-    s1 = run_prequential(_fake_retriever, QUERIES, n_events=30, drift_at=15, seed=7)
-    s2 = run_prequential(_fake_retriever, QUERIES, n_events=30, drift_at=15, seed=7)
+    s1 = run_prequential(_fake_retriever, QUERIES, n_events=30, drift_points=[15], seed=7)
+    s2 = run_prequential(_fake_retriever, QUERIES, n_events=30, drift_points=[15], seed=7)
     assert s1.prequential_ndcg5 == s2.prequential_ndcg5
     assert s1.chosen_weights == s2.chosen_weights
