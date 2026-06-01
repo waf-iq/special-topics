@@ -171,8 +171,17 @@ class HybridRetriever:
             vec = normalize(vec).astype(np.float32)
         return vec[0]
 
-    def search(self, query: str, k: int, hybrid_weight: float | None = None) -> list[str]:
-        """Top-k chunk_ids. hybrid_weight overrides config.hybrid_weight if given."""
+    def _ranked_candidates(
+        self, query: str, k: int, hybrid_weight: float | None = None
+    ) -> list[tuple[str, float]]:
+        """Core fusion. Returns the top-k ``(chunk_id, fused_score)`` pairs,
+        sorted by descending fused score.
+
+        ``search`` and ``search_with_scores`` are both thin wrappers over this,
+        so the BM25/dense fusion math lives in exactly one place. The fused
+        score is the per-query min-max-scaled weighted sum — comparable WITHIN
+        a query's result list, not across queries.
+        """
         w = hybrid_weight if hybrid_weight is not None else self.config.hybrid_weight
         c_k = self.config.candidate_k
 
@@ -192,7 +201,18 @@ class HybridRetriever:
 
         fused = w * dense_norm + (1 - w) * bm25_norm
         order = np.argsort(-fused)[:k]
-        return [self.df.iloc[candidates[i]]["chunk_id"] for i in order]
+        return [(self.df.iloc[candidates[i]]["chunk_id"], float(fused[i])) for i in order]
+
+    def search(self, query: str, k: int, hybrid_weight: float | None = None) -> list[str]:
+        """Top-k chunk_ids. hybrid_weight overrides config.hybrid_weight if given."""
+        return [chunk_id for chunk_id, _ in self._ranked_candidates(query, k, hybrid_weight)]
+
+    def search_with_scores(
+        self, query: str, k: int, hybrid_weight: float | None = None
+    ) -> list[tuple[str, float]]:
+        """Top-k ``(chunk_id, fused_score)`` pairs — same ranking as ``search``,
+        with the fused score exposed for the FastAPI ``/search`` response (D2-B1)."""
+        return self._ranked_candidates(query, k, hybrid_weight)
 
 
 def load_chunks(path: Path = CHUNKS_PARQUET) -> pd.DataFrame:
