@@ -51,6 +51,37 @@ jupyter notebook notebooks/02_online_learning.ipynb
 pytest tests/test_smoke.py
 ```
 
+## D2 — Docker stack (ingest, hybrid retrieval, graph)
+
+D2 moves the blessed D1 retriever onto production infra: MongoDB (papers +
+chunks), Qdrant (dense vectors), Neo4j (author/paper/topic graph), behind a
+FastAPI `/search`. Architecture: `reports/d2_dataflow.png`.
+
+```bash
+cp .env.example .env
+
+# 1) Bring up the three data stores (Mongo + Qdrant + Neo4j). One command.
+docker compose up -d
+#    GET healthchecks settle within ~30s; check with: docker compose ps
+
+# 2) Seed all three, in dependency order (Mongo -> Qdrant -> Neo4j).
+make seed                       # uses .venv/bin/python; override: make seed PYTHON=python
+
+# 3) (once D2-B1's api.py is merged) bring up the FastAPI app and query it:
+docker compose --profile api up -d --build
+curl -s localhost:8000/search -H 'content-type: application/json' \
+     -d '{"query": "diffusion tensor imaging of white matter", "k": 5}'
+```
+
+Useful targets: `make up` / `make down` / `make logs` / `make clean` (deletes
+volumes) / `make diagram` (re-render the dataflow PNG) / `make seed-dev` (seed
+Neo4j from parquet before Mongo is populated).
+
+> The `api` service is behind the `api` compose profile until D2-B1's
+> `src/csai415/api.py` lands, so `docker compose up -d` brings the stores up
+> cleanly today without trying to build a not-yet-existing app. Neo4j runs
+> `NEO4J_AUTH=none` for dev — prod would set a password.
+
 ## Repo layout
 
 ```

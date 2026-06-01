@@ -1,0 +1,90 @@
+# D2-M1 — full stack for the PDF-Papers agent. See D2_TASKS.md §D2-M1.
+#
+#   docker compose up -d          # brings up the 3 stores (mongo, qdrant, neo4j)
+#   make seed                     # populates all three (host-side, against the
+#                                 # published ports)
+#   docker compose --profile api up -d   # adds the FastAPI app once D2-B1 lands
+#
+# The `api` service is behind the `api` profile so the default `up` doesn't try
+# to build an app (src/csai415/api.py) that D2-B1 hasn't merged yet. Once it's
+# in, drop `--profile api` users either keep using it or we remove the profile.
+
+services:
+  mongo:
+    image: mongo:7
+    container_name: csai415_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  qdrant:
+    image: qdrant/qdrant:v1.12.4
+    container_name: csai415_qdrant
+    ports:
+      - "6333:6333"   # REST
+      - "6334:6334"   # gRPC
+    volumes:
+      - qdrant_data:/qdrant/storage
+    healthcheck:
+      # Qdrant's image ships no curl/wget; use bash's /dev/tcp to probe the
+      # REST port. (debian-based image includes bash.)
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/6333' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  neo4j:
+    image: neo4j:5
+    container_name: csai415_neo4j
+    environment:
+      # Dev only — prod would set NEO4J_AUTH=neo4j/<password>.
+      NEO4J_AUTH: none
+    ports:
+      - "7474:7474"   # HTTP browser
+      - "7687:7687"   # Bolt
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -a bolt://localhost:7687 'RETURN 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  api:
+    build: .
+    container_name: csai415_api
+    profiles: ["api"]   # opt-in until D2-B1's src/csai415/api.py is merged
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      # In-network hostnames are the service names, not localhost.
+      MONGO_URL: mongodb://mongo:27017
+      QDRANT_URL: http://qdrant:6333
+      NEO4J_URL: bolt://neo4j:7687
+    depends_on:
+      mongo:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz')\" || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  mongo_data:
+  qdrant_data:
+  neo4j_data:
