@@ -17,7 +17,7 @@ QUERIES = {
     "01 — Papers by a given author": {
         "file": "cypher/01_papers_by_author.cypher",
         "cypher": """
-            MATCH (a:Author {name: "Yoshua Bengio"})-[:WROTE]->(p:Paper)
+            MATCH (a:Author {name: "Jun Wang"})-[:WROTE]->(p:Paper)
             RETURN p.paper_id AS paper_id, p.title AS title, p.year AS year
             ORDER BY p.year DESC
         """,
@@ -26,8 +26,8 @@ QUERIES = {
     "02 — Top co-authors": {
         "file": "cypher/02_top_coauthors.cypher",
         "cypher": """
-            MATCH (a:Author {name: "Yoshua Bengio"})-[:WROTE]->(p:Paper)<-[:WROTE]-(coauthor:Author)
-            WHERE coauthor.name <> "Yoshua Bengio"
+            MATCH (a:Author {name: "Jun Wang"})-[:WROTE]->(p:Paper)<-[:WROTE]-(coauthor:Author)
+            WHERE coauthor.name <> "Jun Wang"
             RETURN coauthor.name AS coauthor, COUNT(DISTINCT p) AS shared_papers
             ORDER BY shared_papers DESC LIMIT 10
         """,
@@ -37,7 +37,7 @@ QUERIES = {
         "file": "cypher/03_top_topics_by_year.cypher",
         "cypher": """
             MATCH (p:Paper)-[:ABOUT]->(t:Topic)
-            WHERE p.year >= 2020 AND p.year <= 2024
+            WHERE p.year >= 2025 AND p.year <= 2026
             RETURN t.name AS topic, COUNT(DISTINCT p) AS paper_count
             ORDER BY paper_count DESC LIMIT 10
         """,
@@ -56,7 +56,7 @@ QUERIES = {
         "file": "cypher/05_authors_on_both_topics.cypher",
         "cypher": """
             MATCH (a:Author)-[:WROTE]->(p1:Paper)-[:ABOUT]->(t1:Topic {name: "cs.CL"})
-            MATCH (a)-[:WROTE]->(p2:Paper)-[:ABOUT]->(t2:Topic {name: "cs.LG"})
+            MATCH (a)-[:WROTE]->(p2:Paper)-[:ABOUT]->(t2:Topic {name: "cs.CV"})
             RETURN a.name AS author, COUNT(DISTINCT p1) AS cl_papers,
                    COUNT(DISTINCT p2) AS lg_papers
             ORDER BY (cl_papers + lg_papers) DESC LIMIT 20
