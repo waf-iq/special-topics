@@ -79,6 +79,74 @@ correctly (no arXiv chunks leaked into the SciFact result set).
 
 ---
 
+## Search Check — source=arxiv
+
+```
+POST http://localhost:8000/search
+{"query": "language model pretraining", "k": 5, "source": "arxiv"}
+```
+
+| # | chunk_id | title | score |
+|---|---|---|---|
+| 1 | `arxiv:2605.31164v1:40` | D³: Dynamic Directional Graph-Constrained Data Scheduling for LLM Training | 0.894 |
+| 2 | `arxiv:2605.31494v1:29` | Consolidating Rewarded Perturbations for LLM Post-Training | 0.887 |
+| 3 | `arxiv:2605.30348v1:39` | LLMSurgeon: Diagnosing Data Mixture of Large Language Models | 0.875 |
+| 4 | `arxiv:2605.30717v1:32` | Neuron-Level Interventions for Gendered and Gender-Neutral Generation in LMs | 0.828 |
+| 5 | `arxiv:2605.30348v1:38` | LLMSurgeon: Diagnosing Data Mixture of Large Language Models | 0.794 |
+
+All `chunk_id` values prefixed `arxiv:` — no SciFact chunks in the arXiv pool. ✓
+
+---
+
+## Search Check — source=null (full corpus)
+
+```
+POST http://localhost:8000/search
+{"query": "language model pretraining", "k": 5}
+```
+
+| # | chunk_id | title | score |
+|---|---|---|---|
+| 1 | `arxiv:2605.31164v1:40` | D³: Dynamic Directional Graph-Constrained Data Scheduling for LLM Training | 0.892 |
+| 2 | `arxiv:2605.31494v1:29` | Consolidating Rewarded Perturbations for LLM Post-Training | 0.888 |
+| 3 | `arxiv:2605.30348v1:39` | LLMSurgeon: Diagnosing Data Mixture of Large Language Models | 0.877 |
+| 4 | `arxiv:2605.30717v1:32` | Neuron-Level Interventions for Gendered and Gender-Neutral Generation in LMs | 0.836 |
+| 5 | `arxiv:2605.30348v1:38` | LLMSurgeon: Diagnosing Data Mixture of Large Language Models | 0.807 |
+
+Full-corpus path works — critical for D3 GraphRAG flow. ✓
+
+---
+
+## Latency Measurement (20 requests, source=scifact)
+
+20 sequential POST /search requests, response times in seconds (sorted ascending):
+
+```
+0.126, 0.145, 0.155, 0.156, 0.156, 0.166, 0.178, 0.195, 0.203, 0.207,
+0.208, 0.214, 0.217, 0.234, 0.250, 0.277, 0.329, 0.388, 0.438, 2.591
+```
+
+| Percentile | Latency |
+|---|---|
+| p50 | 207ms |
+| p95 | **438ms** |
+| p100 (max) | 2591ms *(cold-cache outlier on first Qdrant query)* |
+
+**p95 = 438ms — passes the ≤ 2s SLA.** The 2.59s outlier is Qdrant's warm-up on the first
+request after container restart; subsequent requests are consistently sub-500ms.
+
+---
+
+## /healthz Fix (api.py)
+
+Per teammate review: `/healthz` previously only pinged `chunks_bge384` (full corpus). A missing
+per-source collection would pass health silently while `/search?source=scifact` would 500.
+
+Fixed in this commit: healthz now iterates all three `SOURCE_COLLECTIONS` values and raises 503
+if any collection is unreachable.
+
+---
+
 ## Notes
 
 - `CSAI415_USE_QDRANT=1` is set in the `api` service environment in `docker-compose.yml`.

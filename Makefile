@@ -22,6 +22,8 @@ logs:              ## Tail logs for all services
 seed:              ## Seed all three stores in dependency order (mongo -> qdrant -> neo4j)
 	$(PYTHON) scripts/seed_mongo.py --source all
 	$(PYTHON) scripts/seed_qdrant.py --source all
+	$(PYTHON) scripts/seed_qdrant.py --source scifact   # D2-INT2: per-source collection
+	$(PYTHON) scripts/seed_qdrant.py --source arxiv     # D2-INT2: per-source collection
 	$(PYTHON) scripts/seed_neo4j.py --source all
 
 seed-dev:          ## Seed Neo4j only, from parquet (before Mongo is populated)
