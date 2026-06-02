@@ -152,9 +152,18 @@ Natural fit for Musab: he owns the docker-compose stack (D2-M1) and is the right
 
 ### Task D2-INT2 — Swap `/search` to Qdrant-backed dense
 **Owner:** WAFIQ
-**Depends on:** D2-B1, D2-B2, D2-INT1
+**Depends on:** D2-B1 ✅, D2-B2 ✅, D2-INT1 ✅
 
-Flip the dependency-injection switch in the FastAPI app so it uses the Qdrant dense backend instead of the in-memory numpy fixture. Re-run D2-B1's pytest cases against the live stack.
+**Approach taken (plan A): three Qdrant collections.** Each per-source `HybridRetriever` in `api.py` is wired to its own Qdrant collection — `chunks_bge384` for the full corpus, `chunks_bge384_scifact`, `chunks_bge384_arxiv` for the subsets. The per-collection layout sidesteps a corpus_idx mismatch between Qdrant's global point IDs and each retriever's reset-indexed local df. Gated on `CSAI415_USE_QDRANT=1` env var so the numpy in-memory fallback keeps the existing test suite working without Docker.
+
+**Live re-seed required (Musab, ~5 min):** D2-INT1 only created `chunks_bge384`. After this PR merges, on the docker-compose host:
+```bash
+python scripts/seed_qdrant.py --source scifact   # creates chunks_bge384_scifact
+python scripts/seed_qdrant.py --source arxiv     # creates chunks_bge384_arxiv
+```
+Then set `CSAI415_USE_QDRANT=1` in the API service's env and restart. `GET /healthz` should still return 200; it now also pings Qdrant for the full collection.
+
+**Known trade-off (must land in D2-A3 report):** three collections must be reseeded any time the corpus changes — operational pain. The architecturally cleaner fix (one collection + source-filter-at-query-time inside `HybridRetriever.search()`) was deferred to D3 to avoid touching Ahmed's just-merged per-source routing logic under time pressure. D3's GraphRAG executor will benefit from the refactor anyway since the executor naturally wants one retriever, not three.
 
 ---
 
@@ -184,7 +193,7 @@ Flip the dependency-injection switch in the FastAPI app so it uses the Qdrant de
 - `reports/D2_report.md` (compiled to PDF, same toolchain as D1).
 - Sections: (1) one-paragraph architecture, (2) dataflow diagram from D2-M1, (3) ingest stats (papers + chunks per source), (4) `/search` metrics table from D2-B3, (5) top-k example queries with citations, (6) 5 Cypher queries + sample outputs, (7) decisions/pitfalls.
 - Cite the blessed BOHB config from D1 — D2 inherits it, doesn't re-tune.
-- **Pitfalls to call out explicitly:** (a) graph has no `CITES` edges — arXiv API doesn't expose citation data; deferred to D3 (brief permits this — "add CITES if time"); (b) Qdrant uses cosine ANN for candidate generation while blessed metric is L2 — L2 preserved at fusion-time rescoring (<0.5pp drift); (c) Author dedup is name-based, so two distinct people who share a name collapse into one node; (d) D2 retrieval reuses D1's blessed retriever — quality numbers are essentially D1's, the D2 work was moving the stack to production infra (Mongo + Qdrant + Neo4j behind FastAPI).
+- **Pitfalls to call out explicitly:** (a) graph has no `CITES` edges — arXiv API doesn't expose citation data; deferred to D3 (brief permits this — "add CITES if time"); (b) Qdrant uses cosine ANN for candidate generation while blessed metric is L2 — L2 preserved at fusion-time rescoring (<0.5pp drift); (c) Author dedup is name-based, so two distinct people who share a name collapse into one node; (d) D2 retrieval reuses D1's blessed retriever — quality numbers are essentially D1's, the D2 work was moving the stack to production infra (Mongo + Qdrant + Neo4j behind FastAPI); (e) **Qdrant uses three per-source collections** (`chunks_bge384`, `_scifact`, `_arxiv`) to sidestep a corpus_idx mismatch between global Qdrant IDs and the per-source `HybridRetriever`'s reset-indexed local df — operationally clunky (reseed all three on any corpus change) and **scheduled to be refactored in D3** to a single collection with source-filter-at-query-time inside `HybridRetriever.search()`; D3's GraphRAG executor wants one retriever, not three, so the refactor pays for itself.
 
 ### Task D2-A4 — Smoke test stays green
 **Owner:** Ahmad Fraij
