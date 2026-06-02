@@ -7,6 +7,7 @@ and the NDCG@5 math is correct against hand-computed cases.
 from __future__ import annotations
 
 import inspect
+import os
 
 import pytest
 
@@ -150,3 +151,76 @@ def test_runcard_extended_fields(tmp_path):
     # write_runcard without the rework kwargs)
     assert "blessed_method" not in card["automl"]
     assert "comparison" not in card["automl"]
+
+
+# --- D2-A4 live-stack integration smoke (gated) -------------------------
+
+D2_STACK_UP = os.environ.get("D2_STACK_UP", "0") == "1"
+
+
+@pytest.mark.skipif(
+    not D2_STACK_UP,
+    reason="D2 stack not running — set D2_STACK_UP=1 with docker compose up",
+)
+def test_d2_stack_smoke():
+    """End-to-end: FastAPI /search + Mongo + Qdrant + Neo4j all reachable
+    and populated. Run with `D2_STACK_UP=1 pytest tests/test_smoke.py -v`
+    after `docker compose up -d` and seeding (Musab's D2-INT1 + D2-INT2 reseed).
+    """
+    import httpx
+    from neo4j import GraphDatabase
+    from pymongo import MongoClient
+    from qdrant_client import QdrantClient
+
+    # 1. FastAPI /healthz returns 200 (also pings Qdrant when CSAI415_USE_QDRANT=1)
+    r = httpx.get("http://localhost:8000/healthz", timeout=5)
+    assert r.status_code == 200, f"/healthz: {r.status_code} {r.text}"
+
+    # 2. /search returns top-k with required fields and a plausible scifact hit
+    r = httpx.post(
+        "http://localhost:8000/search",
+        json={"query": "diffusion tensor imaging of white matter", "k": 5},
+        timeout=10,
+    )
+    assert r.status_code == 200
+    hits = r.json()
+    assert len(hits) == 5
+    required = {"chunk_id", "paper_id", "title", "text", "page_range", "score"}
+    for h in hits:
+        assert required <= set(h)
+
+    # 3. /search source filter routes correctly — all hits must be scifact-sourced
+    r = httpx.post(
+        "http://localhost:8000/search",
+        json={"query": "language model pretraining", "k": 5, "source": "scifact"},
+        timeout=10,
+    )
+    assert r.status_code == 200
+    assert all(h["chunk_id"].startswith("scifact:") for h in r.json())
+
+    # 4. Mongo papers + chunks collections populated (counts from D2-INT1 verification)
+    mc = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
+    db = mc.csai415
+    assert db.papers.count_documents({}) > 5000, "papers undersized — re-seed?"
+    assert db.chunks.count_documents({}) > 15000, "chunks undersized — re-seed?"
+    mc.close()
+
+    # 5. Qdrant has all three collections per D2-INT2
+    qc = QdrantClient(url="http://localhost:6333")
+    coll_names = {c.name for c in qc.get_collections().collections}
+    for needed in ("chunks_bge384", "chunks_bge384_scifact", "chunks_bge384_arxiv"):
+        assert needed in coll_names, f"missing collection {needed!r}"
+    assert qc.get_collection("chunks_bge384").points_count > 15000
+
+    # 6. Neo4j has Paper + Author + Topic nodes (from D2-C1 seed)
+    drv = GraphDatabase.driver("bolt://localhost:7687", auth=None)
+    with drv.session() as sess:
+        counts = sess.run(
+            "MATCH (p:Paper) WITH count(p) AS papers "
+            "MATCH (a:Author) WITH papers, count(a) AS authors "
+            "MATCH (t:Topic) RETURN papers, authors, count(t) AS topics"
+        ).single()
+    drv.close()
+    assert counts["papers"] > 100, "Paper nodes undersized"
+    assert counts["authors"] > 500, "Author nodes undersized"
+    assert counts["topics"] >= 5, "Topic nodes undersized"
