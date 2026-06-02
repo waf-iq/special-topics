@@ -1,9 +1,12 @@
-"""D2-A2 — Seed Qdrant chunks_bge384 collection from chunks.parquet.
+"""D2-A2 / D2-INT2 — Seed Qdrant collections from chunks.parquet.
 
-Usage:
-    python scripts/seed_qdrant.py                     # seed all sources
-    python scripts/seed_qdrant.py --source scifact    # only SciFact rows
-    python scripts/seed_qdrant.py --source arxiv      # only arxiv + arxiv-demo rows
+Each ``--source`` writes to its OWN collection so the D2-INT2 per-source
+retriever design works (each per-source HybridRetriever consumes a
+collection whose point IDs match its reset-indexed local df):
+
+    python scripts/seed_qdrant.py                     # all  -> chunks_bge384
+    python scripts/seed_qdrant.py --source scifact    # scifact-only -> chunks_bge384_scifact
+    python scripts/seed_qdrant.py --source arxiv      # arxiv + arxiv-demo -> chunks_bge384_arxiv
     python scripts/seed_qdrant.py --no-recreate       # upsert into existing collection
 
 Reads QDRANT_URL from env (default: http://localhost:6333).
@@ -31,6 +34,15 @@ SOURCE_FILTERS = {
     "arxiv": {"arxiv", "arxiv-demo"},
 }
 
+# Per-source -> collection name. MUST match SOURCE_COLLECTIONS in
+# src/csai415/api.py so the live api wires each per-source retriever to
+# the right Qdrant collection.
+SOURCE_COLLECTIONS = {
+    None: QDRANT_COLLECTION,            # "chunks_bge384"  (full corpus)
+    "scifact": "chunks_bge384_scifact",
+    "arxiv": "chunks_bge384_arxiv",
+}
+
 
 def _prepare_parquet(source_filter: str | None) -> tuple[Path, bool]:
     """Return (parquet_path, is_temp). Filters to a temp file when needed."""
@@ -51,20 +63,26 @@ def _prepare_parquet(source_filter: str | None) -> tuple[Path, bool]:
 
 
 def seed_qdrant(qdrant_url: str, source_filter: str | None = None, recreate: bool = True) -> dict:
-    """Seed Qdrant collection from parquet. Returns stats dict."""
+    """Seed the source's Qdrant collection from parquet. Returns stats dict.
+
+    Collection name is derived from ``source_filter`` via
+    :data:`SOURCE_COLLECTIONS` — different sources go to different collections
+    so a re-seed of one source can't clobber another.
+    """
     parquet_path, is_temp = _prepare_parquet(source_filter)
+    collection = SOURCE_COLLECTIONS[source_filter]
 
     try:
         client = QdrantClient(url=qdrant_url)
-        n = seed_collection_from_parquet(client, parquet_path, recreate=recreate)
+        n = seed_collection_from_parquet(client, parquet_path, collection=collection, recreate=recreate)
     finally:
         if is_temp:
             parquet_path.unlink(missing_ok=True)
 
-    info = client.get_collection(QDRANT_COLLECTION)
-    print(f"seed_qdrant: {n} points into {QDRANT_COLLECTION} "
+    info = client.get_collection(collection)
+    print(f"seed_qdrant: {n} points into {collection} "
           f"(size={info.config.params.vectors.size}, dist={info.config.params.vectors.distance})")
-    return {"points": n}
+    return {"points": n, "collection": collection}
 
 
 def main() -> int:
