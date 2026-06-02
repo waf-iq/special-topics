@@ -264,6 +264,6 @@ If D2-A1 slips past H6, the fallback is to seed Mongo + Qdrant + Neo4j with just
 - [ ] `cypher/` has 5 documented queries; `reports/d2_cypher_examples.md` has their real outputs against the seeded graph.
 - [ ] `reports/d2_dataflow.png` (rendered from `.mmd`) committed.
 - [ ] `reports/D2_report.pdf` ≤ 2 pages, covers all rubric lines.
-- [ ] `pytest tests/test_smoke.py` green (both D1 path and `D2_STACK_UP=1` path when the stack is running).
+- [ ] `pytest tests/test_smoke.py` green in both modes: default run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live stack up, run is `12 passed`.
 - [ ] Each member has ≥2 commits under their own GitHub identity on D2 branches.
 - [ ] Each member has a populated `ai_logs/<name>_d2.md` with share-link + summary.
