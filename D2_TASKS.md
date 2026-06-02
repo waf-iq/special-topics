@@ -187,8 +187,8 @@ Then set `CSAI415_USE_QDRANT=1` in the API service's env and restart. `GET /heal
 - If `cs.CL` is the only topic (because we filtered to `cat:cs.CL`), pick query 3 as a year-window count instead so the result is non-trivial.
 
 ### Task D2-A3 — 2-page D2 report
-**Owner:** Yousef Alsakkaf
-**Depends on:** D2-B3, D2-C3, D2-M1's diagram
+**Owner:** Ahmad Fraij (reassigned from Yousef — Ahmad freed up after D2-A4)
+**Depends on:** D2-B3, D2-C3, D2-M1's diagram (scaffold sections 1–3 + 7 can start now)
 
 - `reports/D2_report.md` (compiled to PDF, same toolchain as D1).
 - Sections: (1) one-paragraph architecture, (2) dataflow diagram from D2-M1, (3) ingest stats (papers + chunks per source), (4) `/search` metrics table from D2-B3, (5) top-k example queries with citations, (6) 5 Cypher queries + sample outputs, (7) decisions/pitfalls.
