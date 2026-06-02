@@ -201,13 +201,14 @@ def create_app(
             raise HTTPException(status_code=503, detail="retriever not loaded")
         client = getattr(app.state, "qdrant_client", None)
         if client is not None:
-            try:
-                client.get_collection(SOURCE_COLLECTIONS[None])
-            except Exception as exc:
-                raise HTTPException(
-                    status_code=503,
-                    detail=f"qdrant unreachable: {exc!s}",
-                ) from exc
+            for col in SOURCE_COLLECTIONS.values():
+                try:
+                    client.get_collection(col)
+                except Exception as exc:
+                    raise HTTPException(
+                        status_code=503,
+                        detail=f"qdrant collection {col!r} unreachable: {exc!s}",
+                    ) from exc
         return {"status": "ok"}
 
     @app.post("/search", response_model=list[SearchHit])
