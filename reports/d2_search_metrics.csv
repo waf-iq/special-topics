@@ -1,0 +1,4 @@
+config,ndcg@5,recall@5,recall@10,p95_latency_ms
+bm25_only,0.4172,0.4733,0.5317,103.7
+dense_only,0.563,0.6489,0.7778,109.7
+hybrid_blessed,0.5611,0.6489,0.7306,106.0
