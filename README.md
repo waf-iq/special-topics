@@ -4,17 +4,18 @@ Hybrid retrieval + GraphRAG agent over scientific PDFs with online learning and 
 
 ## Team
 
-Pair labels reflect temporal order: Pair A starts first, Pair C starts last.
+Pairs rotated between D1 and D1-rework; the layout below reflects the current
+assignment used for D1-rework and D2.
 
-| Member | D1 slice |
-|---|---|
-| Ahmed Soliman + Ahmad Fraij | Pair A — Corpus + Eval + Report (ingest pipeline + gold Q/A) |
-| Yousef Alsakkaf | Pair A — Corpus + Eval + Report (eval/runcard/report/plumbing) |
-| WAFIQ Akram ABO DAKEN | Pair B — AutoML (Optuna driver + run card + notebook) |
-| Ahmed Soliman + Ahmad Fraij | Pair B — AutoML (HybridRetriever class + search space) |
-| Abdurlahman Alali | Pair C — Online learning (River learner) |
-| Yehia Noureldin | Pair C — Online learning (drift simulation + prequential plot) |
-| Musab | Solo — Experiment tracking (MLflow integration around Optuna study) |
+| Pair | Members | D2 focus |
+|---|---|---|
+| Pair A | Ahmad Fraij + Yousef Alsakkaf | Corpus expansion (D2-A1), Mongo + Qdrant seed (D2-A2), smoke test (D2-A4), 2-page D2 report (D2-A3) |
+| Pair B | WAFIQ Akram ABO DAKEN + Ahmed Soliman | Qdrant dense backend (D2-B2), FastAPI `/search` (D2-B1), retrieval metrics (D2-B3), Qdrant swap (D2-INT2) |
+| Pair C | Abdurlahman Alali + Yehia Noureldin | Neo4j loader (D2-C1), Cypher query library (D2-C2), live-graph capture (D2-C3) |
+| Solo | Musab Kamberi | Docker Compose stack + diagram + Makefile (D2-M1), live re-seed (D2-INT1), Qdrant deployment (D2-INT2 follow-up) |
+
+See `D2_TASKS.md` for per-task ownership including covering arrangements
+when a teammate was offline. D1 ownership lives in `MEMBER_BRIEF.md`.
 
 ## D1 setup
 
