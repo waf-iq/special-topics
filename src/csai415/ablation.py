@@ -35,7 +35,7 @@ from .retrieve import (
 )
 from .runcard import RUNCARD_PATH
 
-ABLATION_CSV = Path("reports/search_space_ablation.csv")
+ABLATION_CSV = Path("reports/D1/search_space_ablation.csv")
 
 # Every dimension Optuna searches over (seed is fixed, so it is not a search dim).
 SEARCH_DIMS = [

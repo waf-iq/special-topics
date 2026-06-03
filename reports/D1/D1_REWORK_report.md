@@ -56,7 +56,7 @@ The runcard at `configs/winning_runcard.yaml` is now schema v3 and carries:
 - `notes` — narrative paragraph explaining the two-stage 5-D-comparison + 7-D-blessed design
 
 ### Where to verify
-- **Tables**: `reports/sampler_comparison.{csv,md}`, `reports/search_space_ablation.csv`
+- **Tables**: `reports/D1/sampler_comparison.{csv,md}`, `reports/D1/search_space_ablation.csv`
 - **Runcard**: `configs/winning_runcard.yaml`
 - **Notebook (read-only view of artifacts)**: `notebooks/01_automl.ipynb`
 - **Regenerate end-to-end** (≈105 min for all 5 methods, ≈27 min for BOHB-only):
@@ -121,8 +121,8 @@ Mean NDCG@5 per segment (pre-drift / between drifts / post-drift-2) plus ADWIN f
 ![Prequential NDCG@5 — 4 variants, 2000 events, 2 drifts](prequential.png)
 
 ### Where to verify
-- **Tables**: `reports/online_learning_results.csv`
-- **Plot**: `reports/prequential.png`
+- **Tables**: `reports/D1/online_learning_results.csv`
+- **Plot**: `reports/D1/prequential.png`
 - **Notebook (read-only view of artifacts)**: `notebooks/02_online_learning.ipynb`
 - **Regenerate end-to-end** (≈5 min):
   ```

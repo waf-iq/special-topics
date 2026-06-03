@@ -19,8 +19,8 @@ D2 = Week 7, **15% of project** = Ingest & storage (3%) + Hybrid retrieval (5%) 
 | Rubric line | Weight | Artifact in repo |
 |---|---|---|
 | Ingest & storage | 3% | `seed_mongo.py` + `seed_qdrant.py`; Mongo `papers`+`chunks` collections with provenance; Qdrant `chunks_bge384` HNSW index; schema doc |
-| Hybrid retrieval | 5% | `POST /search` (FastAPI) backed by Qdrant + BM25 with blessed BOHB config; `reports/d2_search_metrics.csv` (Recall@5, Recall@10, p95 latency) + 5 top-k example queries with citations |
-| Graph build | 5% | Neo4j seeded with Authors/Papers/Topics; `cypher/` directory with 3–5 documented queries; dataflow diagram (`reports/d2_dataflow.{mmd,png}`) |
+| Hybrid retrieval | 5% | `POST /search` (FastAPI) backed by Qdrant + BM25 with blessed BOHB config; `reports/D2/d2_search_metrics.csv` (Recall@5, Recall@10, p95 latency) + 5 top-k example queries with citations |
+| Graph build | 5% | Neo4j seeded with Authors/Papers/Topics; `cypher/` directory with 3–5 documented queries; dataflow diagram (`reports/D2/d2_dataflow.{mmd,png}`) |
 | Engineering | 2% | `docker-compose.yml` (Mongo + Qdrant + Neo4j + FastAPI), `.env.example`, healthchecks, `make seed`, one-command README quickstart, smoke test |
 
 ---
@@ -121,17 +121,17 @@ Blessed BOHB config (`hybrid_weight=0.777, candidate_k=27, metric=l2, bm25_k1=2.
   4. Papers about topic T and authors who wrote them.
   5. Authors who write on BOTH topic T1 and topic T2 (intersection).
 - Each query gets a one-paragraph "why this is useful for the agent" note (D3 GraphRAG will consume these).
-- After H6 reseed, capture actual outputs into `reports/d2_cypher_examples.md`.
+- After H6 reseed, capture actual outputs into `reports/D2/d2_cypher_examples.md`.
 
 ### Solo + Pair C support — Engineering / infra
 
 #### Task D2-M1 — Docker Compose + diagram + README ✅
-**Owner:** Musab (commit `6b3c5c5` via PR #4). `docker-compose.yml` (mongo+qdrant+neo4j+api with healthchecks), `Dockerfile`, `Makefile` with `up`/`seed`/`logs`/`clean` targets, `reports/d2_dataflow.mmd` + rendered PNG, `.env.example`, README quickstart. Abdurlahman ultimately stayed focused on D2-C1 — Musab landed M1 solo.
+**Owner:** Musab (commit `6b3c5c5` via PR #4). `docker-compose.yml` (mongo+qdrant+neo4j+api with healthchecks), `Dockerfile`, `Makefile` with `up`/`seed`/`logs`/`clean` targets, `reports/D2/d2_dataflow.mmd` + rendered PNG, `.env.example`, README quickstart. Abdurlahman ultimately stayed focused on D2-C1 — Musab landed M1 solo.
 
 - `docker-compose.yml`: services for `mongo` (port 27017), `qdrant` (6333), `neo4j` (7474+7687, `NEO4J_AUTH=none` for dev), `api` (the FastAPI app, built from `Dockerfile`). Named volumes for each store. Healthchecks for all 4.
 - `.env.example` with `MONGO_URL`, `QDRANT_URL`, `NEO4J_URL`, `API_PORT`.
 - `scripts/seed_all.sh` (or `Makefile` target `seed`) that runs D2-A2's two seed scripts + D2-C1's seed in order.
-- `reports/d2_dataflow.mmd` (mermaid) + rendered `.png`: shows arXiv PDFs + SciFact → ingest → (Mongo + Qdrant + Neo4j) → FastAPI `/search` → user. Include the GraphRAG path as dashed lines labelled "D3".
+- `reports/D2/d2_dataflow.mmd` (mermaid) + rendered `.png`: shows arXiv PDFs + SciFact → ingest → (Mongo + Qdrant + Neo4j) → FastAPI `/search` → user. Include the GraphRAG path as dashed lines labelled "D3".
 - README quickstart: `docker compose up -d && make seed && curl localhost:8000/search ...`. One command should bring the stack up; second command should seed.
 
 ---
@@ -139,10 +139,10 @@ Blessed BOHB config (`hybrid_weight=0.777, candidate_k=27, metric=l2, bm25_k1=2.
 ## Wave 2 — runs at H5 after Wave 1 lands (~30 min total)
 
 ### Task D2-INT1 — Reseed against expanded corpus ✅
-**Owner:** Musab (commit `6d7ba08`). Brought up full stack, ran the three seeders against the expanded parquet. Mongo: 5,338 papers + 15,760 chunks. Qdrant: 15,760 vectors. Neo4j: 155 papers / 764 authors / 22 topics. Verification at `reports/d2_int1_verification.md`.
+**Owner:** Musab (commit `6d7ba08`). Brought up full stack, ran the three seeders against the expanded parquet. Mongo: 5,338 papers + 15,760 chunks. Qdrant: 15,760 vectors. Neo4j: 155 papers / 764 authors / 22 topics. Verification at `reports/D2/d2_int1_verification.md`.
 
 ### Task D2-INT2 — Swap `/search` to Qdrant-backed dense ✅
-**Owner:** WAFIQ (code: commits `1eff7fa` per-source backends + `5ba6473` seed_qdrant collection-name fix) + Musab (deployment: commits `2b5553d` live re-seed + `584521f` all-collection /healthz). Verification at `reports/d2_int2_verification.md`. p95 latency 438ms, well under 2s SLA.
+**Owner:** WAFIQ (code: commits `1eff7fa` per-source backends + `5ba6473` seed_qdrant collection-name fix) + Musab (deployment: commits `2b5553d` live re-seed + `584521f` all-collection /healthz). Verification at `reports/D2/d2_int2_verification.md`. p95 latency 438ms, well under 2s SLA.
 
 **Approach taken (plan A): three Qdrant collections.** Each per-source `HybridRetriever` in `api.py` is wired to its own Qdrant collection — `chunks_bge384` for the full corpus, `chunks_bge384_scifact`, `chunks_bge384_arxiv` for the subsets. The per-collection layout sidesteps a corpus_idx mismatch between Qdrant's global point IDs and each retriever's reset-indexed local df. Gated on `CSAI415_USE_QDRANT=1` env var so the numpy in-memory fallback keeps the existing test suite working without Docker.
 
@@ -160,26 +160,26 @@ Then set `CSAI415_USE_QDRANT=1` in the API service's env and restart. `GET /heal
 ## Wave 3 — runs at H7 after Wave 2 lands (~2 hours)
 
 ### Task D2-B3 — Metrics table against `/search` ✅
-**Nominal owner:** Ahmed Soliman. **Actual execution:** WAFIQ (covering — Ahmed offline; commit `ed3668f`). `scripts/eval_search_metrics.py` + `reports/d2_search_metrics.csv` + `reports/d2_topk_examples.md`. Hybrid_blessed lands within 0.5pp of D1 runcard holdout; honest framing required in report — `dense_only` beats `hybrid_blessed` on Recall@10 (0.778 vs 0.731), a real corpus characteristic.
+**Nominal owner:** Ahmed Soliman. **Actual execution:** WAFIQ (covering — Ahmed offline; commit `ed3668f`). `scripts/eval_search_metrics.py` + `reports/D2/d2_search_metrics.csv` + `reports/D2/d2_topk_examples.md`. Hybrid_blessed lands within 0.5pp of D1 runcard holdout; honest framing required in report — `dense_only` beats `hybrid_blessed` on Recall@10 (0.778 vs 0.731), a real corpus characteristic.
 **Depends on:** D2-INT2
 
 - Run `csai415.eval.evaluate(retriever_fn=lambda q,k,hw: call_search_api(q, k, source="scifact"), queries=load_qa(), k=5)`.
 - Repeat at `k=10`.
-- Produce `reports/d2_search_metrics.csv`: rows = `{bm25_only, dense_only, hybrid_blessed}`, cols = `recall@5, recall@10, ndcg@5, p95_latency_ms`. Compare to D1 numbers as a sanity check (should be within ±1pp of the runcard's holdout metrics).
-- Pick 5 example queries (mix of easy / hard / a couple from arXiv side without qrels) → `reports/d2_topk_examples.md` showing query + top-5 hits with `paper title, page_range, score`.
+- Produce `reports/D2/d2_search_metrics.csv`: rows = `{bm25_only, dense_only, hybrid_blessed}`, cols = `recall@5, recall@10, ndcg@5, p95_latency_ms`. Compare to D1 numbers as a sanity check (should be within ±1pp of the runcard's holdout metrics).
+- Pick 5 example queries (mix of easy / hard / a couple from arXiv side without qrels) → `reports/D2/d2_topk_examples.md` showing query + top-5 hits with `paper title, page_range, score`.
 
 ### Task D2-C3 — Capture real Cypher outputs ✅
-**Owner:** Yehia Noureldin (commit `2426fac`). `reports/d2_cypher_examples.md` + `scripts/capture_cypher_outputs.py` runner. Captured against the live graph (155 papers / 764 authors / 13 topics).
+**Owner:** Yehia Noureldin (commit `2426fac`). `reports/D2/d2_cypher_examples.md` + `scripts/capture_cypher_outputs.py` runner. Captured against the live graph (155 papers / 764 authors / 13 topics).
 **Depends on:** D2-INT1
 
 - Re-run the 5 Cypher queries from D2-C2 against the real seeded graph (now with ~120 arxiv papers, ~300+ authors, ~1 topic = cs.CL plus any sub-categories like cs.CL+cs.LG).
-- Capture outputs (truncated to 10 rows each) into `reports/d2_cypher_examples.md`.
+- Capture outputs (truncated to 10 rows each) into `reports/D2/d2_cypher_examples.md`.
 - If `cs.CL` is the only topic (because we filtered to `cat:cs.CL`), pick query 3 as a year-window count instead so the result is non-trivial.
 
 ### Task D2-A3 — 2-page D2 report ✅
 **Owners:** Ahmad Fraij + WAFIQ Akram ABO DAKEN (co-authored). Ahmad shipped the scaffold (commits `aaedfb1` + `3ac9879`); WAFIQ did the rework — embedded the dataflow diagram, pulled in real numbers from `d2_int1_verification.md` / `d2_int2_verification.md` / `d2_search_metrics.csv` / `d2_cypher_examples.md`, replaced the pitfalls section with the (a)–(f) list.
 
-- `reports/D2_report.md` (compiled to PDF, same toolchain as D1).
+- `reports/D2/D2_report.md` (compiled to PDF, same toolchain as D1).
 - Sections: (1) one-paragraph architecture, (2) dataflow diagram from D2-M1, (3) ingest stats (papers + chunks per source), (4) `/search` metrics table from D2-B3, (5) top-k example queries with citations, (6) 5 Cypher queries + sample outputs, (7) decisions/pitfalls.
 - Cite the blessed BOHB config from D1 — D2 inherits it, doesn't re-tune.
 - **Pitfalls to call out explicitly:** (a) graph has no `CITES` edges — arXiv API doesn't expose citation data; deferred to D3 (brief permits this — "add CITES if time"); (b) Qdrant uses cosine ANN for candidate generation while blessed metric is L2 — L2 preserved at fusion-time rescoring (<0.5pp drift); (c) Author dedup is name-based, so two distinct people who share a name collapse into one node; (d) D2 retrieval reuses D1's blessed retriever — quality numbers are essentially D1's, the D2 work was moving the stack to production infra (Mongo + Qdrant + Neo4j behind FastAPI); (e) **Qdrant uses three per-source collections** (`chunks_bge384`, `_scifact`, `_arxiv`) to sidestep a corpus_idx mismatch between global Qdrant IDs and the per-source `HybridRetriever`'s reset-indexed local df — operationally clunky (reseed all three on any corpus change) and **scheduled to be refactored in D3** to a single collection with source-filter-at-query-time inside `HybridRetriever.search()`; D3's GraphRAG executor wants one retriever, not three, so the refactor pays for itself.
@@ -249,11 +249,11 @@ If D2-A1 slips past H6, the fallback is to seed Mongo + Qdrant + Neo4j with just
 - [x] `docker compose up -d` brings Mongo + Qdrant + Neo4j + FastAPI cleanly. `GET /healthz` returns 200 within 30s of startup. *(Musab D2-INT1 + D2-INT2)*
 - [x] `make seed` populates all three stores idempotently. Re-running is safe. *(WAFIQ fix `463c7f6` adds per-source Qdrant)*
 - [x] `POST /search {"query": "...", "k": 5}` returns 5 hits with `chunk_id, paper_id, title, text, page_range, score`. *(verified in `d2_int2_verification.md`)*
-- [x] `reports/d2_search_metrics.csv` exists with Recall@5/@10 + p95 latency for bm25/dense/hybrid on SciFact holdout. *(D2-B3, `ed3668f`)*
-- [x] `reports/d2_topk_examples.md` has 5 example queries with citations. *(D2-B3 — 3 SciFact + 2 arXiv)*
-- [x] `cypher/` has 5 documented queries; `reports/d2_cypher_examples.md` has their real outputs against the seeded graph. *(Yehia D2-C2 + D2-C3)*
-- [x] `reports/d2_dataflow.png` (rendered from `.mmd`) committed. *(Musab D2-M1)*
-- [x] `reports/D2_report.pdf` ≤ 2 pages, covers all rubric lines. *(Ahmad + WAFIQ co-authored)*
+- [x] `reports/D2/d2_search_metrics.csv` exists with Recall@5/@10 + p95 latency for bm25/dense/hybrid on SciFact holdout. *(D2-B3, `ed3668f`)*
+- [x] `reports/D2/d2_topk_examples.md` has 5 example queries with citations. *(D2-B3 — 3 SciFact + 2 arXiv)*
+- [x] `cypher/` has 5 documented queries; `reports/D2/d2_cypher_examples.md` has their real outputs against the seeded graph. *(Yehia D2-C2 + D2-C3)*
+- [x] `reports/D2/d2_dataflow.png` (rendered from `.mmd`) committed. *(Musab D2-M1)*
+- [x] `reports/D2/D2_report.pdf` ≤ 2 pages, covers all rubric lines. *(Ahmad + WAFIQ co-authored)*
 - [x] `pytest tests/test_smoke.py` green in both modes: default run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live stack up, run is `12 passed`. *(D2-A4)*
 - [ ] Each member has ≥2 commits under their own GitHub identity on D2 branches. *(Ahmed Soliman currently at 1 — needs a follow-up commit, or co-author trailer in D2-B3-related commits)*
 - [ ] Each member has a populated `ai_logs/<name>_d2.{md,txt}` with share-link + summary. *(handled offline)*

@@ -46,7 +46,7 @@ Render the report figures from the study:
 ```bash
 python -m nbconvert --to notebook --execute notebooks/01_automl.ipynb --inplace
 # ~30 sec
-# outputs: reports/optimization_history.png, reports/param_importances.png, reports/winner_vs_baselines.png, reports/winner_vs_baselines.csv
+# outputs: reports/D1/optimization_history.png, reports/D1/param_importances.png, reports/D1/winner_vs_baselines.png, reports/D1/winner_vs_baselines.csv
 ```
 
 ## Online learning prequential — Pair C
@@ -56,7 +56,7 @@ Runs the ε-greedy bandit vs static AutoML-winner baseline over a 200-event stre
 ```bash
 python -m nbconvert --to notebook --execute notebooks/02_online_learning.ipynb --inplace
 # ~2 min
-# outputs: reports/prequential.png (depends on configs/winning_runcard.yaml from Pair B)
+# outputs: reports/D1/prequential.png (depends on configs/winning_runcard.yaml from Pair B)
 ```
 
 ## MLflow tracking — Solo (Musab)
@@ -66,7 +66,7 @@ Replays the completed Optuna study into MLflow, tags the winner as blessed with 
 ```bash
 python -m csai415.mlflow_tracking
 # ~30 sec
-# outputs: mlruns.db (gitignored), reports/mlflow_top5.md, reports/mlflow_parallel_coords.png
+# outputs: mlruns.db (gitignored), reports/D1/mlflow_top5.md, reports/D1/mlflow_parallel_coords.png
 
 mlflow ui --backend-store-uri sqlite:///mlruns.db
 # browse at http://localhost:5000
@@ -74,10 +74,10 @@ mlflow ui --backend-store-uri sqlite:///mlruns.db
 
 ## D1 report
 
-The Markdown source is at `reports/D1_report.md`; the committed PDF was rendered via:
+The Markdown source is at `reports/D1/D1_report.md`; the committed PDF was rendered via:
 
 ```bash
-pandoc reports/D1_report.md -o reports/D1_report.pdf
+pandoc reports/D1/D1_report.md -o reports/D1/D1_report.pdf
 ```
 
 (Any Markdown→PDF tool works; the figure paths are relative so `pandoc` handles them out of the box.)
@@ -197,7 +197,7 @@ curl -s -X POST http://localhost:8000/search \
 # expect 5 hits, every chunk_id prefixed "scifact:"
 ```
 
-Full verification (3 source paths + 20-request p95 latency) is in `reports/d2_int2_verification.md`.
+Full verification (3 source paths + 20-request p95 latency) is in `reports/D2/d2_int2_verification.md`.
 
 ## Run the live-stack smoke test — D2-A4
 
@@ -214,8 +214,8 @@ Without the env var the live test is skipped and the suite stays green offline.
 python scripts/eval_search_metrics.py
 # ~2 min: runs the 60-query SciFact holdout against the in-process retriever
 # Outputs:
-#   reports/d2_search_metrics.csv  (3 configs × 4 metrics)
-#   reports/d2_topk_examples.md    (3 SciFact + 2 arXiv example queries)
+#   reports/D2/d2_search_metrics.csv  (3 configs × 4 metrics)
+#   reports/D2/d2_topk_examples.md    (3 SciFact + 2 arXiv example queries)
 # Expected: hybrid_blessed NDCG@5 = 0.561, Recall@5 = 0.649, p95 ~106ms
 ```
 
@@ -226,7 +226,7 @@ Requires Neo4j seeded (above):
 ```bash
 python scripts/capture_cypher_outputs.py
 # Runs all 5 cypher/*.cypher files against the live graph, captures results.
-# Output: reports/d2_cypher_examples.md
+# Output: reports/D2/d2_cypher_examples.md
 ```
 
 ## Regenerate the dataflow diagram — D2-M1
@@ -243,7 +243,7 @@ python -c "
 from markdown_pdf import MarkdownPdf, Section
 from pathlib import Path
 import os
-os.chdir('reports')
+os.chdir('reports/D2')
 md = Path('D2_report.md').read_text(encoding='utf-8')
 pdf = MarkdownPdf(toc_level=0)
 pdf.add_section(Section(md, paper_size='A4'))
@@ -253,7 +253,7 @@ pdf.save('D2_report.pdf')
 "
 ```
 
-(`pandoc reports/D2_report.md -o reports/D2_report.pdf` also works if pandoc is installed.)
+(`pandoc reports/D2/D2_report.md -o reports/D2/D2_report.pdf` also works if pandoc is installed.)
 
 ## Tear down (full reset)
 
@@ -283,7 +283,7 @@ python scripts/capture_cypher_outputs.py
 D2_STACK_UP=1 pytest tests/test_smoke.py -v
 ```
 
-Total ≈ 10-15 minutes (compose image build dominates first time). All `reports/d2_*.{csv,md,png}` regenerate; `/search` is live on `localhost:8000`.
+Total ≈ 10-15 minutes (compose image build dominates first time). All `reports/D2/d2_*.{csv,md,png}` regenerate; `/search` is live on `localhost:8000`.
 
 ## Troubleshooting
 
@@ -291,4 +291,4 @@ Total ≈ 10-15 minutes (compose image build dominates first time). All `reports
 - **`make seed` errors out on `seed_neo4j.py`** → check `docker compose ps neo4j` is healthy. Neo4j takes ~15-20 s longer than Mongo/Qdrant to settle on first boot.
 - **Embedder download timing out on the API container** → `BAAI/bge-small-en-v1.5` is fetched at app startup. First boot needs internet; subsequent restarts use the HuggingFace cache mounted in the container.
 - **`docker compose --profile api up` fails to build** → check the `Dockerfile` matches the python version in `.venv` (3.12 expected); the api image installs `requirements.txt` so any local-only deps would surface here.
-- **First `/search` after restart is slow (~2.5 s)** → expected: Qdrant HNSW cold-cache. Subsequent queries are sub-500 ms; see `reports/d2_int2_verification.md` for the full latency profile.
+- **First `/search` after restart is slow (~2.5 s)** → expected: Qdrant HNSW cold-cache. Subsequent queries are sub-500 ms; see `reports/D2/d2_int2_verification.md` for the full latency profile.

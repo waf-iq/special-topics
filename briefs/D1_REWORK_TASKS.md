@@ -31,7 +31,7 @@ Recalibrated up from "≥3 samplers" to the prof's Week 02 HPO lab framing: **fi
 **Blessed method (Option C):** BOHB — best lab-narrative pick (53/80 trials pruned, continuous-space search), tied with Grid empirically. Reported alongside Grid and TPE as "statistically indistinguishable" in the rework report.
 
 **Outputs produced:**
-- `reports/sampler_comparison.csv` + `.md` — 5-row leaderboard
+- `reports/D1/sampler_comparison.csv` + `.md` — 5-row leaderboard
 - `studies/csai415-d1-{grid,random,tpe_bayesian,hyperband,bohb}.db` — one Optuna SQLite per method
 - `tests/test_hpo_methods_smoke.py` — 5 tests, all green
 
@@ -44,7 +44,7 @@ Originally scoped as "add a new dimension to the search space + ablate". After B
 
 - Hold the BOHB-blessed config fixed: `metric=l2, svd_dim=None, normalize=False, hybrid_weight=0.825, candidate_k=25`.
 - For each dim in `RetrieverConfig`, drop it back to its `RetrieverConfig` default (cosine / None / True / 0.5 / 10) one at a time and re-evaluate on the 60-query holdout.
-- Output `reports/search_space_ablation.csv`: rows = dims, cols = `dim_name`, `value_blessed`, `value_default`, `holdout_ndcg5_blessed`, `holdout_ndcg5_default`, `delta`.
+- Output `reports/D1/search_space_ablation.csv`: rows = dims, cols = `dim_name`, `value_blessed`, `value_default`, `holdout_ndcg5_blessed`, `holdout_ndcg5_default`, `delta`.
 - Defensible new-dim work (BM25 `k1`/`b`, query-prefix toggle) moves to D2 with a one-line note in the D1 report.
 - **Does not block B3** — can run in parallel since B3 only consumes B1 output.
 
@@ -75,7 +75,7 @@ Originally scoped as "add a new dimension to the search space + ablate". After B
 **Owner:** Musab
 
 - Restructure `src/csai415/mlflow_tracking.py` so each of the 5 method study DBs from B1 (`studies/csai415-d1-{grid,random,tpe_bayesian,hyperband,bohb}.db`) gets its own parent MLflow run, with each method's trials as child runs.
-- `reports/mlflow_top5.md` becomes per-method (top-5 per method + an overall blessed run pointing at the BOHB winner).
+- `reports/D1/mlflow_top5.md` becomes per-method (top-5 per method + an overall blessed run pointing at the BOHB winner).
 - Compare-runs screenshot should now show all 5 methods (Grid / Random / TPE / Hyperband / BOHB) side by side — that's the new headline for Musab's slice.
 - **Important:** the old single-study constants (`STUDY_NAME = "csai415-d1-knn"`, `STUDY_STORAGE = "sqlite:///studies/csai415-d1-knn.db"`) are dead code paths now. Either delete or update to read from the rework studies.
 
@@ -91,7 +91,7 @@ Originally scoped as "add a new dimension to the search space + ablate". After B
 
 Inputs are already on disk from B1; no recompute needed:
 - `studies/csai415-d1-bohb.db` (blessed method's full trial history)
-- `reports/sampler_comparison.csv` (5-method leaderboard for the comparison section)
+- `reports/D1/sampler_comparison.csv` (5-method leaderboard for the comparison section)
 
 Tasks:
 - Extend `csai415.runcard.write_runcard()` to accept a `comparison` table + `blessed_method` name. Schema bump to v3.
@@ -107,8 +107,8 @@ Tasks:
 
 - Uses the updated runcard from B3 (so the static baseline weight is correct).
 - Run all 3 variants from C1 against the 2000-event stream from C2, plus the static-AutoML-weight baseline.
-- New `reports/prequential.png` overlays all 4 curves.
-- New `reports/online_learning_results.csv`: rows = {static, eps_greedy_contextual, eps_greedy_noncontext, logistic_bandit}, cols = pre-drift NDCG@5, post-drift-1 NDCG@5, post-drift-2 NDCG@5, ADWIN firings count.
+- New `reports/D1/prequential.png` overlays all 4 curves.
+- New `reports/D1/online_learning_results.csv`: rows = {static, eps_greedy_contextual, eps_greedy_noncontext, logistic_bandit}, cols = pre-drift NDCG@5, post-drift-1 NDCG@5, post-drift-2 NDCG@5, ADWIN firings count.
 - **Headline claim must be quantitatively defensible**: either ≥5% post-drift lift vs static (the brief's bar), or a documented why-not with evidence. If contextual beats non-contextual by ≥5%, that's also a publishable finding — it justifies the features.
 
 ### Solo
@@ -125,7 +125,7 @@ Tasks:
 
 ### Pair A (Ahmad Fraij + Yousef Alsakkaf)
 
-#### Task A1 — Rewrite `reports/D1_report.md`
+#### Task A1 — Rewrite `reports/D1/D1_report.md`
 **Owner:** Yousef Alsakkaf
 **Depends on:** B3, C3, M2
 

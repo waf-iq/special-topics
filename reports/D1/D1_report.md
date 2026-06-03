@@ -88,7 +88,7 @@ ADWIN was recalibrated against the 2000-event stream: `delta=0.002` gives ~2-eve
 
 ### Headline result
 
-Mean NDCG@5 per segment (pre-drift / between drifts / post-drift-2), full table in `reports/online_learning_results.csv`:
+Mean NDCG@5 per segment (pre-drift / between drifts / post-drift-2), full table in `reports/D1/online_learning_results.csv`:
 
 | Variant                  | Pre-drift | Post-drift-1 | Post-drift-2 | ADWIN firings |
 |---|---:|---:|---:|---:|
@@ -110,7 +110,7 @@ The original D1 reported "+3% adaptive vs static, below 5%." With 10× the data 
 
 ## Experiment tracking — Solo (Musab)
 
-The 80-trial Optuna study was replayed into MLflow (`csai415-d1-automl` experiment, SQLite backend) for compare-runs visualization and artifact tracking. The winning trial is tagged `csai415.blessed=true` with the runcard YAML and the three Pair B figures attached as artifacts. Top-5 trials by NDCG@5 (full table in `reports/mlflow_top5.md`):
+The 80-trial Optuna study was replayed into MLflow (`csai415-d1-automl` experiment, SQLite backend) for compare-runs visualization and artifact tracking. The winning trial is tagged `csai415.blessed=true` with the runcard YAML and the three Pair B figures attached as artifacts. Top-5 trials by NDCG@5 (full table in `reports/D1/mlflow_top5.md`):
 
 | Run ID  | NDCG@5 | candidate_k | Metric | Hybrid Wt. |
 |---------|-------:|------------:|--------|-----------:|
@@ -138,9 +138,9 @@ All top-5 use heavily dense-leaning weights (>= 0.80) with no SVD and `l2`/`dot`
 
 One-command setup is in the README. Three rework entry points:
 
-- `python -m csai415.hpo_methods` — runs all 5 HPO methods over the 5-D space (Random/TPE/Hyperband/BOHB get the expanded 7-D space), writes `reports/sampler_comparison.{csv,md}`, persists one Optuna SQLite per method under `studies/`, and emits the blessed v3 runcard at `configs/winning_runcard.yaml`. `--methods bohb` re-runs just BOHB; `--bless-only` skips the comparison and rewrites the runcard from existing artifacts.
-- `python -m csai415.ablation` — drop-one-dim ablation against the blessed runcard's `best_params`, writes `reports/search_space_ablation.csv`. Re-run any time `best_params` changes.
-- `python -m csai415.online` — 4-variant prequential comparison over the 2000-event multi-drift stream, writes `reports/online_learning_results.csv` and `reports/prequential.png`. CLI flags: `--n-events`, `--drift-points`, `--seed`.
+- `python -m csai415.hpo_methods` — runs all 5 HPO methods over the 5-D space (Random/TPE/Hyperband/BOHB get the expanded 7-D space), writes `reports/D1/sampler_comparison.{csv,md}`, persists one Optuna SQLite per method under `studies/`, and emits the blessed v3 runcard at `configs/winning_runcard.yaml`. `--methods bohb` re-runs just BOHB; `--bless-only` skips the comparison and rewrites the runcard from existing artifacts.
+- `python -m csai415.ablation` — drop-one-dim ablation against the blessed runcard's `best_params`, writes `reports/D1/search_space_ablation.csv`. Re-run any time `best_params` changes.
+- `python -m csai415.online` — 4-variant prequential comparison over the 2000-event multi-drift stream, writes `reports/D1/online_learning_results.csv` and `reports/D1/prequential.png`. CLI flags: `--n-events`, `--drift-points`, `--seed`.
 
 `notebooks/01_automl.ipynb` and `notebooks/02_online_learning.ipynb` are pure read-only views of those artifacts and regenerate no compute. SciFact is loaded from `ir_datasets`; the corpus chunks and gold qrels are versioned in the repo so a fresh clone reproduces these exact numbers (subject to the single-seed caveats above).
 

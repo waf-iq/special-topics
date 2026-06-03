@@ -39,7 +39,7 @@ read as deliberate, not accidental):
     **wall-clock + holdout score**, not eval count — the report must say so,
     or it invites the same "tick the box" critique D1 got.
 
-Output: `reports/sampler_comparison.csv` + `reports/sampler_comparison.md`
+Output: `reports/D1/sampler_comparison.csv` + `reports/D1/sampler_comparison.md`
 + `studies/csai415-d1-*.db` (one per method) + a list of `RunResult`
 instances.
 
@@ -70,7 +70,7 @@ from .retrieve import (
 )
 from .runcard import RUNCARD_PATH, write_runcard
 
-REPORTS_DIR = Path("reports")
+REPORTS_DIR = Path("reports/D1")
 COMPARISON_CSV = REPORTS_DIR / "sampler_comparison.csv"
 COMPARISON_MD  = REPORTS_DIR / "sampler_comparison.md"
 
@@ -566,8 +566,8 @@ def run_method_comparison(
     list sorted by holdout NDCG@5 descending (the overall winner is index 0).
 
     Artifacts written:
-      * `reports/sampler_comparison.csv` — full table for the notebook
-      * `reports/sampler_comparison.md`  — readable summary for PR / report
+      * `reports/D1/sampler_comparison.csv` — full table for the notebook
+      * `reports/D1/sampler_comparison.md`  — readable summary for PR / report
       * `studies/csai415-d1-{method}.db` — one Optuna SQLite per method
                                             (skipped if storage_dir=None)
 
@@ -646,7 +646,7 @@ _BLESSED_NOTES: dict[str, str] = {
         "BOHB was then re-tuned over the expanded 7 dims (adds BM25 k1/b) so the "
         "top-level best_params and the search_space_ablation are coherent. Grid "
         "stayed 5-D because two more dims would explode the cell count. See "
-        "reports/sampler_comparison.{csv,md} and reports/search_space_ablation.csv."
+        "reports/D1/sampler_comparison.{csv,md} and reports/D1/search_space_ablation.csv."
     ),
 }
 
@@ -665,7 +665,7 @@ def _notes_for(blessed_method: str) -> str:
         f"D1 rework: {blessed_method} blessed (override of default 'bohb') "
         f"after 5-method HPO comparison "
         f"(Grid / Random / TPE / Hyperband / BOHB). See "
-        f"reports/sampler_comparison.{{csv,md}} for the full table; this "
+        f"reports/D1/sampler_comparison.{{csv,md}} for the full table; this "
         f"method's row carries its winning config and holdout numbers."
     )
 
@@ -740,7 +740,7 @@ def write_blessed_runcard(
 
     No HPO retraining. Reads:
       * `studies/csai415-d1-{blessed_method}.db` for the winner config + tune value
-      * `reports/sampler_comparison.csv`         for the full 5-method comparison
+      * `reports/D1/sampler_comparison.csv`         for the full 5-method comparison
       * `configs/d1_split_indices.json`          for split metadata
 
     Recomputes the three legacy baselines (BM25 / dense / default-hybrid) on

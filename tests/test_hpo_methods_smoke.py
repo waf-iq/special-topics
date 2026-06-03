@@ -21,7 +21,7 @@ import pytest
 
 CHUNKS_PARQUET = Path("data/processed/chunks.parquet")
 GOLD_JSONL = Path("data/gold/qa.jsonl")
-COMPARISON_CSV = Path("reports/sampler_comparison.csv")
+COMPARISON_CSV = Path("reports/D1/sampler_comparison.csv")
 BOHB_STUDY_DB  = Path("studies/csai415-d1-bohb.db")
 
 

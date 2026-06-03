@@ -3,7 +3,7 @@
 Run after D2-INT1 (graph seeded with ~120 arXiv papers):
     python scripts/capture_cypher_outputs.py
 
-Writes: reports/d2_cypher_examples.md
+Writes: reports/D2/d2_cypher_examples.md
 """
 
 from pathlib import Path
@@ -129,7 +129,7 @@ def main():
 
     driver.close()
 
-    out_path = Path("reports/d2_cypher_examples.md")
+    out_path = Path("reports/D2/d2_cypher_examples.md")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text("\n".join(output_lines), encoding="utf-8")
     print(f"Saved {out_path}")

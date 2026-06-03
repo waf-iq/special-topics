@@ -56,7 +56,7 @@ pytest tests/test_smoke.py
 
 D2 moves the blessed D1 retriever onto production infra: MongoDB (papers +
 chunks), Qdrant (dense vectors), Neo4j (author/paper/topic graph), behind a
-FastAPI `/search`. Architecture: `reports/d2_dataflow.png`.
+FastAPI `/search`. Architecture: `reports/D2/d2_dataflow.png`.
 
 ```bash
 cp .env.example .env
@@ -109,7 +109,7 @@ tests/          — smoke tests
 - [x] Optuna study (80 trials, multivariate TPE, NopPruner, stratified 80/20 split)
 - [x] `configs/winning_runcard.yaml` reproducible (git SHA + env versions + dataset hashes + split indices)
 - [ ] River + ADWIN online learner with prequential plot
-- [ ] `reports/D1_report.pdf` (2 pages, baseline-vs-AutoML table + prequential chart)
+- [ ] `reports/D1/D1_report.pdf` (2 pages, baseline-vs-AutoML table + prequential chart)
 - [x] `pytest tests/test_smoke.py` green (11 passed + 1 xpass)
 - [ ] Every member has ≥2 commits under their own GitHub identity
 

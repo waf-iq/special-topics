@@ -68,7 +68,7 @@ CSAI415/
 │   ├── 01_automl.ipynb        (Pair B)
 │   └── 02_online_learning.ipynb (Pair C)
 ├── configs/winning_runcard.yaml
-├── reports/D1_report.pdf
+├── reports/D1/D1_report.pdf
 ├── tests/test_smoke.py
 └── ai_logs/<member-name>.md   (one per member with your AI share-link)
 ```
@@ -107,7 +107,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 
 ### 6.A — Pair A: Corpus + Eval + Report (Abdurlahman Alali + Yousef Alsakkaf)
 
-**Files you own:** `src/csai415/ingest.py`, `src/csai415/eval.py`, `src/csai415/runcard.py`, `README.md`, `requirements.txt`, `.env.example`, `tests/test_smoke.py`, `reports/D1_report.pdf`. **You are on the critical path — your outputs unblock Pairs B and C. Start NOW.**
+**Files you own:** `src/csai415/ingest.py`, `src/csai415/eval.py`, `src/csai415/runcard.py`, `README.md`, `requirements.txt`, `.env.example`, `tests/test_smoke.py`, `reports/D1/D1_report.pdf`. **You are on the critical path — your outputs unblock Pairs B and C. Start NOW.**
 
 **Sub-roles:**
 - **Abdurlahman Alali**: ingest pipeline (SciFact load → chunks → embeddings → `chunks.parquet`) + gold Q/A builder from SciFact qrels.
@@ -120,7 +120,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 - `src/csai415/eval.py` verified working with `evaluate(retriever_fn, queries, k=5) -> dict`.
 
 **Acceptance bar — hours 9–11:**
-- 2-page PDF report at `reports/D1_report.pdf` with: (1) one paragraph methods, (2) baseline-vs-AutoML table, (3) prequential plot from Pair C, (4) decisions/pitfalls bullets.
+- 2-page PDF report at `reports/D1/D1_report.pdf` with: (1) one paragraph methods, (2) baseline-vs-AutoML table, (3) prequential plot from Pair C, (4) decisions/pitfalls bullets.
 - `README.md` with one-command setup.
 - `tests/test_smoke.py` runs in < 30s and verifies ingest → retrieve → evaluate works end-to-end on 5 docs.
 
@@ -173,7 +173,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 
 ### 6.C — Pair C: Online learning (Ahmed Soliman + Yehia Noureldin)
 
-**Files you own:** `src/csai415/online.py`, `notebooks/02_online_learning.ipynb`, `reports/prequential.png`.
+**Files you own:** `src/csai415/online.py`, `notebooks/02_online_learning.ipynb`, `reports/D1/prequential.png`.
 
 **You start in Wave 3:** you need both Pair A's `qa.jsonl` and Pair B's working `retriever_fn`. You CAN build skeleton code against a fake retriever in the meantime; swap in real one at the end.
 
@@ -212,7 +212,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 - Local MLflow backend running (`file:./mlruns` is fine; `mlruns/` is gitignored).
 - Optuna→MLflow callback wired: every trial logs `params`, `metrics` (ndcg5, recall5, p95_latency_ms), and the dataset SHA-256 hashes as tags.
 - After the study finishes, the best trial's MLflow run is tagged `csai415.blessed=true` and has the runcard YAML + an optimization-history PNG + a parameter-importance PNG attached as artifacts.
-- `reports/mlflow_top5.md` (or similar) — a markdown table comparing top-5 runs, generated programmatically from `mlflow.search_runs()`. This goes into the 2-page report.
+- `reports/D1/mlflow_top5.md` (or similar) — a markdown table comparing top-5 runs, generated programmatically from `mlflow.search_runs()`. This goes into the 2-page report.
 - A screenshot of the MLflow UI's "Compare Runs" view, also for the report.
 
 **Starter questions for your AI:**
@@ -220,7 +220,7 @@ def retriever_fn(query: str, k: int, hybrid_weight: float) -> list[str]:
 2. **Use the built-in Optuna integration or write own callback** — `optuna.integration.mlflow.MLflowCallback` auto-logs each trial. What does it *not* log that's worth adding (dataset hashes, retriever config nesting, artifact paths)?
 3. **Run hierarchy** — should the 60 Optuna trials be 60 sibling MLflow runs, or 1 parent run with 60 children? Which gives a better Compare-Runs view in the UI?
 4. **The "blessed run" pattern** — after Optuna finishes, what's the cleanest way to mark the winner so D2 reviewers can find it? Custom tag, special run name, or MLflow Model Registry?
-5. **Comparison-table export** — pull top-5 runs at end of study, write a markdown table to `reports/mlflow_top5.md`. Should the script be invoked from inside `run_study()`, or be a separate post-run command? What's better for reproducibility?
+5. **Comparison-table export** — pull top-5 runs at end of study, write a markdown table to `reports/D1/mlflow_top5.md`. Should the script be invoked from inside `run_study()`, or be a separate post-run command? What's better for reproducibility?
 6. **Screenshot for the report** — the MLflow UI has Compare Runs (table), Parallel Coordinates, and Parameter Importance views. Which one tells the strongest story in a single screenshot for a 2-page report?
 7. **After running the live integration**, ask: "I'm seeing N runs in MLflow but Optuna reports M trials — why the mismatch? Pruned trials?"
 

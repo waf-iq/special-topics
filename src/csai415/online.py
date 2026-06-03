@@ -429,7 +429,7 @@ def simulate_feedback_stream(
     return stream
 
 
-def plot_prequential(state: OnlineLearnerState, out_path: Path = Path("reports/prequential.png"),
+def plot_prequential(state: OnlineLearnerState, out_path: Path = Path("reports/D1/prequential.png"),
                       window: int = 20) -> Path:
     """Prequential NDCG@5 chart (§6.C Q5): rolling-window mean of the adaptive
     learner vs the static baseline, planted-drift line, ADWIN firings marked.
@@ -571,8 +571,8 @@ def run_c3(
                               fits log-likelihood naturally.
 
     Outputs written:
-      reports/prequential.png            — 4 rolling NDCG@5 curves overlaid
-      reports/online_learning_results.csv — 4 rows x 5 cols summary table
+      reports/D1/prequential.png            — 4 rolling NDCG@5 curves overlaid
+      reports/D1/online_learning_results.csv — 4 rows x 5 cols summary table
     """
     import csv
     import matplotlib
@@ -684,10 +684,10 @@ def run_c3(
         }
 
     # ------------------------------------------------------------------
-    # Save reports/online_learning_results.csv
+    # Save reports/D1/online_learning_results.csv
     # Rows = 4 variants. Cols = the 5 numbers C3 requires.
     # ------------------------------------------------------------------
-    csv_path = Path("reports/online_learning_results.csv")
+    csv_path = Path("reports/D1/online_learning_results.csv")
     csv_path.parent.mkdir(parents=True, exist_ok=True)
 
     with csv_path.open("w", newline="") as f:
@@ -712,7 +712,7 @@ def run_c3(
     print(f"Saved {csv_path}")
 
     # ------------------------------------------------------------------
-    # Save reports/prequential.png
+    # Save reports/D1/prequential.png
     # Rolling mean smooths the per-event noise so curves are readable.
     # Window=50 over 2000 events is the equivalent of window=5 over 200.
     # ------------------------------------------------------------------
@@ -745,7 +745,7 @@ def run_c3(
     ax.set_ylim(0, 1)
     fig.tight_layout()
 
-    png_path = Path("reports/prequential.png")
+    png_path = Path("reports/D1/prequential.png")
     fig.savefig(png_path, dpi=150)
     plt.close(fig)
     print(f"Saved {png_path}")

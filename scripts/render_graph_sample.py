@@ -6,7 +6,7 @@ graph from a 30-paper sample, lays it out with spring layout, colors by node
 type. The result is a Neo4j-style visualization without needing the live
 stack — same nodes, same edges Neo4j carries.
 
-Output: ``reports/d2_graph_sample.png``.
+Output: ``reports/D2/d2_graph_sample.png``.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ import pandas as pd
 
 CHUNKS_PARQUET = Path("data/processed/chunks.parquet")
 ARXIV_META = Path("data/raw_pdfs/arxiv_batch_meta.json")
-OUTPUT = Path("reports/d2_graph_sample.png")
+OUTPUT = Path("reports/D2/d2_graph_sample.png")
 
 PAPER_COLOR = "#4C72B0"   # blue
 AUTHOR_COLOR = "#55A868"  # green

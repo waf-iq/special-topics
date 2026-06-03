@@ -75,7 +75,7 @@ automl:
     n_evals: 27
     n_pruned: 53
     notes: TPE + HyperbandPruner, ladder (30, 60, 120, 240)
-  comparison_csv: reports/sampler_comparison.csv
+  comparison_csv: reports/D1/sampler_comparison.csv
 metrics:
   winner_tune:
     ndcg5: 0.7192768806220697
@@ -100,5 +100,5 @@ notes: "D1 rework: bohb blessed after 5-method HPO comparison (Grid / Random / T
   \ / Hyperband / BOHB). Grid and BOHB produce identical NDCG@5 on every holdout query\
   \ (paired bootstrap B=5000, P(tie)=1.0); TPE within the same CI. Picked BOHB for\
   \ narrative \u2014 continuous-space search + multi-fidelity pruning landed on the\
-  \ same optimum the prof's lab method ladder predicts. See reports/sampler_comparison.{csv,md}\
+  \ same optimum the prof's lab method ladder predicts. See reports/D1/sampler_comparison.{csv,md}\
   \ for the full table."

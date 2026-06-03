@@ -13,10 +13,10 @@ measured at +5–15 ms per request (p95 over the wire = 438 ms; in-process p95
 here should be lower).
 
 Outputs:
-  reports/d2_search_metrics.csv  -- 3 configs (bm25_only / dense_only /
+  reports/D2/d2_search_metrics.csv  -- 3 configs (bm25_only / dense_only /
                                     hybrid_blessed) x {recall@5, recall@10,
                                     ndcg@5, p95_latency_ms}
-  reports/d2_topk_examples.md    -- 5 example queries (3 SciFact + 2 arXiv)
+  reports/D2/d2_topk_examples.md    -- 5 example queries (3 SciFact + 2 arXiv)
                                     with top-5 hits, paper titles, page ranges
 """
 
@@ -37,8 +37,8 @@ CHUNKS_PARQUET = Path("data/processed/chunks.parquet")
 QA_JSONL = Path("data/gold/qa.jsonl")
 SPLIT_INDICES = Path("configs/d1_split_indices.json")
 RUNCARD = Path("configs/winning_runcard.yaml")
-METRICS_CSV = Path("reports/d2_search_metrics.csv")
-TOPK_MD = Path("reports/d2_topk_examples.md")
+METRICS_CSV = Path("reports/D2/d2_search_metrics.csv")
+TOPK_MD = Path("reports/D2/d2_topk_examples.md")
 
 
 def load_holdout_queries() -> list[dict]:

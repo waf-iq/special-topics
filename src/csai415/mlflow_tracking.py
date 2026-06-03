@@ -26,9 +26,9 @@ STUDY_NAME = "csai415-d1-knn"
 STUDY_STORAGE = "sqlite:///studies/csai415-d1-knn.db"
 
 RUNCARD_PATH = Path("configs/winning_runcard.yaml")
-PLOTS_DIR = Path("reports")
-MARKDOWN_OUT = Path("reports/mlflow_top5.md")
-PARALLEL_COORDS_OUT = Path("reports/mlflow_parallel_coords.png")
+PLOTS_DIR = Path("reports/D1")
+MARKDOWN_OUT = Path("reports/D1/mlflow_top5.md")
+PARALLEL_COORDS_OUT = Path("reports/D1/mlflow_parallel_coords.png")
 
 BLESSED_TAG_KEY = "csai415.blessed"
 ARTIFACT_PLOT_NAMES = (

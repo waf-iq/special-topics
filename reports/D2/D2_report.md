@@ -11,7 +11,7 @@ D2 productionises the D1 retriever onto a service stack: ingestion → MongoDB +
 
 ![D2 dataflow](d2_dataflow.png)
 
-Source `reports/d2_dataflow.mmd`. Flow: SciFact (via `ir_datasets`) + 150 arXiv cs.CL PDFs → `ingest.py` chunk+embed → `chunks.parquet` → seeded into Mongo (paper/chunk provenance), Qdrant (384-d BGE vectors), Neo4j (Author/Paper/Topic graph) → FastAPI `/search` over BM25 + Qdrant fusion. The `make seed` target reseeds all three stores idempotently; `docker compose up -d` brings the stack up in ~30 s.
+Source `reports/D2/d2_dataflow.mmd`. Flow: SciFact (via `ir_datasets`) + 150 arXiv cs.CL PDFs → `ingest.py` chunk+embed → `chunks.parquet` → seeded into Mongo (paper/chunk provenance), Qdrant (384-d BGE vectors), Neo4j (Author/Paper/Topic graph) → FastAPI `/search` over BM25 + Qdrant fusion. The `make seed` target reseeds all three stores idempotently; `docker compose up -d` brings the stack up in ~30 s.
 
 ## 3. Ingest & storage (rubric 3%)
 
@@ -21,7 +21,7 @@ Source `reports/d2_dataflow.mmd`. Flow: SciFact (via `ir_datasets`) + 150 arXiv 
 | Qdrant | Three collections (`chunks_bge384`, `_scifact`, `_arxiv`), 384-d cosine; payload `{chunk_id, paper_id, source, page_start, page_end, title, text}` so `/search` is one-store. | 15,760 / 5,663 / 10,097 vectors |
 | Neo4j | `(:Paper)`, `(:Author)`, `(:Topic)`; `[:WROTE]`, `[:ABOUT]` edges. Uniqueness constraints; `MERGE` semantics (idempotent reseed). SciFact rows skipped (no authors in BEIR). | 155 papers / 764 authors / 13 topics |
 
-Verification reports: `reports/d2_int1_verification.md` (initial seed) and `reports/d2_int2_verification.md` (post per-source Qdrant). Schemas at `docs/d2_schemas.md` + `docs/d2_graph_schema.md`. Corpus splits: SciFact = 5,663 chunks across 3,793 abstracts (BEIR test split, no page info); arXiv = 9,740 chunks across 150 papers (PyMuPDF page-mapped); arxiv-demo = 357 chunks across 5 D1 demo PDFs.
+Verification reports: `reports/D2/d2_int1_verification.md` (initial seed) and `reports/D2/d2_int2_verification.md` (post per-source Qdrant). Schemas at `docs/d2_schemas.md` + `docs/d2_graph_schema.md`. Corpus splits: SciFact = 5,663 chunks across 3,793 abstracts (BEIR test split, no page info); arXiv = 9,740 chunks across 150 papers (PyMuPDF page-mapped); arxiv-demo = 357 chunks across 5 D1 demo PDFs.
 
 ## 4. Hybrid retrieval (rubric 5%)
 
@@ -35,21 +35,21 @@ Metrics on the **60-query SciFact holdout** (same split as D1 runcard for direct
 | `dense_only` (w=1.0) | 0.5630 | 0.6489 | **0.7778** | 109.7 ms |
 | `hybrid_blessed` (w=0.777) | **0.5611** | 0.6489 | 0.7306 | 106.0 ms |
 
-Source: `reports/d2_search_metrics.csv`. D1 runcard `winner_holdout` reference: NDCG@5=0.561, Recall@5=0.649, p95=103 ms — drift on `hybrid_blessed` < 0.5pp on every metric, confirming the production stack preserves D1's blessed retrieval. **Honest finding:** `dense_only` beats `hybrid_blessed` on Recall@10 (0.778 vs 0.731). BM25's top-rank contribution helps NDCG@5 but crowds out relevant dense candidates lower in the ranking. D3 may revisit the fusion weight against deeper-k objectives.
+Source: `reports/D2/d2_search_metrics.csv`. D1 runcard `winner_holdout` reference: NDCG@5=0.561, Recall@5=0.649, p95=103 ms — drift on `hybrid_blessed` < 0.5pp on every metric, confirming the production stack preserves D1's blessed retrieval. **Honest finding:** `dense_only` beats `hybrid_blessed` on Recall@10 (0.778 vs 0.731). BM25's top-rank contribution helps NDCG@5 but crowds out relevant dense candidates lower in the ranking. D3 may revisit the fusion weight against deeper-k objectives.
 
-Live-stack p95 (over HTTP, see `reports/d2_int2_verification.md`): 438 ms; p100 = 2.59 s on the very first request (Qdrant HNSW cold-cache). Subsequent requests sub-500 ms — passes the brief's ≤ 2 s SLA on p95. Top-k example queries (3 SciFact holdout + 2 qualitative arXiv) live in `reports/d2_topk_examples.md`.
+Live-stack p95 (over HTTP, see `reports/D2/d2_int2_verification.md`): 438 ms; p100 = 2.59 s on the very first request (Qdrant HNSW cold-cache). Subsequent requests sub-500 ms — passes the brief's ≤ 2 s SLA on p95. Top-k example queries (3 SciFact holdout + 2 qualitative arXiv) live in `reports/D2/d2_topk_examples.md`.
 
 ## 5. Graph build (rubric 5%)
 
-Neo4j seeded from Mongo via `scripts/seed_neo4j.py` (with parquet dev-fallback `make seed-dev`). Schema (`reports/d2_graph_schema.png`, source `.mmd` — `make diagram`):
+Neo4j seeded from Mongo via `scripts/seed_neo4j.py` (with parquet dev-fallback `make seed-dev`). Schema (`reports/D2/d2_graph_schema.png`, source `.mmd` — `make diagram`):
 
 ![Neo4j ER schema](d2_graph_schema.png)
 
-A 30-paper sample of the live graph (`reports/d2_graph_sample.png`, regenerable via `make graph-sample`) — blue Papers, green Authors, red Topics. Hub topology around `cs.CL` is visible without zooming:
+A 30-paper sample of the live graph (`reports/D2/d2_graph_sample.png`, regenerable via `make graph-sample`) — blue Papers, green Authors, red Topics. Hub topology around `cs.CL` is visible without zooming:
 
 ![Neo4j subgraph sample](d2_graph_sample.png)
 
-Five Cypher queries in `cypher/`, captured outputs in `reports/d2_cypher_examples.md`: (1) papers by author, (2) 2-hop top co-authors, (3) top topics in 2025–2026 (`cs.CL=113, cs.LG=10, cs.CV=10, cs.CR=5, cs.AI=4` — the full-categories list from D2-A2's fix avoids a degenerate single-topic graph), (4) papers + authors by topic, (5) authors on two topics. These map onto D3's GraphRAG executor surfaces (per-paper context, community detection, topic-bounded retrieval, cross-topic agent reasoning).
+Five Cypher queries in `cypher/`, captured outputs in `reports/D2/d2_cypher_examples.md`: (1) papers by author, (2) 2-hop top co-authors, (3) top topics in 2025–2026 (`cs.CL=113, cs.LG=10, cs.CV=10, cs.CR=5, cs.AI=4` — the full-categories list from D2-A2's fix avoids a degenerate single-topic graph), (4) papers + authors by topic, (5) authors on two topics. These map onto D3's GraphRAG executor surfaces (per-paper context, community detection, topic-bounded retrieval, cross-topic agent reasoning).
 
 ## 6. Engineering (rubric 2%)
 
@@ -61,4 +61,4 @@ Stack: `docker-compose.yml` (Mongo 7, Qdrant 1.12.4, Neo4j 5, FastAPI app), `Doc
 
 ## 8. Repo references
 
-`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_search_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.yaml`, `reports/{d2_dataflow,d2_int1_verification,d2_int2_verification,d2_search_metrics,d2_topk_examples,d2_cypher_examples}`. AI logs per member at `ai_logs/<name>_d2.{md,txt}`.
+`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_search_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.yaml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_verification,d2_search_metrics,d2_topk_examples,d2_cypher_examples}`. AI logs per member at `ai_logs/<name>_d2.{md,txt}`.

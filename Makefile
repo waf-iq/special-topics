@@ -29,9 +29,9 @@ seed:              ## Seed all three stores in dependency order (mongo -> qdrant
 seed-dev:          ## Seed Neo4j only, from parquet (before Mongo is populated)
 	$(PYTHON) scripts/seed_neo4j.py --from-parquet data/processed/chunks.parquet --source arxiv
 
-diagram:           ## Render all reports/*.mmd diagrams to PNG via mermaid-cli
-	npx --yes @mermaid-js/mermaid-cli -i reports/d2_dataflow.mmd -o reports/d2_dataflow.png
-	npx --yes @mermaid-js/mermaid-cli -i reports/d2_graph_schema.mmd -o reports/d2_graph_schema.png
+diagram:           ## Render all reports/D2/*.mmd diagrams to PNG via mermaid-cli
+	npx --yes @mermaid-js/mermaid-cli -i reports/D2/d2_dataflow.mmd -o reports/D2/d2_dataflow.png
+	npx --yes @mermaid-js/mermaid-cli -i reports/D2/d2_graph_schema.mmd -o reports/D2/d2_graph_schema.png
 
 graph-sample:      ## Render the Author/Paper/Topic subgraph PNG from parquet (no live Neo4j needed)
 	$(PYTHON) scripts/render_graph_sample.py
