@@ -1,0 +1,20 @@
+erDiagram
+    PAPER {
+        string paper_id PK "unique"
+        string title
+        int year
+        string source "scifact | arxiv"
+    }
+    AUTHOR {
+        string name PK "unique"
+    }
+    TOPIC {
+        string name PK "unique (arxiv category, e.g. cs.CL)"
+    }
+    VENUE {
+        string name PK "deferred — arXiv has no venue metadata"
+    }
+
+    AUTHOR ||--o{ PAPER : WROTE
+    PAPER  ||--o{ TOPIC : ABOUT
+    PAPER  }o--|| VENUE : PUBLISHED_IN

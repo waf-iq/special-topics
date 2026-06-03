@@ -41,15 +41,15 @@ Live-stack p95 (over HTTP, see `reports/d2_int2_verification.md`): 438 ms; p100 
 
 ## 5. Graph build (rubric 5%)
 
-Neo4j seeded from Mongo via `scripts/seed_neo4j.py` (with parquet dev-fallback `make seed-dev`). Five Cypher queries in `cypher/`, captured outputs in `reports/d2_cypher_examples.md`:
+Neo4j seeded from Mongo via `scripts/seed_neo4j.py` (with parquet dev-fallback `make seed-dev`). Schema (`reports/d2_graph_schema.png`, source `.mmd` — `make diagram`):
 
-1. **Papers by author** — `MATCH (a:Author {name:"Jun Wang"})-[:WROTE]->(p)` — returns 2 papers.
-2. **Top co-authors** — 2-hop `WROTE-Paper-WROTE` — returns 5 co-authors of "Jun Wang".
-3. **Top topics by year** (2025–2026) — `cs.CL=113, cs.LG=10, cs.CV=10, cs.CR=5, cs.AI=4`. *Demonstrates the full-categories list from D2-A2's fix — a single-primary-category ingest would have collapsed to one row.*
-4. **Papers & authors by topic** (`cs.CL`) — first 10 paper/author rows.
-5. **Authors on two topics** (`cs.CL ∩ cs.CV`) — intersection query, returns 1 author with 1 paper each side.
+![Neo4j ER schema](d2_graph_schema.png)
 
-These map directly onto D3's GraphRAG executor surfaces: query 1 powers "context for paper X", query 2 powers community detection, queries 3/4 power topic-bounded retrieval, query 5 powers cross-topic agent reasoning.
+A 30-paper sample of the live graph (`reports/d2_graph_sample.png`, regenerable via `make graph-sample`) — blue Papers, green Authors, red Topics. Hub topology around `cs.CL` is visible without zooming:
+
+![Neo4j subgraph sample](d2_graph_sample.png)
+
+Five Cypher queries in `cypher/`, captured outputs in `reports/d2_cypher_examples.md`: (1) papers by author, (2) 2-hop top co-authors, (3) top topics in 2025–2026 (`cs.CL=113, cs.LG=10, cs.CV=10, cs.CR=5, cs.AI=4` — the full-categories list from D2-A2's fix avoids a degenerate single-topic graph), (4) papers + authors by topic, (5) authors on two topics. These map onto D3's GraphRAG executor surfaces (per-paper context, community detection, topic-bounded retrieval, cross-topic agent reasoning).
 
 ## 6. Engineering (rubric 2%)
 
