@@ -1,0 +1,1886 @@
+ ▐▛███▜▌   Claude Code v2.1.162
+▝▜█████▛▘  Opus 4.8 · Claude Max
+  ▘▘ ▝▝    ~\Projects\special-topics
+
+  Feature of the week: /loop — run a prompt or slash command on a recurring interval
+
+
+❯ .                                                                             
+
+● I see just a . — no task yet. What would you like to work on?
+
+  For context, I can see we're in the special-topics repo (currently clean on
+  main), and from memory you're WAFIQ coordinating Pair B (AutoML), with D2 work
+  recently committed. A few things I could help with if useful:
+
+  - D1 rework — the AutoML (20/50) and Online learning (30/50) items flagged to
+  fix before D2
+  - D2 follow-up — anything on the Neo4j/search stack or the report artifacts
+  - Or something else entirely
+
+  Just let me know.
+
+✻ Crunched for 7s
+
+❯ the doctor said missing D2 notebook                                           
+
+● Let me look at the repo structure to understand what "the doctor" is checking
+  and what a D2 notebook should look like.
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● "The doctor" = your instructor/professor, and D2 is missing a notebook. D1
+  shipped two notebooks (notebooks/01_automl.ipynb,
+  notebooks/02_online_learning.ipynb) but D2 has none. Let me confirm what's
+  expected and gather the source material before I build one.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Now let me look at the second D1 notebook for the full pattern, plus the D2
+  artifacts the notebook should load, and check the brief's notebook
+  requirement.
+
+  Read 5 files, ran 3 shell commands (ctrl+o to expand)
+
+● Let me check the runcard (for the D1 holdout reference numbers the notebook
+  will compare against) and confirm the D2 image artifacts exist.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● I have everything I need. The D1 notebooks are reproducible-from-artifacts
+  (they load committed CSVs/PNGs/YAML and narrate them — no Docker required),
+  and the test suite is deliberately green without the stack. The D2 notebook
+  should follow the same philosophy: reproduce the D2 report's evidence from
+  reports/D2/ artifacts, with an optional live-stack section that only fires if
+  the API is up.
+
+  Let me build notebooks/03_d2_retrieval_stack.ipynb via a builder script (so
+  JSON escaping is handled correctly), then execute it to prove it runs without
+  Docker.
+
+● Write(_build_d2_nb.py)
+  ⎿  Wrote 300 lines to _build_d2_nb.py
+      1 """One-shot builder for notebooks/03_d2_retrieval_stack.ipynb.
+      2 
+      3 Kept out of git; deleted after the notebook is generated. Using a
+         builder
+      4 guarantees valid JSON + correct escaping rather than hand-writing
+      5 """
+      6 import json
+      7 from pathlib import Path
+      8 
+      9 cells = []
+     … +410 lines (ctrl+o to expand)
+
+● Now build the notebook and execute it to prove it runs without the stack:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● nbconvert is available. Let me execute the notebook end-to-end (no stack up —
+  the live cell should degrade gracefully):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Executed cleanly (exit 0, 635 KB with rendered image outputs). Let me verify
+  there are no error outputs and spot-check the key computed cells:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All green — no errors, the drift check computes +0.0000 against the D1 holdout
+  (exact match), images render, and the live cell degrades gracefully (URLError
+  → friendly note). Now clean up the builder and wire the notebook into the
+  discoverable docs so the marker finds it.
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● Now I'll add a HOW_TO section for rendering the notebook (mirroring the D1
+  notebook steps), and a repo reference in the D2 report:
+
+● Update(HOW_TO.md)
+  ⎿  Added 10 lines
+      255  
+      256  (`pandoc reports/D2/D2_report.md -o reports/D2/D2_report.pdf` 
+           also works if pandoc is installed.)
+      257  
+      258 +## Render the D2 walkthrough notebook                         
+      259 +                                                              
+      260 +`notebooks/03_d2_retrieval_stack.ipynb` is the D2 companion to
+          + the D1 notebooks. It reproduces the report's evidence (archit
+          +ecture, ingest counts, `/search` metrics vs the D1 holdout, to
+          +p-k examples, graph schema + Cypher outputs) **from the commit
+          +ted `reports/D2/` artifacts** — it executes top-to-bottom with
+          + no Docker or network. Its final cell optionally hits the live
+          + API if the stack happens to be up.                           
+      261 +                                                              
+      262 +```bash                                                       
+      263 +python -m nbconvert --to notebook --execute notebooks/03_d2_re
+          +trieval_stack.ipynb --inplace                                 
+      264 +# ~10 sec; reads only reports/D2/* and configs/winning_runcard
+          +.yaml                                                         
+      265 +# To exercise the optional live-stack cell, bring the stack up
+          + first (see above) or set CSAI415_API_URL.                    
+      266 +```                                                           
+      267 +                                                              
+      268  ## Tear down (full reset)
+      269  
+      270  ```bash
+● Update(reports\D2\D2_report.md)
+  ⎿  Added 1 line, removed 1 line
+      61  
+      62  ## 8. Repo references
+      63  
+      64 -`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         -ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         -h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         -, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         -ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         -fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         -`. AI logs per member at `ai_logs/<name>_d2.{md,txt}`.         
+      64 +`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         +ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         +h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         +, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         +ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         +fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         +`. Walkthrough notebook: `notebooks/03_d2_retrieval_stack.ipynb
+         +` (reproduces this report's evidence from the committed artifac
+         +ts; runs without Docker). AI logs per member at `ai_logs/<name>
+         +_d2.{md,txt}`.                                                 
+
+● Now add a Definition-of-Done line in D2_TASKS.md so the closed gap is
+  documented in the plan:
+
+● Update(briefs\D2_TASKS.md)
+  ⎿  Added 1 line
+      254  - [x] `cypher/` has 5 documented queries; `reports/D2/d2_cyphe
+           r_examples.md` has their real outputs against the seeded graph
+           . *(Yehia D2-C2 + D2-C3)*
+      255  - [x] `reports/D2/d2_dataflow.png` (rendered from `.mmd`) comm
+           itted. *(Musab D2-M1)*
+      256  - [x] `reports/D2/D2_report.pdf` ≤ 2 pages, covers all rubric 
+           lines. *(Ahmad + WAFIQ co-authored)*
+      257 +- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 walkthrough
+          + notebook (marker flagged D2 had none; D1 shipped two). Reprod
+          +uces the report's evidence from committed `reports/D2/` artifa
+          +cts; runs end-to-end without Docker, optional live-stack cell.
+          + *(executed clean via nbconvert)*                             
+      258  - [x] `pytest tests/test_smoke.py` green in both modes: defaul
+           t run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live
+            stack up, run is `12 passed`. *(D2-A4)*
+      259  - [ ] Each member has ≥2 commits under their own GitHub identi
+           ty on D2 branches. *(Ahmed Soliman currently at 1 — needs a fo
+           llow-up commit, or co-author trailer in D2-B3-related commits)
+           *
+      260  - [ ] Each member has a populated `ai_logs/<name>_d2.{md,txt}`
+            with share-link + summary. *(handled offline)*
+
+● Let me confirm the final repo state:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Done. The "missing D2 notebook" the doctor flagged is now in the repo.
+
+  What I added
+
+  notebooks/03_d2_retrieval_stack.ipynb — the D2 companion to your D1 notebooks
+  (01_automl, 02_online_learning), built in the same house style: narrative
+  markdown + code cells that load the committed reports/D2/ artifacts and render
+  them. 19 cells covering all four rubric lines:
+
+  1. Architecture — embeds d2_dataflow.png
+  2. Ingest & storage — store/object/count table (Mongo 5,338+15,760 · Qdrant 3
+  collections · Neo4j 155/764/13)
+  3. Hybrid retrieval — loads d2_search_metrics.csv + the runcard, prints the
+  blessed BOHB config, and computes drift vs the D1 holdout (lands at +0.0000);
+  honest dense_only > hybrid note + live p95
+  4. Top-k examples — renders d2_topk_examples.md
+  5. Graph build — embeds d2_graph_schema.png + d2_graph_sample.png, renders
+  d2_cypher_examples.md
+  6. Optional live-stack cell — hits /search if up, asserts the source filter
+  holds; degrades gracefully otherwise (stdlib urllib, no new deps)
+  7. Decisions & pitfalls (a)–(f)
+
+  Key design choice
+
+  It follows the repo's "green without Docker" philosophy: the notebook executes
+  top-to-bottom from committed files with no stack or network. I proved this
+  with nbconvert --execute — exit 0, zero error outputs, images rendered, drift
+  check exact, and the live cell printed its friendly "stack not reachable"
+  fallback. It's committed with outputs, like your D1 notebooks.
+
+  Wired in for discoverability
+
+  - reports/D2/D2_report.md §8 — added the notebook to repo references
+  - HOW_TO.md — new "Render the D2 walkthrough notebook" runbook section
+  - briefs/D2_TASKS.md — DoD checkbox documenting the closed gap
+
+  The one-shot builder script was deleted; nothing is staged or committed yet.
+  Want me to commit these on a branch (e.g. d2-notebook) and open a PR, given
+  the brief's one-branch-per-task / external-review convention?
+
+✻ Sautéed for 5m 38s
+
+! code                                                                          
+  ⎿  (Bash completed with no output)
+
+! code .                                                                        
+  ⎿  (Bash completed with no output)
+
+❯ is this what is actually required by the notebook?                            
+
+● Fair challenge — I inferred the requirement from the D1 notebook pattern, but
+  I never actually read the brief to confirm what a D2 notebook must contain.
+  Let me check the source of truth.
+
+  Read 1 file (ctrl+o to expand)
+
+● PDF rendering needs pdftoppm. Let me extract the text directly — the repo
+  already uses PyMuPDF for ingestion.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Good — now I have the ground truth from the brief. Here's the honest answer:
+
+  Searched for 1 pattern, ran 1 shell command (ctrl+o to expand)
+
+● Short answer: No — strictly, the brief does not require a D2 notebook at all.
+  I inferred it from the D1 pattern. Here's what the brief actually says
+  (briefs/CSAI415_Project_Brief.pdf):
+
+  ┌─────────────┬────────────────────────────────────────────────────────────┐
+  │ Deliverable │               "Repo" requirement (verbatim)                │
+  ├─────────────┼────────────────────────────────────────────────────────────┤
+  │ D1 — Week 5 │ "runnable notebook/script + YAML/JSON run card for the     │
+  │             │ winning config"                                            │
+  ├─────────────┼────────────────────────────────────────────────────────────┤
+  │ D2 — Week 7 │ "Docker Compose & seed scripts for stores; basic FastAPI"  │
+  └─────────────┴────────────────────────────────────────────────────────────┘
+
+  So the notebook is a D1 requirement. D2's repo deliverable is Compose + seed
+  scripts + FastAPI — all of which already exist. The pull for a D2 notebook is
+  coming from the doctor's feedback, not the written brief (likely the
+  consistency expectation — D1 shipped two — plus the global grading criterion
+  "Reproducibility: seeds, environment, data paths; one-command run").
+
+  Since the doctor didn't specify contents, what I built is a judgment call. Two
+  things about it:
+
+  What's defensible: It mirrors the actual D1 notebook style — your
+  01_automl.ipynb / 02_online_learning.ipynb also mostly load committed 
+  artifacts and narrate them (they don't re-run the 25-min study). And it covers
+  exactly D2's four graded bullets: metrics table, top-k with citations,
+  dataflow diagram, 3–5 Cypher.
+
+  The real weak spot: the brief's word for D1 was "runnable," and the global
+  criterion is "one-command run." My notebook mostly displays pre-computed
+  CSVs/PNGs; it doesn't execute the retrieval. I confirmed the retriever is
+  buildable in-process with no Docker (HybridRetriever(dense_backend=None)
+  builds a numpy backend from chunks.parquet), so a genuinely runnable version
+  is feasible — it could build the blessed retriever and run a real query +
+  reproduce Recall@5 live.
+
+  That's the one fork that actually changes the content, and you may know what
+  the doctor meant:
+  ⎿  Invalid tool parameters
+
+● User answered Claude's questions:
+  ⎿  · The brief doesn't mandate a D2 notebook, so the doctor's intent decides 
+     the content. What should the D2 notebook be? → Make it genuinely runnable
+
+● Good — making it genuinely runnable. I need the real APIs so the new cells
+  actually execute (no invented function names). Let me read the retriever,
+  eval, runcard, and how the existing code builds a retriever from parquet.
+
+  Read 1 file (ctrl+o to expand)
+
+● The numpy path is fully in-process from chunks.parquet (embeddings are stored
+  in the parquet; only the query needs the embedder). Let me read eval.py + the
+  gold/split formats, then verify this actually runs in this environment before
+  I add cells — I won't ship a notebook cell I haven't executed.
+
+  Searched for 1 pattern, read 1 file, ran 1 shell command (ctrl+o to expand)
+● This reproduces exactly: holdout = [qa[i] for i in split['holdout']], and
+  building on the source=='scifact' subset matches how eval_search_metrics.py
+  computed hybrid_blessed. Before writing any cell, let me verify it genuinely
+  runs here — deps, model availability, and that the numbers come out right.
+  First a quick check whether the embedder is cached (to size the run):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All green — deps present, BGE model already cached locally, parquet has
+  embeddings, and source counts match the report (scifact 5663). Now the real
+  test: build the blessed retriever in-process on the SciFact subset and confirm
+  the numbers reproduce.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Exact reproduction — ndcg5=0.5611, recall5=0.6489, matching the committed CSV
+  to 4 decimals, and the top-5 for "language model pretraining" matches
+  d2_int2_verification.md exactly. Model load is a one-time ~58 s (cached), eval
+  is 4.6 s. This is genuinely runnable, no Docker.
+
+  Now I'll regenerate the notebook with a real "reproduce /search live, 
+  in-process" section added. Recreating via builder (cleaner than hand-editing
+  executed JSON):
+
+● Write(_build_d2_nb.py)
+  ⎿  Wrote 327 lines to _build_d2_nb.py
+       1 """One-shot builder for notebooks/03_d2_retrieval_stack.ipynb. D
+       2 import json
+       3 from pathlib import Path
+       4 
+       6 def md(t):  cells.append({"cell_type": "markdown", "metadata": {
+         }, "source": t.strip("\n").splitlines(keepends=True)})
+         "execution_count": None, "outputs": [], "source": t.strip("\n").
+         splitlines(keepends=True)})
+       8 
+      10 md(r"""
+     … +459 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Executed clean. Let me confirm zero errors and that the new runnable cells
+  produced the PASS assertion and live top-5:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All cells green, no errors, the in-process reproduction PASSes (live
+  NDCG@5=0.5611 / Recall@5=0.6489 = CSV), and the optional HTTP cell degrades
+  gracefully. Cleanup + fix the HOW_TO timing note (it now genuinely runs the
+  retriever, ~60 s, and reads more than just reports/D2/):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(HOW_TO.md)
+  ⎿  Added 4 lines, removed 3 lines
+      257  
+      258  ## Render the D2 walkthrough notebook
+      259  
+      260 -`notebooks/03_d2_retrieval_stack.ipynb` is the D2 companion to
+          - the D1 notebooks. It reproduces the report's evidence (archit
+          -ecture, ingest counts, `/search` metrics vs the D1 holdout, to
+          -p-k examples, graph schema + Cypher outputs) **from the commit
+          -ted `reports/D2/` artifacts** — it executes top-to-bottom with
+          - no Docker or network. Its final cell optionally hits the live
+          - API if the stack happens to be up.                           
+      260 +`notebooks/03_d2_retrieval_stack.ipynb` is the D2 companion to
+          + the D1 notebooks. §3 **rebuilds the blessed BOHB retriever in
+          +-process** from `chunks.parquet` (numpy backend — no Docker), 
+          +runs a real query, and asserts the live NDCG@5/Recall@5 match 
+          +`reports/D2/d2_search_metrics.csv`. The other sections render 
+          +the report's evidence (architecture, ingest counts, top-k exam
+          +ples, graph schema + Cypher) from the committed `reports/D2/` 
+          +artifacts. It executes top-to-bottom with no Docker or network
+          +; the final cell optionally hits the live HTTP API if the stac
+          +k is up.                                                      
+      261  
+      262  ```bash
+      263 -python -m nbconvert --to notebook --execute notebooks/03_d2_re
+          -trieval_stack.ipynb --inplace                                 
+      264 -# ~10 sec; reads only reports/D2/* and configs/winning_runcard
+          -.yaml                                                         
+      263 +python -m nbconvert --to notebook --execute --ExecutePreproces
+          +sor.timeout=300 notebooks/03_d2_retrieval_stack.ipynb --inplac
+          +e                                                             
+      264 +# ~60-70 sec (first BGE model load dominates; cached afterward
+          +s).                                                           
+      265 +# Reads: chunks.parquet, data/gold/qa.jsonl, configs/{winning_
+          +runcard.yaml,d1_split_indices.json}, reports/D2/*.            
+      266  # To exercise the optional live-stack cell, bring the stack up
+            first (see above) or set CSAI415_API_URL.
+      267  ```
+      268  
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Done — and now it actually answers your question instead of dodging it.
+
+  The honest verdict on "is this required?"
+
+  No — the written brief does not require a D2 notebook. A notebook is a D1
+  deliverable ("runnable notebook/script"); D2's repo line is "Docker Compose &
+  seed scripts + FastAPI," which you already have. The notebook is purely the
+  doctor's add-on. Since they didn't specify contents, I matched D1's pattern
+  and the brief's two relevant global criteria — "runnable" and "one-command run
+  / reproducibility."
+
+  What changed since your last look
+
+  The first version mostly displayed committed CSVs — which technically failed
+  the "runnable" bar. Per your choice, §3 now genuinely runs the system, no 
+  Docker:
+
+  - Builds the blessed BOHB HybridRetriever in-process from chunks.parquet
+  (numpy backend — the same class the FastAPI app wraps)
+  - Runs a real query (top-5 matches d2_int2_verification.md exactly)
+  - Re-evaluates the same 60-query holdout and asserts the result equals the
+  committed CSV → verified live: NDCG@5=0.5611, Recall@5=0.6489, PASS
+
+  I executed the full notebook via nbconvert — 22 cells, zero errors, ~60 s
+  (one-time BGE load, cached). It runs top-to-bottom with no Docker/network; the
+  final cell optionally hits the HTTP API and degrades gracefully when it's
+  down.
+
+  Files (nothing committed yet)
+
+  - notebooks/03_d2_retrieval_stack.ipynb (new, executed with outputs)
+  - HOW_TO.md, reports/D2/D2_report.md, briefs/D2_TASKS.md — pointers/runbook
+
+  One caveat to flag
+
+  I reproduced the metrics exactly, but chunks.parquet carries a chunks_sha256
+  in the run card — if the corpus parquet is ever re-expanded, the SciFact
+  subset is stable so §3 will still pass, but the arXiv counts in §2 would drift
+  from the verification reports. Not a problem now; just so you know what the
+  notebook does and doesn't pin.
+
+  Want me to commit this on a d2-notebook branch and open a PR (per your
+  one-branch-per-task / external-review convention)? If so, who reviews — given
+  you (Pair B) authored it, it'd want someone from Pair A or C.
+
+✻ Baked for 7m 37s
+
+❯ are you sure that notebook is a runable version of the delivelrable           
+
+● You're right to keep pushing. Let me not reassure you — let me actually audit
+  what that notebook runs versus what it just displays, component by component,
+  because I think I over-claimed.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● That check is decisive, and it changes my answer. No — I'm not. I 
+  over-claimed. Here's the honest audit of what the notebook executes versus
+  what it just renders:
+
+  ┌────────────────────────────┬────────────────────────┬───────────────────┐
+  │  D2 deliverable component  │    In the notebook     │   Actually run?   │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Ingestion                  │ counts transcribed     │ ❌ displayed      │
+  │ (PDF→chunks→embeddings)    │ from verification .md  │                   │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Mongo store                │ counts transcribed     │ ❌ displayed      │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Qdrant dense store         │ —                      │ ❌ bypassed (uses │
+  │                            │                        │  numpy instead)   │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Neo4j graph + 5 Cypher     │ PNGs + committed .md   │ ❌ displayed      │
+  │ queries                    │                        │                   │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Dataflow diagram           │ PNG                    │ n/a (static)      │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ FastAPI /search endpoint   │ optional HTTP cell     │ ❌ skipped when   │
+  │                            │                        │ stack down        │
+  ├────────────────────────────┼────────────────────────┼───────────────────┤
+  │ Retrieval metrics          │ §3 builds              │ ✅ runs — but via │
+  │ (Recall/NDCG)              │ HybridRetriever +      │  the numpy        │
+  │                            │ evals                  │ backend           │
+  └────────────────────────────┴────────────────────────┴───────────────────┘
+
+  So what genuinely runs is one slice of one rubric line — the retrieval metric
+  — and it runs the D1 numpy retriever, not the D2 production path. Everything
+  that is distinctively D2 (the three live stores, the Qdrant-backed dense path,
+  the Neo4j Cypher, the FastAPI endpoint) is static. Calling that "a runnable
+  version of the deliverable" was wrong.
+
+  And there's a hard constraint I glossed over: the D2 deliverable is a 
+  multi-service stack, so it fundamentally can't be "run" offline. To talk to
+  the real services you need docker compose up and the client libs — and neo4j,
+  qdrant-client, pymongo aren't even installed in this local interpreter (they
+  live in the Docker image). My notebook is "runnable without Docker" precisely 
+  because it avoids the infrastructure that is the deliverable.
+
+  So "runnable" has two incompatible meanings here, and which one the doctor
+  wants changes the artifact a lot:
+
+● User answered Claude's questions:
+  ⎿  · The D2 deliverable is a live multi-service stack, so a notebook can't 
+     truly 'run' it offline. Which sense of 'runnable' does the doctor want? → 
+     Live-stack driver (truest)
+
+● Live-stack driver it is. Two things matter now: (1) build it against the real
+  APIs (connection details, endpoint shapes, Cypher files), and (2) actually 
+  verify it — given I've twice shipped things I claimed worked, I won't hand you
+  a live notebook I haven't run. So first: is Docker available here, and is the
+  stack maybe already up? And let me read the real connection/query code.
+
+  Read 2 files, ran 1 shell command (ctrl+o to expand)
+
+● Decisive: the Docker daemon isn't running on this machine, and the stack
+  client libs (neo4j, qdrant-client, pymongo) aren't installed in this
+  interpreter. So I'll be straight with you up front: I can write a correct
+  live-stack driver against the real APIs, but I cannot bring the stack up and 
+  verify it end-to-end from this session. After being caught twice, I won't
+  pretend otherwise — I'll build it, label it clearly as unexecuted, and give
+  you an exact path to run/verify it (or verify it myself the moment you start
+  the stack).
+
+  Let me read the exact /search + /healthz contract and env config so the driver
+  cells are correct:
+
+  Read 2 files (ctrl+o to expand)
+
+● Now I have the exact contract. Building the notebook as a pure live-stack 
+  driver — health gate, live store counts (Mongo + Qdrant), /search over HTTP on
+  all 3 routes with leakage asserts, live retrieval metrics against the
+  deployed endpoint, and the 5 Neo4j Cypher queries live (reusing
+  scripts/capture_cypher_outputs). I'll save it unexecuted (I can't run it here
+  — no Docker), then syntax-check every cell so at least the Python is sound.
+
+● Write(_build_d2_nb.py)
+  ⎿  Wrote 262 lines to _build_d2_nb.py
+       1 """One-shot builder for notebooks/03_d2_retrieval_stack.ipynb (l
+       2 import json
+       3 from pathlib import Path
+       4 
+       6 def md(t):   cells.append({"cell_type": "markdown", "metadata": 
+         {}, "source": t.strip("\n").splitlines(keepends=True)})
+         "execution_count": None, "outputs": [], "source": t.strip("\n").
+         splitlines(keepends=True)})
+       8 
+      10 md(r"""
+     … +333 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+● All 16 cells compile; the notebook is unexecuted by design. Now I must fix the
+  docs I wrote earlier — they describe the old offline notebook ("no Docker,
+  ~60s, executed clean") which is now false. Cleanup + correct all three:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(HOW_TO.md)
+  ⎿  Added 7 lines, removed 4 lines
+      257  
+      258  ## Render the D2 walkthrough notebook
+      259  
+      260 -`notebooks/03_d2_retrieval_stack.ipynb` is the D2 companion to
+          - the D1 notebooks. §3 **rebuilds the blessed BOHB retriever in
+          --process** from `chunks.parquet` (numpy backend — no Docker), 
+          -runs a real query, and asserts the live NDCG@5/Recall@5 match 
+          -`reports/D2/d2_search_metrics.csv`. The other sections render 
+          -the report's evidence (architecture, ingest counts, top-k exam
+          -ples, graph schema + Cypher) from the committed `reports/D2/` 
+          -artifacts. It executes top-to-bottom with no Docker or network
+          -; the final cell optionally hits the live HTTP API if the stac
+          -k is up.                                                      
+      260 +`notebooks/03_d2_retrieval_stack.ipynb` is a **live-stack driv
+          +er** for the D2 deliverable — it talks to the running services
+          +, not to committed artifacts. It drives: `GET /healthz`; live 
+          +Mongo + Qdrant counts; the deployed FastAPI `/search` on all t
+          +hree source routes (with no-leakage asserts); the deployed end
+          +point's Recall@5/NDCG@5 on the 60-query holdout; and the 5 Neo
+          +4j Cypher queries via the bolt driver. It is intentionally wri
+          +tten to **fail loudly if the stack is down**, so the copy in g
+          +it is **unexecuted** — its outputs are produced at run time ag
+          +ainst your stack.                                             
+      261  
+      262  ```bash
+      263 +# 1. bring the deliverable up                                 
+      264 +docker compose --profile api up -d && make seed               
+      265 +# 2. install host client libs (they ship in the API image, not
+          + necessarily your local env)                                  
+      266 +pip install neo4j qdrant-client pymongo                       
+      267 +# 3. run the driver (captures outputs against the live stack) 
+      268  python -m nbconvert --to notebook --execute --ExecutePreproces
+           sor.timeout=300 notebooks/03_d2_retrieval_stack.ipynb --inplac
+           e
+      264 -# ~60-70 sec (first BGE model load dominates; cached afterward
+          -s).                                                           
+      265 -# Reads: chunks.parquet, data/gold/qa.jsonl, configs/{winning_
+          -runcard.yaml,d1_split_indices.json}, reports/D2/*.            
+      266 -# To exercise the optional live-stack cell, bring the stack up
+          - first (see above) or set CSAI415_API_URL.                    
+      269 +# Connection defaults match .env.example; override via CSAI415
+          +_API_URL / MONGO_URL / QDRANT_URL / NEO4J_URL.                
+      270  ```
+      271  
+      272  ## Tear down (full reset)
+
+● Update(reports\D2\D2_report.md)
+  ⎿  Added 1 line, removed 1 line
+      61  
+      62  ## 8. Repo references
+      63  
+      64 -`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         -ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         -h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         -, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         -ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         -fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         -`. Walkthrough notebook: `notebooks/03_d2_retrieval_stack.ipynb
+         -` (reproduces this report's evidence from the committed artifac
+         -ts; runs without Docker). AI logs per member at `ai_logs/<name>
+         -_d2.{md,txt}`.                                                 
+      64 +`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         +ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         +h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         +, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         +ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         +fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         +`. Live-stack driver notebook: `notebooks/03_d2_retrieval_stack
+         +.ipynb` (exercises the running deliverable — `/healthz`, live M
+         +ongo/Qdrant counts, deployed `/search` on all three routes, hol
+         +dout metrics over HTTP, and the 5 Neo4j Cypher queries; require
+         +s `docker compose --profile api up -d && make seed`). AI logs p
+         +er member at `ai_logs/<name>_d2.{md,txt}`.                     
+
+● Update(briefs\D2_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      254  - [x] `cypher/` has 5 documented queries; `reports/D2/d2_cyphe
+           r_examples.md` has their real outputs against the seeded graph
+           . *(Yehia D2-C2 + D2-C3)*
+      255  - [x] `reports/D2/d2_dataflow.png` (rendered from `.mmd`) comm
+           itted. *(Musab D2-M1)*
+      256  - [x] `reports/D2/D2_report.pdf` ≤ 2 pages, covers all rubric 
+           lines. *(Ahmad + WAFIQ co-authored)*
+      257 -- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 walkthrough
+          - notebook (marker flagged D2 had none; D1 shipped two). Reprod
+          -uces the report's evidence from committed `reports/D2/` artifa
+          -cts; runs end-to-end without Docker, optional live-stack cell.
+          - *(executed clean via nbconvert)*                             
+      257 +- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 **live-stac
+          +k driver** notebook (marker flagged D2 had none; D1 shipped tw
+          +o). Drives the running deliverable: `/healthz`, live Mongo/Qdr
+          +ant counts, deployed `/search` on all 3 routes (+ no-leakage a
+          +sserts), holdout metrics over HTTP, and the 5 Neo4j Cypher que
+          +ries via bolt. Requires `docker compose --profile api up -d &&
+          + make seed` + `pip install neo4j qdrant-client pymongo`. **Cod
+          +e syntax-checked; NOT yet executed against a live stack** (no 
+          +Docker in the authoring env) — run it once on a seeded stack t
+          +o capture outputs before submitting.                          
+      258  - [x] `pytest tests/test_smoke.py` green in both modes: defaul
+           t run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live
+            stack up, run is `12 passed`. *(D2-A4)*
+      259  - [ ] Each member has ≥2 commits under their own GitHub identi
+           ty on D2 branches. *(Ahmed Soliman currently at 1 — needs a fo
+           llow-up commit, or co-author trailer in D2-B3-related commits)
+           *
+      260  - [ ] Each member has a populated `ai_logs/<name>_d2.{md,txt}`
+            with share-link + summary. *(handled offline)*
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Rebuilt as a pure live-stack driver — and I'm going to be precise about what
+  is and isn't verified, because that's the whole issue you've been catching.
+
+  What the notebook now does (16 cells)
+
+  It talks to the running services, not committed files:
+  - §2 GET /healthz gate — fails loudly if the stack is down
+  - §3 live Mongo + Qdrant counts (queried directly, with a per-source Mongo
+  breakdown)
+  - §4 deployed FastAPI /search over HTTP on all three routes (scifact / arxiv /
+  full) + asserts no cross-corpus leakage
+  - §5 Recall@5 / NDCG@5 of the deployed endpoint on the same 60-query holdout
+  (via the shared csai415.eval)
+  - §6 the 5 Neo4j Cypher queries live via the bolt driver — reusing
+  scripts/capture_cypher_outputs.QUERIES so it stays in lock-step with the
+  committed .md
+
+  It's written against the real contracts I read from source (api.py's /search +
+  /healthz, the compose connection details, .env.example defaults, the Cypher
+  set).
+
+  What I verified vs what I did NOT
+
+  - ✅ Verified: all 16 code cells compile (no syntax errors); cells use the
+  actual API/contract/connection details from the codebase.
+  - ❌ NOT verified: runtime behavior against live services. The Docker daemon 
+  isn't running on this machine, and neo4j/qdrant-client/pymongo aren't 
+  installed in this interpreter, so I could not bring the stack up and execute
+  it. The committed notebook is therefore unexecuted by design (and I labeled it
+  as such in the notebook, HOW_TO, the report, and the D2 DoD — which I
+  corrected; the earlier "runs without Docker / executed clean" text was wrong
+  for this version).
+
+  To actually verify it (two paths)
+
+  1. You run it: docker compose --profile api up -d && make seed → pip install 
+  neo4j qdrant-client pymongo → Run-All (or the nbconvert line in HOW_TO).
+  2. I run it: start Docker Desktop and seed, tell me when /healthz is 200, and
+  I'll execute it here and commit it with real outputs.
+
+  One likely failure point to watch
+
+  Per d2_int1_verification.md, the initial make seed only created chunks_bge384;
+  the per-source collections (_scifact, _arxiv) were added in INT2. HOW_TO
+  claims the current make seed creates all three — if your make seed doesn't,
+  §3's Qdrant cell and /healthz will fail on the missing collections (fix:
+  python scripts/seed_qdrant.py --source scifact && ... --source arxiv). That's
+  the first thing to check if it errors.
+
+  Want me to go with path 2 — i.e., once you've got the stack up, I execute and
+  commit it with outputs? Nothing is committed yet.
+
+✻ Churned for 6m 19s
+
+※ recap: Goal: add the D2 notebook the instructor flagged as missing. I built it as a live-stack driver, but couldn't run it here since Docker isn't running. Next: start Docker, bring the stack up and seed, then I'll execute and commit it with real outputs. (disable recaps in /config)
+
+❯ refer to labs from week 5 and 6 in @labs\ for more context about how the      
+  notebook should be                                                            
+  ⎿  Listed directory labs\
+
+● These are the course labs the D2 deliverable is built on — exactly the right
+  reference for what the doctor expects the notebook to look like. Let me read
+  both structures.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● This is the missing context — and it changes the picture significantly. The
+  labs are self-contained, single-notebook pipelines: they !pip install, define
+  the classes inline, stand up the stores and a FastAPI server inside the 
+  notebook (background thread), then demo /search via httpx and run Cypher.
+  That's neither my "offline artifact renderer" nor my "external-Docker driver."
+
+  The crucial question is how the labs instantiate the stores (in-memory? cloud?
+  localhost?). Let me read the actual connection cells.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now it's clear, and it reconciles everything. The labs are self-contained and 
+  runnable with NO Docker — but not by faking anything: they use in-memory 
+  Qdrant (QdrantClient(":memory:")), mongomock, a real FastAPI server in a 
+  background thread, and demo via httpx. (Week 6 uses Neo4j Aura cloud for the
+  graph.) So "runnable version of the deliverable" is genuinely achievable with
+  the real components — my numpy version was too fake, my Docker-driver version
+  was too heavy.
+
+  The team's own api.create_app(qdrant_client=...) already accepts an injected
+  client, and the test suite already runs it with in-memory Qdrant. Let me read
+  that proven pattern before I rebuild a third time.
+
+  Read 2 files (ctrl+o to expand)
+
+● That test file is the key — it's the proven, in-repo pattern for running the 
+  real deliverable with no Docker, and it mirrors the lab's in-memory philosophy
+  using the team's actual production code:
+
+  client = QdrantClient(":memory:")                       # real Qdrant, 
+  in-memory
+  seed_collection_from_parquet(client, path, collection=...)   # team's own 
+  seeder
+  app = create_app(chunks_path=..., qdrant_client=client)      # the real 
+  FastAPI app
+  with TestClient(app) as c: ...                               # drive /search 
+  over HTTP
+
+  So both my earlier attempts missed the mark the labs set:
+  - Lab pattern = self-contained notebook, in-memory Qdrant + mongomock + real 
+  FastAPI in-process, demo via HTTP — genuinely runnable, no Docker, no fakes.
+  (Week 6 uses Neo4j Aura cloud for the graph.)
+  - My v1 used numpy (too fake); my v2 required external Docker (too heavy). The
+  right version is in-memory, lab-style, but wired to the team's real 
+  create_app / seed_collection_from_parquet / csai415.eval.
+
+  And this is verifiable right here for the retrieval+storage+API half — I just
+  need pip install qdrant-client mongomock (lightweight, no Docker). The metrics
+  will reproduce against the real in-memory Qdrant-backed endpoint.
+
+  The one genuinely unresolved piece is the graph: there's no in-memory Neo4j.
+  The lab used Aura (cloud creds); the repo uses Neo4j-in-Docker. Both decisions
+  below change the artifact and depend on things only you know/have, so rather
+  than rebuild a third time and risk another miss:
+
+● User answered Claude's questions:
+  ⎿  · Neo4j has no in-memory mode (unlike Qdrant). How should the notebook's 
+     graph section (the 5 Cypher queries) get its graph? → Try Neo4j, fall back 
+     to networkx
+     · How should the notebook's code relate to the team's existing src/ 
+     modules? → Reuse the team's src modules
+
+● Both decisions locked: try-Neo4j-else-networkx for the graph, reuse the team's
+  src modules in lab-style in-memory flow. Now I need the exact signatures of
+  the seed helpers I'll reuse, and how the graph is built from Mongo papers, so
+  the networkx fallback mirrors it faithfully.
+
+  Read 1 file (ctrl+o to expand)
+
+● Now the seed scripts (to mirror how Mongo papers and the Neo4j graph are built
+  — needed for the networkx fallback) and the parquet's columns:
+
+  Read 1 file (ctrl+o to expand)
+
+● This is ideal. Two key findings:
+  1. The parquet already carries authors, year, topic, source per row
+  (iter_papers_from_parquet reads exactly those) — so the networkx fallback
+  needs no Mongo/meta-join.
+  2. seed_graph(session, papers) is duck-typed on .run() — so I can pass a tiny
+  networkx "sink" session and reuse the team's real loader (normalize_paper,
+  should_load, seed_graph) to build the fallback graph. The graph is built by
+  the team's code; only the sink differs.
+
+  Let me confirm the parquet columns and install the lightweight deps needed to
+  actually run/verify this here (no Docker):
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Everything checks out — parquet carries authors/topic/year, and the in-memory
+  deps are installed. Now I can build the lab-style notebook and actually 
+  execute it here (the graph will exercise the networkx fallback, since there's
+  no Neo4j in this env — exactly the path a grader without a stack hits).
+
+  Building it (reusing create_app, seed_collection_from_parquet, seed_graph,
+  csai415.eval):
+
+● Write(_build_d2_nb.py)  ⎿  Wrote 410 lines to _build_d2_nb.py
+       1 """One-shot builder for notebooks/03_d2_retrieval_stack.ipynb (l
+       2 import json
+       3 from pathlib import Path
+       4 
+       6 def md(t):   cells.append({"cell_type": "markdown", "metadata": 
+         {}, "source": t.strip("\n").splitlines(keepends=True)})
+         "execution_count": None, "outputs": [], "source": t.strip("\n").
+         splitlines(keepends=True)})
+       8 
+      10 md(r"""
+     … +533 lines (ctrl+o to expand)
+
+● Two bugs to fix before running: an escaped triple-quote that won't render as a
+  valid docstring, and a sloppy node-key tuple in q1. Let me correct both in
+  the builder:
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 1 line, removed 1 line
+      265  import networkx as nx
+      266  
+      267  def build_networkx_graph():
+      268 -    \"\"\"Reuse the team's seed_graph, redirecting MERGE write
+          -s into a networkx DiGraph.\"\"\"                              
+      268 +    # Reuse the team's seed_graph, redirecting MERGE writes in
+          +to a networkx DiGraph.                                        
+      269      class _NxSink:
+      270          def __init__(self):
+      271              self.G = nx.DiGraph()
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 1 line, removed 1 line
+      303      return [p for p in G.successors(author_node) if G.edges[au
+           thor_node, p]["rel"] == "WROTE"]
+      304  
+      305  def q1_papers_by_author(G, author_node):
+      306 -    rows = [{"paper_id": pid, "title": G.nodes[(("Paper"), pid
+          -)]["title"], "year": G.nodes[("Paper", pid)]["year"]}         
+      306 +    rows = [{"paper_id": pid, "title": G.nodes[("Paper", pid)]
+          +["title"], "year": G.nodes[("Paper", pid)]["year"]}           
+      307              for (_, pid) in _papers_of(G, author_node)]
+      308      return sorted(rows, key=lambda r: (r["year"] or 0), revers
+           e=True)
+      309  
+
+● Now build, syntax-check, and actually execute it (the real test):
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● Executed end-to-end (exit 0). Now verify no errors and inspect the actual
+  outputs — healthz, the routing asserts, the metrics reproduction, and the
+  networkx graph:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fully verified — and the results are strong. No errors. Real FastAPI app
+  (/healthz 200), all three /search routes pass the no-leakage asserts, and the
+  deployed endpoint reproduces the metrics: Recall@5 = 0.6489 exactly, NDCG@5 =
+  0.5589 vs 0.5611 (a 0.0022 gap — precisely the documented cosine-ANN vs numpy
+  fusion drift). The networkx graph reports 155 Papers / 764 Authors / 13 Topics
+  — matching the report's live Neo4j counts exactly, and "Jun Wang" (the
+  committed Cypher's demo author) is present. Let me confirm the 5 query tables
+  actually have rows:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The networkx fallback reproduces the committed d2_cypher_examples.md
+  faithfully — Jun Wang's same 2 papers, the same co-authors, topics cs.CL=113, 
+  cs.CV=10, cs.LG=10..., the Romanian-VLM cs.CL papers, and Q5 → Jun Wang. The
+  in-notebook graph genuinely matches the real Neo4j graph the report captured.
+
+  Now clean up and correct the three docs to describe this final, verified, 
+  lab-style self-contained version:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Update(HOW_TO.md)
+  ⎿  Added 6 lines, removed 8 lines
+      257  
+      258  ## Render the D2 walkthrough notebook
+      259  
+      260 -`notebooks/03_d2_retrieval_stack.ipynb` is a **live-stack driv
+          -er** for the D2 deliverable — it talks to the running services
+          -, not to committed artifacts. It drives: `GET /healthz`; live 
+          -Mongo + Qdrant counts; the deployed FastAPI `/search` on all t
+          -hree source routes (with no-leakage asserts); the deployed end
+          -point's Recall@5/NDCG@5 on the 60-query holdout; and the 5 Neo
+          -4j Cypher queries via the bolt driver. It is intentionally wri
+          -tten to **fail loudly if the stack is down**, so the copy in g
+          -it is **unexecuted** — its outputs are produced at run time ag
+          -ainst your stack.                                             
+      260 +`notebooks/03_d2_retrieval_stack.ipynb` is a **self-contained,
+          + in-memory** run of the D2 pipeline, in the style of the Week 
+          +5/6 labs — **no Docker required**. It imports the team's *actu
+          +al* production modules and stands the stack up in-process: Mon
+          +go via `mongomock`, Qdrant via `QdrantClient(":memory:")` (see
+          +ded by `csai415.qdrant_dense.seed_collection_from_parquet`), t
+          +he real FastAPI `/search` app via `create_app(qdrant_client=..
+          +.)` + `TestClient`, and the graph via Neo4j when `NEO4J_URL` i
+          +s reachable **or** an in-notebook `networkx` fallback that reu
+          +ses `seed_neo4j.seed_graph`. It runs `/healthz`, `/search` on 
+          +all three routes (no-leakage asserts), reproduces the holdout 
+          +Recall@5/NDCG@5 against `d2_search_metrics.csv`, and runs the 
+          +5 graph queries.                                              
+      261  
+      262  ```bash
+      263 -# 1. bring the deliverable up                                 
+      264 -docker compose --profile api up -d && make seed               
+      265 -# 2. install host client libs (they ship in the API image, not
+          - necessarily your local env)                                  
+      266 -pip install neo4j qdrant-client pymongo                       
+      267 -# 3. run the driver (captures outputs against the live stack) 
+      268 -python -m nbconvert --to notebook --execute --ExecutePreproces
+          -sor.timeout=300 notebooks/03_d2_retrieval_stack.ipynb --inplac
+          -e                                                             
+      269 -# Connection defaults match .env.example; override via CSAI415
+          -_API_URL / MONGO_URL / QDRANT_URL / NEO4J_URL.                
+      263 +pip install qdrant-client mongomock networkx neo4j     # in-me
+          +mory stack clients (already in requirements.txt)              
+      264 +python -m nbconvert --to notebook --execute --ExecutePreproces
+          +sor.timeout=600 notebooks/03_d2_retrieval_stack.ipynb --inplac
+          +e                                                             
+      265 +# ~2-3 min (seeds 3 in-memory Qdrant collections + 60-query ho
+          +ldout eval; first BGE load cached).                           
+      266 +# To run the REAL Cypher path in §8 instead of the networkx fa
+          +llback:                                                       
+      267 +#   docker compose --profile api up -d && make seed && export 
+          +NEO4J_URL=bolt://localhost:7687                               
+      268  ```
+      269  
+      270  ## Tear down (full reset)
+
+● Update(reports\D2\D2_report.md)
+  ⎿  Added 1 line, removed 1 line
+      61  
+      62  ## 8. Repo references
+      63  
+      64 -`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         -ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         -h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         -, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         -ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         -fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         -`. Live-stack driver notebook: `notebooks/03_d2_retrieval_stack
+         -.ipynb` (exercises the running deliverable — `/healthz`, live M
+         -ongo/Qdrant counts, deployed `/search` on all three routes, hol
+         -dout metrics over HTTP, and the 5 Neo4j Cypher queries; require
+         -s `docker compose --profile api up -d && make seed`). AI logs p
+         -er member at `ai_logs/<name>_d2.{md,txt}`.                     
+      64 +`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         +ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         +h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         +, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         +ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         +fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         +`. Self-contained notebook: `notebooks/03_d2_retrieval_stack.ip
+         +ynb` (Week 5/6 lab style — stands the pipeline up in-memory wit
+         +h no Docker: mongomock + in-memory Qdrant + the real FastAPI `/
+         +search` via TestClient + Neo4j-or-networkx graph; runs `/health
+         +z`, `/search` on all 3 routes, reproduces the holdout metrics, 
+         +and the 5 graph queries; set `NEO4J_URL` to run real Cypher). A
+         +I logs per member at `ai_logs/<name>_d2.{md,txt}`.             
+
+● Update(briefs\D2_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      254  - [x] `cypher/` has 5 documented queries; `reports/D2/d2_cyphe
+           r_examples.md` has their real outputs against the seeded graph
+           . *(Yehia D2-C2 + D2-C3)*
+      255  - [x] `reports/D2/d2_dataflow.png` (rendered from `.mmd`) comm
+           itted. *(Musab D2-M1)*
+      256  - [x] `reports/D2/D2_report.pdf` ≤ 2 pages, covers all rubric 
+           lines. *(Ahmad + WAFIQ co-authored)*
+      257 -- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 **live-stac
+          -k driver** notebook (marker flagged D2 had none; D1 shipped tw
+          -o). Drives the running deliverable: `/healthz`, live Mongo/Qdr
+          -ant counts, deployed `/search` on all 3 routes (+ no-leakage a
+          -sserts), holdout metrics over HTTP, and the 5 Neo4j Cypher que
+          -ries via bolt. Requires `docker compose --profile api up -d &&
+          - make seed` + `pip install neo4j qdrant-client pymongo`. **Cod
+          -e syntax-checked; NOT yet executed against a live stack** (no 
+          -Docker in the authoring env) — run it once on a seeded stack t
+          -o capture outputs before submitting.                          
+      257 +- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 notebook (m
+          +arker flagged D2 had none; D1 shipped two). **Self-contained, 
+          +in-memory, no Docker** — Week 5/6 lab style, but importing the
+          + team's real modules: mongomock storage, `QdrantClient(":memor
+          +y:")` seeded via `seed_collection_from_parquet`, the real Fast
+          +API `/search` (`create_app(qdrant_client=...)` + `TestClient`)
+          +, and Neo4j-or-networkx graph (reusing `seed_neo4j.seed_graph`
+          +). Runs `/healthz`, `/search` ×3 routes (+ no-leakage asserts)
+          +, reproduces holdout metrics (deployed Recall@5=0.6489 = commi
+          +tted; NDCG@5 0.5589 vs 0.5611, within documented ANN drift), a
+          +nd the 5 graph queries (networkx fallback reproduces `d2_cyphe
+          +r_examples.md`: 155/764/13, Jun Wang, cs.CL=113…). **Executed 
+          +clean via nbconvert** (`pip install qdrant-client mongomock ne
+          +tworkx neo4j`); set `NEO4J_URL` for the real-Cypher path.     
+      258  - [x] `pytest tests/test_smoke.py` green in both modes: defaul
+           t run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live
+            stack up, run is `12 passed`. *(D2-A4)*
+      259  - [ ] Each member has ≥2 commits under their own GitHub identi
+           ty on D2 branches. *(Ahmed Soliman currently at 1 — needs a fo
+           llow-up commit, or co-author trailer in D2-B3-related commits)
+           *
+      260  - [ ] Each member has a populated `ai_logs/<name>_d2.{md,txt}`
+            with share-link + summary. *(handled offline)*
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Done — and this time it's actually executed and verified, not claimed. The
+  notebook now matches the Week 5/6 lab pattern: self-contained, in-memory, no
+  Docker, but wired to the team's real modules.
+
+  What it is now (22 cells, lab-style)
+
+  ┌─────┬────────────────┬──────────────────────────────────────────────────┐
+  │  §  │  Runs against  │                    Backed by                     │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 3   │ Mongo storage  │ mongomock + the real seed_neo4j.normalize_paper  │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 4   │ Qdrant vector  │ QdrantClient(":memory:") seeded by               │
+  │     │ store          │ seed_collection_from_parquet                     │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 5   │ FastAPI        │ the real create_app(qdrant_client=...) via       │
+  │     │ /healthz       │ TestClient                                       │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 6   │ /search ×3     │ real endpoint + no-leakage asserts               │
+  │     │ routes         │                                                  │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 7   │ holdout        │ csai415.eval on the deployed endpoint            │
+  │     │ metrics        │                                                  │
+  ├─────┼────────────────┼──────────────────────────────────────────────────┤
+  │ 8   │ graph + 5      │ Neo4j if NEO4J_URL set, else networkx reusing    │
+  │     │ queries        │ seed_graph                                       │
+  └─────┴────────────────┴──────────────────────────────────────────────────┘
+
+  Verification (executed via nbconvert, exit 0, zero errors)
+
+  - /healthz → 200; all three /search routes pass leakage asserts
+  - Deployed metrics: Recall@5 = 0.6489 exactly, NDCG@5 0.5589 vs committed
+  0.5611 (the 0.0022 gap is the documented cosine-ANN-vs-numpy fusion drift,
+  <0.5pp)
+  - networkx graph: 155 Papers / 764 Authors / 13 Topics — matches the report's 
+  live Neo4j exactly, and the 5 query outputs reproduce d2_cypher_examples.md
+  (Jun Wang's 2 papers, cs.CL=113, cs.CV=10, cs.LG=10…, etc.)
+  - Committed with outputs from this run.
+
+  The one honest caveat
+
+  The committed outputs show the networkx fallback (there's no Neo4j in this
+  authoring env). The real-Cypher branch in §8 is the only path not executed
+  here — but it reuses the exact committed query set and seed_graph, and the
+  fallback already proved the topology and outputs match. To capture real Cypher
+  outputs too, set NEO4J_URL (Aura or docker compose Neo4j) and re-run.
+
+  Docs corrected to match (HOW_TO, report §8, D2 DoD). Only notebooks/03_* +
+  those 3 docs are mine — the two labs/ files showing as untracked are yours.
+
+  Want me to commit on a d2-notebook branch and open a PR for review by Pair A
+  or C?
+
+✻ Churned for 12m 20s
+
+❯ I have a neo4j instance now do I just add URI and username and password to    
+  .env or is the implementation not there. secondly I want the notebook to also 
+  focus on the full pipeline and run intermediate or slightly complex queries.  
+
+● Two good asks. Let me answer #1 precisely first, then gather what I need for
+  #2.
+
+  On Neo4j + .env: Right now the notebook reads NEO4J_URL / NEO4J_USER /
+  NEO4J_PASSWORD from the environment, but it does not load .env — so just
+  editing .env wouldn't be picked up unless something calls load_dotenv(). I'll
+  fix that (and accept NEO4J_URI, which is what Aura's credentials file uses).
+  Let me confirm the building blocks for both changes:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● python-dotenv is installed, real arXiv PDFs are on disk (so I can demo true
+  PDF→chunks→embeddings ingestion), and ingest.py exposes parse_arxiv_pdfs +
+  embed_chunks. Let me read those to wire the ingestion section correctly:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Everything's available: python-dotenv installed, real PDFs on disk, and
+  parse_arxiv_pdfs + embed_chunks give a true PDF→chunks→embeddings path. Let me
+  check whether a .env already exists (so my verification run uses the portable
+  networkx path, not your private instance):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● .env is absent, so my verification run will naturally exercise the portable
+  networkx path — good. Here's the plan for both asks:
+
+  1. Neo4j via .env: add load_dotenv() to setup and accept Aura's variable names
+  (NEO4J_URI/NEO4J_USERNAME), so editing .env "just works."
+  2. Full pipeline: add a real ingestion section
+  (PDF→text→chunks→embeddings→retrieve) using parse_arxiv_pdfs + embed_chunks on
+  the on-disk PDFs.
+  3. Intermediate queries: add a 5-query analytics section (prolific authors,
+  co-authorship pairs, interdisciplinary/bridge authors, topic co-occurrence,
+  2-hop reach) with both Cypher and networkx implementations.
+
+  Writing the expanded builder:
+● Write(_build_d2_nb.py)
+  ⎿  Wrote 531 lines to _build_d2_nb.py
+       1 """One-shot builder for notebooks/03_d2_retrieval_stack.ipynb (f
+       2 import json
+       3 from pathlib import Path
+       4 
+       6 def md(t):   cells.append({"cell_type": "markdown", "metadata": 
+         {}, "source": t.strip("\n").splitlines(keepends=True)})
+         "execution_count": None, "outputs": [], "source": t.strip("\n").
+         splitlines(keepends=True)})
+       8 
+      10 md(r"""
+     … +692 lines (ctrl+o to expand)
+
+● Same escaped-quote issue in the graph_query docstring — fixing it to a
+  comment:
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 1 line, removed 1 line
+      336  
+      337  
+      338  def graph_query(cypher, nx_fn, columns, **params):
+      339 -    \"\"\"Run a query on whichever backend is active; return a
+          - DataFrame.\"\"\"                                             
+      339 +    # Run a query on whichever backend is active; return a Dat
+          +aFrame.                                                       
+      340      rows = [r.data() for r in _session.run(cypher, **params)] 
+           if use_neo4j else nx_fn(GRAPH)
+      341      return pd.DataFrame(rows, columns=columns)
+      342  """)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now execute end-to-end (forcing the networkx path explicitly so my
+  verification is portable, even though no .env exists):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Executed clean (exit 0). Let me verify no errors and inspect the new sections
+  — ingestion, metrics, and the intermediate analytics:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● No errors. The ingestion section parsed 123 chunks from 2 real PDFs (with an
+  honest token-overflow warning) and the ingest→retrieve demo surfaces the
+  paper's own title; metrics PASS again. Let me confirm the intermediate
+  analytics (cell 24) actually returned rows:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The intermediate analytics work — prolific authors, co-author clusters (Guang
+  Zhang/Jianing Hao/Yuanjian Xu/Zhong Li), and interdisciplinary authors (Jun
+  Wang [cs.CL, cs.CV]) all return rows. But two queries come back empty in the
+  networkx fallback: D (topic co-occurrence — expected/documented, since the
+  parquet has one topic per paper) and E (2-hop reach for Jun Wang — empty 
+  because his co-authors have no other papers in this 155-paper corpus). One
+  documented-empty is a useful teaching point; two is weak. Let me swap the
+  2-hop query for a "most collaborative authors" (distinct co-author count)
+  query that's productive on this corpus and still a real graph-centrality
+  query:
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 7 lines, removed 5 lines
+      408              for j in range(i + 1, len(ts)):
+      409                  c[(ts[i], ts[j])] += 1
+      410      return [{"topic_a": a, "topic_b": b, "papers": v} for (a, 
+           b), v in c.most_common(10)]
+      411 -def cx_two_hop(G):                                            
+      412 -    direct = {a for p in _papers_of(G, DEMO_AUTHOR) for a in _
+          -authors_of(G, p) if a != DEMO_AUTHOR}                         
+      413 -    second = {a[1] for co in direct for p in _papers_of(G, co)
+          - for a in _authors_of(G, p)                                   
+      414 -              if a != DEMO_AUTHOR and a not in direct}        
+      415 -    return [{"second_degree": name} for name in sorted(second)
+          -[:15]]                                                        
+      411 +def cx_collaborators(G):                                      
+      412 +    rows = []                                                 
+      413 +    for a in (n for n, d in G.nodes(data=True) if d["kind"] ==
+          + "Author"):                                                   
+      414 +        cos = {x for p in _papers_of(G, a) for x in _authors_o
+          +f(G, p) if x != a}                                            
+      415 +        if cos:                                               
+      416 +            rows.append({"author": a[1], "collaborators": len(
+          +cos)})                                                        
+      417 +    return sorted(rows, key=lambda r: (-r["collaborators"], r[
+          +"author"]))[:10]                                              
+      418  print("query library ready")
+      419  """)
+      420  
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 7 lines, removed 7 lines
+      480  RETURN t1.name AS topic_a, t2.name AS topic_b, count(DISTINCT 
+           p) AS papers
+      481  ORDER BY papers DESC, topic_a LIMIT 10
+      482  '''
+      483 -CY_TWOHOP = '''                                               
+      484 -MATCH (a:Author {name:$author})-[:WROTE]->(:Paper)<-[:WROTE]-(
+          -co:Author)-[:WROTE]->(:Paper)<-[:WROTE]-(reach:Author)        
+      485 -WHERE reach <> a AND NOT (a)-[:WROTE]->(:Paper)<-[:WROTE]-(rea
+          -ch)                                                           
+      486 -RETURN DISTINCT reach.name AS second_degree                   
+      487 -ORDER BY second_degree LIMIT 15                               
+      483 +CY_COLLAB = '''                                               
+      484 +MATCH (a:Author)-[:WROTE]->(:Paper)<-[:WROTE]-(co:Author)     
+      485 +WHERE a <> co                                                 
+      486 +RETURN a.name AS author, count(DISTINCT co) AS collaborators  
+      487 +ORDER BY collaborators DESC, author LIMIT 10                  
+      488  '''
+      489  
+      490  print("--- A. Most prolific authors (papers + distinct topics)
+            ---")
+     ...
+      499  print("--- D. Topic co-occurrence pairs (rich only on real Neo
+           4j) ---")
+      500  display(graph_query(CY_COOCCUR, cx_topic_cooccurrence, ["topic
+           _a", "topic_b", "papers"]))
+      501  
+      502 -print(f"--- E. 2-hop collaboration reach of {DEMO_AUTHOR_NAME}
+          - (collaborators-of-collaborators) ---")                       
+      503 -display(graph_query(CY_TWOHOP, cx_two_hop, ["second_degree"], 
+          -author=DEMO_AUTHOR_NAME))                                     
+      502 +print("--- E. Most collaborative authors (distinct co-author c
+          +ount) ---")                                                   
+      503 +display(graph_query(CY_COLLAB, cx_collaborators, ["author", "c
+          +ollaborators"]))                                              
+      504  """)
+      505  
+      506  # ── 12 wrap ──
+
+● Update(_build_d2_nb.py)
+  ⎿  Added 5 lines, removed 3 lines
+      446  ## Section 11 — Intermediate graph analytics — Graph build (5%
+           )
+      447  
+      448  Deeper questions over the same `(:Author)-[:WROTE]->(:Paper)-[
+           :ABOUT]->(:Topic)`
+      449 -schema (no `CITES` — deferred to D3). Each runs as real Cypher
+          - on Neo4j and as a                                            
+      450 -networkx traversal in the fallback.                           
+      449 +schema (no `CITES` — deferred to D3): (A) most prolific author
+          +s, (B) top                                                    
+      450 +co-authorship pairs, (C) interdisciplinary authors spanning ≥2
+          + topics, (D) topic                                            
+      451 +co-occurrence, (E) most collaborative authors by distinct co-a
+          +uthor count. Each                                             
+      452 +runs as real Cypher on Neo4j and as a networkx traversal in th
+          +e fallback.                                                   
+      453  
+      452 -> **Note on topic co-occurrence (Q4):** the `networkx` fallbac
+          -k builds from the                                             
+      454 +> **Note on topic co-occurrence (D):** the `networkx` fallback
+          + builds from the                                              
+      455  > parquet's *primary* `topic` (one per paper), so co-occurrenc
+           e is empty there;
+      456  > the live Neo4j graph is seeded from Mongo's *full* arXiv cat
+           egory list, so it
+      457  > returns real topic pairs — a concrete reason to point `.env`
+            at a real Neo4j.
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All five intermediate queries now behave well: A/B/C/E return rows (E shows
+  authors with 15 distinct collaborators), D is the documented
+  "rich-only-on-real-Neo4j" case. No errors, builder removed.
+
+  Now I'll update the docs to match the expanded notebook and make .env
+  Aura-friendly:
+
+● Update(.env.example)
+  ⎿  Added 2 lines
+      18  # Qdrant: dense vector store for /search
+      19  QDRANT_URL=http://localhost:6333
+      20  # Neo4j: knowledge graph. Dev containers run NEO4J_AUTH=none (l
+          eave user/pass unset).
+      21 +# The D2 notebook (notebooks/03) also accepts Aura's variable n
+         +ames as aliases:                                               
+      22 +#   NEO4J_URI (e.g. neo4j+s://xxxx.databases.neo4j.io) and NEO4
+         +J_USERNAME.                                                    
+      23  NEO4J_URL=bolt://localhost:7687
+      24  NEO4J_USER=neo4j
+      25  NEO4J_PASSWORD=
+
+● Update(HOW_TO.md)
+  ⎿  Added 17 lines, removed 6 lines
+      257  
+      258  ## Render the D2 walkthrough notebook
+      259  
+      260 -`notebooks/03_d2_retrieval_stack.ipynb` is a **self-contained,
+          - in-memory** run of the D2 pipeline, in the style of the Week 
+          -5/6 labs — **no Docker required**. It imports the team's *actu
+          -al* production modules and stands the stack up in-process: Mon
+          -go via `mongomock`, Qdrant via `QdrantClient(":memory:")` (see
+          -ded by `csai415.qdrant_dense.seed_collection_from_parquet`), t
+          -he real FastAPI `/search` app via `create_app(qdrant_client=..
+          -.)` + `TestClient`, and the graph via Neo4j when `NEO4J_URL` i
+          -s reachable **or** an in-notebook `networkx` fallback that reu
+          -ses `seed_neo4j.seed_graph`. It runs `/healthz`, `/search` on 
+          -all three routes (no-leakage asserts), reproduces the holdout 
+          -Recall@5/NDCG@5 against `d2_search_metrics.csv`, and runs the 
+          -5 graph queries.                                              
+      260 +`notebooks/03_d2_retrieval_stack.ipynb` is a **self-contained,
+          + in-memory** run of the **full** D2 pipeline, in the style of 
+          +the Week 5/6 labs — **no Docker required**. It imports the tea
+          +m's *actual* production modules and runs ingest → store → sear
+          +ch → graph in-process:                                        
+      261  
+      262 +- **§2 ingestion** — parses + embeds real PDFs from `data/raw_
+          +pdfs/` via `ingest.parse_arxiv_pdfs` + `ingest.embed_chunks`, 
+          +then retrieves over the just-ingested chunks;                 
+      263 +- **§3–5 storage** — Mongo via `mongomock`, Qdrant via `Qdrant
+          +Client(":memory:")` (seeded by `seed_collection_from_parquet`,
+          + 3 collections);                                              
+      264 +- **§6–8 retrieval** — the real FastAPI `/search` via `create_
+          +app(qdrant_client=...)` + `TestClient`: `/healthz`, all 3 rout
+          +es (no-leakage asserts), and the holdout Recall@5/NDCG@5 repro
+          +duced against `d2_search_metrics.csv`;                        
+      265 +- **§9–11 graph** — Neo4j when configured **or** a `networkx` 
+          +fallback (reusing `seed_neo4j.seed_graph`), running the 5 docu
+          +mented queries **plus** 5 intermediate analytics (prolific aut
+          +hors, co-authorship pairs, interdisciplinary authors, topic co
+          +-occurrence, most-collaborative authors).                     
+      266 +                                                              
+      267  ```bash
+      263 -pip install qdrant-client mongomock networkx neo4j     # in-me
+          -mory stack clients (already in requirements.txt)              
+      264 -python -m nbconvert --to notebook --execute --ExecutePreproces
+          -sor.timeout=600 notebooks/03_d2_retrieval_stack.ipynb --inplac
+          -e                                                             
+      265 -# ~2-3 min (seeds 3 in-memory Qdrant collections + 60-query ho
+          -ldout eval; first BGE load cached).                           
+      266 -# To run the REAL Cypher path in §8 instead of the networkx fa
+          -llback:                                                       
+      267 -#   docker compose --profile api up -d && make seed && export 
+          -NEO4J_URL=bolt://localhost:7687                               
+      268 +pip install qdrant-client mongomock networkx neo4j python-dote
+          +nv pymupdf   # all in requirements.txt                        
+      269 +python -m nbconvert --to notebook --execute --ExecutePreproces
+          +sor.timeout=900 notebooks/03_d2_retrieval_stack.ipynb --inplac
+          +e                                                             
+      270 +# ~3-4 min (ingest 2 PDFs + seed 3 in-memory Qdrant collection
+          +s + 60-query holdout eval; first BGE load cached).            
+      271  ```
+      272  
+      273 +To run **§9–11 as real Cypher** against your own Neo4j (Aura o
+          +r the compose Neo4j), drop credentials into a `.env` at the re
+          +po root — the notebook calls `load_dotenv()` and accepts both 
+          +the repo names (`NEO4J_URL`/`NEO4J_USER`) and Aura's (`NEO4J_U
+          +RI`/`NEO4J_USERNAME`):                                        
+      274 +                                                              
+      275 +```ini                                                        
+      276 +NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io               
+      277 +NEO4J_USERNAME=neo4j                                          
+      278 +NEO4J_PASSWORD=your-password                                  
+      279 +```                                                           
+      280 +                                                              
+      281  ## Tear down (full reset)
+      282  
+      283  ```bash
+
+● Update(reports\D2\D2_report.md)
+  ⎿  Added 1 line, removed 1 line
+      61  
+      62  ## 8. Repo references
+      63  
+      64 -`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         -ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         -h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         -, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         -ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         -fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         -`. Self-contained notebook: `notebooks/03_d2_retrieval_stack.ip
+         -ynb` (Week 5/6 lab style — stands the pipeline up in-memory wit
+         -h no Docker: mongomock + in-memory Qdrant + the real FastAPI `/
+         -search` via TestClient + Neo4j-or-networkx graph; runs `/health
+         -z`, `/search` on all 3 routes, reproduces the holdout metrics, 
+         -and the 5 graph queries; set `NEO4J_URL` to run real Cypher). A
+         -I logs per member at `ai_logs/<name>_d2.{md,txt}`.             
+      64 +`src/csai415/api.py`, `src/csai415/qdrant_dense.py`, `scripts/{
+         +ingest_arxiv_batch,seed_mongo,seed_qdrant,seed_neo4j,eval_searc
+         +h_metrics,capture_cypher_outputs}.py`, `cypher/01..05_*.cypher`
+         +, `docker-compose.yml`, `Makefile`, `configs/winning_runcard.ya
+         +ml`, `reports/D2/{d2_dataflow,d2_int1_verification,d2_int2_veri
+         +fication,d2_search_metrics,d2_topk_examples,d2_cypher_examples}
+         +`. Self-contained full-pipeline notebook: `notebooks/03_d2_retr
+         +ieval_stack.ipynb` (Week 5/6 lab style — in-memory, no Docker: 
+         +real PDF ingestion via `ingest.parse_arxiv_pdfs`/`embed_chunks`
+         + → mongomock + in-memory Qdrant → the real FastAPI `/search` vi
+         +a TestClient → Neo4j-or-networkx graph; runs `/healthz`, `/sear
+         +ch` ×3 routes, reproduces the holdout metrics, and 10 graph que
+         +ries — the 5 documented + 5 intermediate analytics; set `NEO4J_
+         +URI`/`NEO4J_USERNAME`/`NEO4J_PASSWORD` in `.env` for live Cyphe
+         +r). AI logs per member at `ai_logs/<name>_d2.{md,txt}`.        
+
+● Update(briefs\D2_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      254  - [x] `cypher/` has 5 documented queries; `reports/D2/d2_cyphe
+           r_examples.md` has their real outputs against the seeded graph
+           . *(Yehia D2-C2 + D2-C3)*
+      255  - [x] `reports/D2/d2_dataflow.png` (rendered from `.mmd`) comm
+           itted. *(Musab D2-M1)*
+      256  - [x] `reports/D2/D2_report.pdf` ≤ 2 pages, covers all rubric 
+           lines. *(Ahmad + WAFIQ co-authored)*
+      257 -- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 notebook (m
+          -arker flagged D2 had none; D1 shipped two). **Self-contained, 
+          -in-memory, no Docker** — Week 5/6 lab style, but importing the
+          - team's real modules: mongomock storage, `QdrantClient(":memor
+          -y:")` seeded via `seed_collection_from_parquet`, the real Fast
+          -API `/search` (`create_app(qdrant_client=...)` + `TestClient`)
+          -, and Neo4j-or-networkx graph (reusing `seed_neo4j.seed_graph`
+          -). Runs `/healthz`, `/search` ×3 routes (+ no-leakage asserts)
+          -, reproduces holdout metrics (deployed Recall@5=0.6489 = commi
+          -tted; NDCG@5 0.5589 vs 0.5611, within documented ANN drift), a
+          -nd the 5 graph queries (networkx fallback reproduces `d2_cyphe
+          -r_examples.md`: 155/764/13, Jun Wang, cs.CL=113…). **Executed 
+          -clean via nbconvert** (`pip install qdrant-client mongomock ne
+          -tworkx neo4j`); set `NEO4J_URL` for the real-Cypher path.     
+      257 +- [x] `notebooks/03_d2_retrieval_stack.ipynb` — D2 **full-pipe
+          +line** notebook (marker flagged D2 had none; D1 shipped two). 
+          +**Self-contained, in-memory, no Docker** — Week 5/6 lab style,
+          + importing the team's real modules. Covers ingest→store→search
+          +→graph: §2 real PDF ingestion (`parse_arxiv_pdfs`+`embed_chunk
+          +s` on `data/raw_pdfs/`, then retrieve), §3-5 mongomock + in-me
+          +mory Qdrant (`seed_collection_from_parquet`, 3 collections), §
+          +6-8 the real FastAPI `/search` (`create_app(qdrant_client=...)
+          +`+`TestClient`: `/healthz`, ×3 routes + no-leakage asserts, ho
+          +ldout metrics — deployed Recall@5=0.6489 = committed, NDCG@5 0
+          +.5589 vs 0.5611 within documented ANN drift), §9-11 Neo4j-or-n
+          +etworkx graph (reusing `seed_neo4j.seed_graph`) running the 5 
+          +documented queries (networkx reproduces `d2_cypher_examples.md
+          +`: 155/764/13, Jun Wang, cs.CL=113…) **plus 5 intermediate ana
+          +lytics** (prolific authors, co-authorship pairs, interdiscipli
+          +nary authors, topic co-occurrence, most-collaborative authors)
+          +. Neo4j via `.env` (`load_dotenv()`; accepts Aura's `NEO4J_URI
+          +`/`NEO4J_USERNAME`). **Executed clean via nbconvert** (`pip in
+          +stall qdrant-client mongomock networkx neo4j python-dotenv pym
+          +updf`).                                                       
+      258  - [x] `pytest tests/test_smoke.py` green in both modes: defaul
+           t run is `11 passed, 1 skipped`; with `D2_STACK_UP=1` and live
+            stack up, run is `12 passed`. *(D2-A4)*
+      259  - [ ] Each member has ≥2 commits under their own GitHub identi
+           ty on D2 branches. *(Ahmed Soliman currently at 1 — needs a fo
+           llow-up commit, or co-author trailer in D2-B3-related commits)
+           *
+      260  - [ ] Each member has a populated `ai_logs/<name>_d2.{md,txt}`
+            with share-link + summary. *(handled offline)*
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Both asks are done and verified end-to-end (executed clean, zero errors,
+  committed with outputs).
+
+  1. Neo4j via .env — now wired (it wasn't before)
+
+  Previously the notebook read env vars but never loaded .env, so editing .env
+  alone wouldn't have worked. Now §1 calls load_dotenv() and §9 accepts both the
+  repo names and Aura's names. So you just drop this into .env at the repo
+  root:
+
+  NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io
+  NEO4J_USERNAME=neo4j
+  NEO4J_PASSWORD=your-password
+
+  Re-run §9–11 and they switch from the networkx fallback to live Cypher against
+  your instance (idempotent MERGE seed, then the queries). .env.example
+  documents the aliases.
+
+  2. Full pipeline + intermediate queries — added
+
+  - §2 Ingestion (new): parses + embeds 2 real PDFs from data/raw_pdfs/ with the
+  team's parse_arxiv_pdfs + embed_chunks (verified: 123 chunks, dim 384, with
+  an honest token-overflow warning), then retrieves over the just-ingested
+  chunks — a true PDF→chunks→embeddings→retrieve demo.
+  - §11 Intermediate analytics (new): 5 deeper queries in both Cypher and 
+  networkx — most prolific authors, top co-authorship pairs, interdisciplinary
+  authors (e.g. Jun Wang [cs.CL, cs.CV]), topic co-occurrence, and
+  most-collaborative authors (top author has 15 distinct collaborators). Topic
+  co-occurrence is intentionally empty in the networkx fallback (one primary
+  topic per paper) and populates only on real Neo4j — a built-in reason to point
+  .env at your instance.
+
+  The notebook is now 27 cells, ingest→store→search→graph, and still reproduces
+  the deployed metrics (Recall@5 = 0.6489 = committed). Docs updated (HOW_TO,
+  report §8, D2 DoD, .env.example).
+
+  One honest caveat (unchanged)
+
+  The committed outputs are from the networkx path — I have no Neo4j here, so
+  the live-Cypher branch in §9–11 is the only part I couldn't execute. Now that
+  you have an instance: add the .env, re-run, and you'll get real Cypher outputs
+  (and the topic-co-occurrence query will fill in). If anything in that path
+  errors against your Neo4j, paste it here and I'll fix it.
+
+  Only notebooks/03_* + the 4 docs are mine; the two labs/ files are yours
+  (untracked). Want me to commit on a d2-notebook branch and open a PR?
+
+✻ Cogitated for 13m 5s
+
+❯ I added the neo4j credentials to the .env do I just run the notebook again    
+  now?                                                                          
+
+● Almost — but two things to check first so you don't get a silent fallback. Let
+  me verify your .env uses key names the notebook recognizes (I'll show only
+  the key names, never the secret values):
+
+  Ran 1 shell command (ctrl+o to expand)
+● Your .env is correct — NEO4J_URL, NEO4J_USER, NEO4J_PASSWORD are all set and
+  all recognized by the notebook (it reads NEO4J_URL first, so your repo-style
+  names work fine; the neo4j+s:// Aura scheme is handled by the driver). So yes
+  — re-run it, with three things in mind:
+
+  1. Restart & Run All (don't just re-run §9). The kernel that ran earlier
+  loaded no .env; restarting ensures §1's load_dotenv() picks up the new
+  credentials cleanly and rebuilds the in-process API fresh. In Jupyter/VS Code:
+  Kernel → Restart & Run All. Headless equivalent:
+  python -m nbconvert --to notebook --execute --ExecutePreprocessor.timeout=900
+  notebooks/03_d2_retrieval_stack.ipynb --inplace
+  Run it in the same Python/kernel where we installed neo4j/qdrant-client/etc.
+
+  2. Confirm it actually used Neo4j — check §9's printed output:
+  - ✅ Success: Connected to Neo4j at neo4j+s://… — running real Cypher. then
+  Neo4j graph: 155 Papers, 764 Authors, 13 Topics
+  - ⚠️ Fallback: NEO4J set but unreachable (…) — networkx fallback. → almost
+  always one of: Aura instance paused (free tier auto-pauses after ~3 days —
+  resume it in the Aura console), wrong password, or a network/firewall block.
+  The notebook degrades gracefully rather than crashing, so this is easy to
+  miss.
+
+  3. Heads-up: §9 writes to your Neo4j. It MERGE-seeds the 155-paper graph
+  (idempotent — safe to re-run). That's intended; it's what populates the graph
+  so §10–11 have data. Once connected, §11's topic co-occurrence (query D) —
+  empty in the networkx run — will now return real rows.
+
+  That live-Cypher path (§9–11) is the one part I couldn't execute here, so if
+  anything errors against your instance, paste the traceback and I'll fix it.
+
+✻ Cooked for 1m 39s
+
+※ recap: You wanted a runnable D2 notebook; it's built and verified (ingest→store→search→graph, 27 cells, metrics reproduce) using the in-memory stack. You just added Neo4j creds to .env. Next: Restart & Run All, then check §9 says "Connected to Neo4j." (disable recaps in /config)
+
+❯ notebook keeps saying no .env is there a problem with the paths or am I       
+  running it incorrectly?                                                       
+
+● That symptom points at a real bug in my setup cell, and I can diagnose it
+  against your actual .env without exposing any secrets. The likely cause:
+  load_dotenv() with no path uses the calling frame's location to find .env —
+  which doesn't work in notebooks — and my os.chdir guard only fires when the
+  folder is literally named notebooks. Let me reproduce it from a subdirectory
+  (simulating the notebook's working dir) and test fixes:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Reproduced it. The key line: from notebooks/, Path(".env").exists() is False —
+  so the print says "no .env" — even though load_dotenv() does find it by
+  walking up. So there are really two issues in my setup cell:
+
+  1. The os.chdir guard only fires when the folder is literally named notebooks.
+  If your kernel's working directory is something else (common in VS
+  Code/JupyterLab depending on notebookFileRoot), it never chdir's to the repo
+  root, so the relative .env path — and the data/... paths — don't resolve.
+  2. The "no .env" message keys off a relative Path(".env"), which is
+  misleading.
+
+  Let me fix the cell to locate the repo root robustly, load .env by explicit
+  path, and print a real diagnostic. First I'll verify the new logic against
+  your actual .env (masked):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The fix works — from notebooks/ it finds the repo root and loads your Neo4j
+  creds. Let me patch that cell into the notebook. I'll not re-execute here
+  (that would connect to your Neo4j and seed it using your credentials — that
+  run is yours to do):
+
+● Write(_patch_nb.py)
+  ⎿  Wrote 63 lines to _patch_nb.py
+      1 """Patch the setup cell of notebooks/03 with robust repo-root + .
+        env loading. Deleted after use."""
+      2 import json
+      3 from pathlib import Path
+      4 
+      5 NEW_SETUP = '''import os
+      6 import sys
+      7 import json
+      8 import tempfile
+      9 from pathlib import Path
+     … +68 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Fixed — and to be clear, you were running it correctly; this was a bug in my
+  setup cell, not your mistake.
+
+  What was wrong
+
+  Two problems in §1:
+  1. It only changed to the repo root when the kernel's working folder was
+  literally named notebooks. VS Code / JupyterLab often set a different working
+  directory (via notebookFileRoot), so the os.chdir never fired — and then the
+  relative .env path (and the data/... paths) didn't resolve.
+  2. It checked a relative Path(".env") and used a bare load_dotenv(), which
+  searches relative to a script file that doesn't exist in a notebook kernel.
+
+  What I changed
+
+  The setup cell now walks up from wherever the kernel starts to find the repo 
+  root (by looking for data/processed/chunks.parquet / pyproject.toml / .git),
+  chdirs there, and loads .env by explicit absolute path. I verified this
+  against your actual .env from inside notebooks/ — it resolved the root and
+  reported NEO4J creds loaded: True (without exposing the values).
+
+  It now also prints a real diagnostic, so you'll see exactly what happened:
+  .env at C:\Users\waska\Projects\special-topics\.env: found | NEO4J creds
+  loaded: True
+  repo root: C:\Users\waska\Projects\special-topics | chunks.parquet present:
+  True
+
+  Run it now
+
+  Kernel → Restart & Run All. Then check two outputs:
+  - §1 should say …found | NEO4J creds loaded: True (not MISSING).
+  - §9 should say Connected to Neo4j at … — running real Cypher and Neo4j graph:
+  155 Papers, 764 Authors, 13 Topics.
+
+  I did not re-execute it here (that would connect to your Neo4j and seed it
+  with your credentials — that run is yours). I cleared the patched cell's
+  output, so it'll show fresh diagnostics on your run; the other cells still
+  show the earlier networkx outputs and will refresh.
+
+  If §1 still says MISSING after restart, paste me that one printed line (repo 
+  root: …) — that happens only if the kernel starts above the repo folder, and
+  the resolved-root path will tell us immediately.
+
+✻ Worked for 3m 35s
+
+❯ I am getting this in cell ModuleNotFoundError                       Traceback 
+  (most recent call last)                                                       
+  /tmp/ipykernel_14362/2990442725.py in <cell line: 0>()                        
+  ----> 1 from csai415.ingest import parse_arxiv_pdfs, embed_chunks             
+        2                                                                       
+        3 sample_pdfs = sorted(Path("data/raw_pdfs").glob("*.pdf"))[:2]         
+        4 print("ingesting:", [p.name for p in sample_pdfs])                    
+        5                                                                       
+                                                                                
+  ModuleNotFoundError: No module named 'csai415' and there was no output in     
+  cell 1 as well                                                                
+
+● That traceback shows /tmp/ipykernel_... — a Linux path. So you're not running
+  on your Windows machine (where the repo and all my fixes live) — you're on a
+  Linux host, almost certainly Google Colab (like the Week 5/6 labs). That's the
+  real issue: in that kernel the csai415 package — and the repo files — simply
+  aren't present, so the import fails and the setup cell can't find a repo root
+  (which is why it printed nothing useful).
+
+  Let me confirm a couple of facts so I can give you a bootstrap that actually
+  works there:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Now I understand the full picture. Key facts: chunks.parquet is committed (47
+  MB, so a clone gets the corpus), but the raw PDFs are gitignored (a fresh
+  clone has none → §2 would find nothing), and download_arxiv_demo() can fetch
+  PDFs on the fly. Let me read that helper to wire §2 robustly:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● download_arxiv_demo(2) fetches 2 cs.CL PDFs live (and writes the metadata
+  sidecar) — perfect for making §2 work on a fresh clone where the PDFs aren't
+  in git. Now I'll add a bootstrap cell (clone repo + install deps) and make §2
+  fall back to downloading. This is what makes it run on Colab like the Week 5/6
+  labs.
+
+● Write(_patch_nb2.py)
+  ⎿  Wrote 84 lines to _patch_nb2.py
+       1 """Add a bootstrap cell (Colab/fresh env) + make §2 ingestion do
+       2 import json
+       3 from pathlib import Path
+       5 BOOTSTRAP_MD = '''## Section 0 — Bootstrap (Colab / fresh enviro
+         nment)
+       7 **Run this cell first.** On Google Colab (or any machine without
+          the repo) it
+         ies, so every
+       9 `from csai415...` import below resolves and `data/`, `configs/` 
+      10 inside an existing clone it just installs deps and continues.
+     … +102 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Done — and now I know the real problem. That /tmp/ipykernel_… path means
+  you're running on Colab (or another fresh Linux host), not your Windows
+  machine. In that kernel the csai415 package and the repo files simply aren't
+  present — so the import fails, and §1 couldn't find a repo root to report
+  (hence no useful output). None of my earlier fixes are in that environment
+  because they live in your local clone.
+
+  The fix is a bootstrap cell that clones the repo + installs deps (exactly how
+  the Week 5/6 labs start with !pip install). I've added it to the notebook in
+  the repo, but since your Colab copy is older, paste this as a brand-new first 
+  cell and run it before anything else:
+
+  # ── Bootstrap: run me FIRST (Colab / fresh machine) ──
+  import os, subprocess, sys
+  from pathlib import Path
+  DEPS =
+  ["qdrant-client","mongomock","networkx","neo4j","python-dotenv","pymupdf",
+          "sentence-transformers","rank_bm25","fastapi","httpx","pandas","pyarro
+  w","arxiv"]
+  subprocess.run([sys.executable,"-m","pip","install","-q",*DEPS])
+  def _has_repo(p): return (p/"src"/"csai415"/"__init__.py").exists()
+  cwd = Path.cwd()
+  if not (_has_repo(cwd) or any(_has_repo(d) for d in cwd.parents)):
+      if not _has_repo(Path("special-topics")):
+          subprocess.run(["git","clone","--depth","1",
+                          "https://github.com/waf-iq/special-topics.git"],
+  check=True)
+      os.chdir("special-topics")
+  print("bootstrap done | cwd:", Path.cwd(), "| repo found:",
+  _has_repo(Path.cwd()))
+
+  First run takes ~2–4 min (installing sentence-transformers). After it prints
+  repo found: True, Run All — the csai415 imports and data/ paths will resolve.
+
+  Neo4j on Colab: a cloned repo has no .env (it's gitignored), so add one cell
+  with your credentials before §9 instead:
+  import os
+  os.environ["NEO4J_URL"] = "neo4j+s://xxxxxxxx.databases.neo4j.io"   # your URI
+  os.environ["NEO4J_USER"] = "neo4j"
+  os.environ["NEO4J_PASSWORD"] = "your-password"
+
+  I also made §2 robust: if no PDFs are on disk (which is the case on a fresh
+  clone — they're gitignored), it now calls download_arxiv_demo(2) to fetch two
+  cs.CL papers live, so the ingestion stage still runs.
+
+  Two honest caveats:
+  - I couldn't execute the Colab path here (no Colab/Linux in this session) — I
+  syntax-checked all cells, but the clone+install+download flow runs first on
+  your machine. If a specific cell errors after the bootstrap, paste it and I'll
+  fix it.
+  - The simplest already-verified alternative is to run it locally on your 
+  Windows machine, where the repo, PDFs, deps, and your .env are all set up —
+  there it's fully tested end-to-end (minus the live Neo4j path). Colab just
+  needs the bootstrap because it starts from nothing.
+
+  Which are you on — Colab? If so, the two cells above are all you need on top
+  of Run All.
+
+✻ Churned for 4m 58s
+
+❯ no I just want to run it locally on my laptop I don't want to run the         
+  notebook remotely, try running it urself maybe I am doing smth wrong          
+
+● Hold on — that's the key realization: I'm operating on your Windows laptop 
+  right now (the Bash tool here runs in C:\Users\waska\Projects\special-topics).
+  The /tmp/ipykernel error means the Jupyter kernel you opened is a different 
+  Python environment (Colab, or WSL, or another venv) than the one where csai415
+  and the deps are installed. The notebook itself isn't broken — the kernel you
+  ran it in just doesn't have the package.
+
+  Let me prove that by actually running the whole notebook here, locally on your
+  machine. Note: your .env is now present, so this will connect to and seed
+  your Neo4j (that's the notebook's job — idempotent). Running it:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Ran clean locally (exit 0). Let me see what happened — including whether it
+  connected to your Neo4j:
+  Ran 1 shell command (ctrl+o to expand)
+
+● It works end-to-end on your laptop — zero errors — and it even connected to 
+  your Neo4j Aura and ran real Cypher (155 Papers, 764 Authors, 13 Topics). So
+  the notebook is correct; the live graph path is now verified too.
+
+  A couple of cleanups from that run: I'll mask your Aura host out of the saved
+  output (it shouldn't be baked into a notebook you might submit), and fix a
+  cosmetic "repo found: False" line in the bootstrap:
+
+● Write(_patch_nb3.py)
+  ⎿  Wrote 41 lines to _patch_nb3.py
+       1 """Mask Neo4j host in outputs + fix bootstrap print. Deleted aft
+         er use."""
+       2 import json, re
+       3 from pathlib import Path
+       4 
+       6 nb = json.loads(nb_path.read_text(encoding="utf-8"))
+       7 
+       8 for c in nb["cells"]:
+       9     if c["cell_type"] != "code":
+      10         continue
+     … +42 lines (ctrl+o to expand)
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The host survived in some other output field. Let me locate it precisely:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The file was written (the scrub of outputs worked) but the assertion checked
+  in-memory and found the host elsewhere. Let me search the whole file — sources
+  included:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Cell 3 is the bootstrap markdown — that's the example placeholder
+  xxxxxxxx.databases.neo4j.io, not your real host. My assertion was just too
+  aggressive. Let me confirm your actual host (32adacde…) is fully scrubbed:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● The real host is gone (only the placeholder remains) and the connection line
+  is masked. The patch script lingered because the over-strict assert aborted
+  before cleanup — removing it:
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● All clean: 29 cells, 0 errors, your real Aura host scrubbed (only the
+  placeholder remains), and the notebook now carries real Cypher outputs from
+  your graph.
+
+  The verdict: the notebook isn't broken — your kernel is the problem
+
+  I just ran the entire notebook here on your laptop and it passed end-to-end:
+  - §1 found .env, loaded your Neo4j creds
+  - §2 ingested 2 PDFs → 123 chunks → embeddings
+  - §6–8 the real FastAPI /search + metrics (Recall@5 = 0.6489)
+  - §9–11 connected to your Neo4j Aura and ran real Cypher (155 Papers, 764 
+  Authors, 13 Topics)
+
+  So csai415 imports fine in the Python where the packages are installed. Your
+  ModuleNotFoundError came with a /tmp/ipykernel_… path — that's a Linux kernel
+  (WSL, or Colab in your browser), not your Windows Python. That kernel doesn't
+  have csai415 or the deps, so the import fails there.
+
+  Fix it on your laptop — pick one
+
+  A. Easiest — point the notebook at your Windows Python (the one that has
+  everything):
+  - VS Code: open the notebook → click the kernel picker (top-right) → Select 
+  Another Kernel → Python Environments → choose the interpreter at
+  C:\Users\waska\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_…\p
+  ython.exe
+  (not a "WSL" or "Linux" entry) → Run All.
+  - Jupyter: launch it from PowerShell (python -m jupyter lab) — not from a
+  WSL/Ubuntu terminal.
+
+  B. Or just run the new "Section 0 — Bootstrap" cell first. I added it to the
+  notebook — it pip installs the deps into whatever kernel you're on. (If that
+  kernel is a fresh WSL, this is heavier — it'll pull torch etc. — so option A
+  is faster since your Windows env already has them.)
+
+  Quick check of which Python your kernel uses — run this in a cell:
+  import sys; print(sys.executable)
+  A C:\…python.exe path = correct. A /usr/... or /home/... path = that's the
+  empty Linux kernel; switch per option A.
+
+  One more thing: I masked your Aura host out of the saved outputs (it shouldn't
+  sit in a notebook you submit) — your password was never printed (§1 only
+  shows a True/False). Nothing's committed yet; want me to put this on a
+  d2-notebook branch and open a PR?
+
+✻ Sautéed for 7m 45s

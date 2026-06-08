@@ -255,6 +255,29 @@ pdf.save('D2_report.pdf')
 
 (`pandoc reports/D2/D2_report.md -o reports/D2/D2_report.pdf` also works if pandoc is installed.)
 
+## Render the D2 walkthrough notebook
+
+`notebooks/03_d2_retrieval_stack.ipynb` is a **self-contained, in-memory** run of the **full** D2 pipeline, in the style of the Week 5/6 labs — **no Docker required**. It imports the team's *actual* production modules and runs ingest → store → search → graph in-process:
+
+- **§2 ingestion** — parses + embeds real PDFs from `data/raw_pdfs/` via `ingest.parse_arxiv_pdfs` + `ingest.embed_chunks`, then retrieves over the just-ingested chunks;
+- **§3–5 storage** — Mongo via `mongomock`, Qdrant via `QdrantClient(":memory:")` (seeded by `seed_collection_from_parquet`, 3 collections);
+- **§6–8 retrieval** — the real FastAPI `/search` via `create_app(qdrant_client=...)` + `TestClient`: `/healthz`, all 3 routes (no-leakage asserts), and the holdout Recall@5/NDCG@5 reproduced against `d2_search_metrics.csv`;
+- **§9–11 graph** — Neo4j when configured **or** a `networkx` fallback (reusing `seed_neo4j.seed_graph`), running the 5 documented queries **plus** 5 intermediate analytics (prolific authors, co-authorship pairs, interdisciplinary authors, topic co-occurrence, most-collaborative authors).
+
+```bash
+pip install qdrant-client mongomock networkx neo4j python-dotenv pymupdf   # all in requirements.txt
+python -m nbconvert --to notebook --execute --ExecutePreprocessor.timeout=900 notebooks/03_d2_retrieval_stack.ipynb --inplace
+# ~3-4 min (ingest 2 PDFs + seed 3 in-memory Qdrant collections + 60-query holdout eval; first BGE load cached).
+```
+
+To run **§9–11 as real Cypher** against your own Neo4j (Aura or the compose Neo4j), drop credentials into a `.env` at the repo root — the notebook calls `load_dotenv()` and accepts both the repo names (`NEO4J_URL`/`NEO4J_USER`) and Aura's (`NEO4J_URI`/`NEO4J_USERNAME`):
+
+```ini
+NEO4J_URI=neo4j+s://xxxxxxxx.databases.neo4j.io
+NEO4J_USERNAME=neo4j
+NEO4J_PASSWORD=your-password
+```
+
 ## Tear down (full reset)
 
 ```bash
