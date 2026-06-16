@@ -39,6 +39,7 @@ import yaml
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from csai415.graphrag import GraphRAGExecutor
 from csai415.retrieve import CHUNKS_PARQUET, HybridRetriever, RetrieverConfig, load_chunks
 
 DEFAULT_RUNCARD = Path("configs/winning_runcard.yaml")
@@ -96,6 +97,32 @@ class SearchHit(BaseModel):
     text: str
     page_range: Optional[str]
     score: float
+
+
+# --- D3: GraphRAG /ask contract (see briefs/D3_TASKS.md, Hour 0) -----------------------
+class CitationModel(BaseModel):
+    chunk_id: str
+    paper_id: str
+    title: str
+    page_range: Optional[str]
+    score: float
+
+
+class AskRequest(BaseModel):
+    query: str = Field(..., min_length=1, description="Natural-language question.")
+    k: int = Field(5, ge=1, le=50, description="Number of cited sources to ground on.")
+    mode: str = Field("hybrid", description="Retrieval mode: 'vector', 'graph', or 'hybrid'.")
+    rerank: bool = Field(True, description="Apply the cross-encoder rerank stage.")
+
+
+class AskResponse(BaseModel):
+    answer: str
+    citations: list[CitationModel]
+    contexts: list[str]
+    mode: str
+    rerank: bool
+    latency_ms: float
+    steps: list[dict]
 
 
 def _page_range(row: pd.Series) -> str | None:
@@ -186,6 +213,9 @@ def create_app(
         app.state.lookup = df.set_index("chunk_id")
         app.state.config = cfg
         app.state.qdrant_client = client
+        # D3: GraphRAG executor over the whole-corpus retriever. D3-2 owner wires the
+        # Neo4j driver (neo4j_driver=...) once the graph stage is live.
+        app.state.executor = GraphRAGExecutor(retrievers[None], app.state.lookup)
         yield
 
     app = FastAPI(title="CSAI415 PDF-Papers /search", lifespan=lifespan)
@@ -238,6 +268,31 @@ def create_app(
                 )
             )
         return out
+
+    @app.post("/ask", response_model=AskResponse)
+    def ask(req: AskRequest):
+        """GraphRAG executor endpoint (D3). Returns a grounded answer with [n] citations.
+
+        The blessed retrieval config + mode policy live server-side; the request only
+        carries the question, k, mode, and the rerank toggle.
+        """
+        executor: GraphRAGExecutor = getattr(app.state, "executor", None)
+        if executor is None:
+            raise HTTPException(status_code=503, detail="executor not loaded")
+        if req.mode not in ("vector", "graph", "hybrid"):
+            raise HTTPException(
+                status_code=400, detail=f"unknown mode {req.mode!r}; expected vector|graph|hybrid"
+            )
+        res = executor.answer(req.query, k=req.k, mode=req.mode, rerank=req.rerank)
+        return AskResponse(
+            answer=res.answer,
+            citations=[CitationModel(**vars(c)) for c in res.citations],
+            contexts=res.contexts,
+            mode=res.mode,
+            rerank=res.rerank,
+            latency_ms=res.latency_ms,
+            steps=res.steps,
+        )
 
     return app
 
