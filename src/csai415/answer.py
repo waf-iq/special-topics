@@ -1,51 +1,192 @@
-"""D3-4 — Answer generation + citations + page ranges. See briefs/D3_TASKS.md (Task D3-4).
+"""Task 3 (D3 Phase A) — Answer generation + citations. See briefs/D3_D4_TASKS.md.
 
-Owner: Task D3-4. Turn the ranked chunks into a grounded answer with inline ``[n]``
-citation markers, where ``[n]`` resolves to ``citations[n-1]`` (1-based).
+Owner: WAFIQ. Turn the ranked chunks into a grounded answer with inline ``[n]`` citation
+markers, where ``[n]`` resolves to ``citations[n-1]`` (1-based). ``citations[i]`` and
+``contexts[i]`` are aligned: ``contexts[i]`` is the chunk text for ``citations[i]``.
 
-**The CONTRACT is frozen at H0** — the ``generate_answer`` signature and the
-``(answer_text, used_idxs)`` return. The body is a deterministic *extractive* stub so
-the executor and ``/ask`` run end-to-end without loading any model. D3-4 owner swaps in
-the graded answerer (``Qwen2.5-3B-Instruct``, the D4 QLoRA target) and the optional
-Groq ``llama-3.3-70b`` ceiling row, and compares numbered-source prompting vs post-hoc
-citation attribution. Load the model lazily inside the function.
+**The CONTRACT is frozen at H0** — the ``generate_answer(query, citations, contexts)``
+signature and the ``(answer_text, used_idxs)`` return. Everything below is body the owner
+fills in.
 
-``citations[i]`` and ``contexts[i]`` are aligned: ``contexts[i]`` is the chunk text for
-``citations[i]``.
+Design (decided in the D3 kickoff discussion):
+  * **One OpenAI-compatible client, backend chosen by env** — Ollama (local Qwen-3B) and
+    Groq (the free 70B ceiling row) both speak the OpenAI API, so zero-shot vs tuned
+    (D4) and Qwen vs Groq are a ``CSAI415_ANSWERER`` swap, never a code change.
+  * **Numbered-source prompting** is the shipped default: contexts go in as ``[1]..[k]``,
+    the model cites ``[n]`` inline, we parse + range-validate the markers.
+  * **Offline-safe fallback** — with no backend configured (e.g. the contract test, or a
+    laptop with no GPU/key) it degrades to a deterministic extractive answer that still
+    emits ``[1]``, so the pipeline and ``tests/test_graphrag_contract.py`` stay green.
+  * **Citation strategy is a knob** (``CSAI415_CITE_MODE``: numbered | hybrid | posthoc)
+    so the deep-dive comparison flips strategies without touching the signature. Only
+    ``numbered`` is implemented here; ``hybrid`` (cite→verify→repair) and ``posthoc``
+    are the owner's build — left as marked seams.
+
+Env:
+  CSAI415_ANSWERER  model id. ``groq:<model>`` / ``groq/<model>`` → Groq; any other
+                    non-empty value → Ollama with that model
+                    (``qwen2.5:3b-instruct`` zero-shot, ``qwen2.5-3b-csai415`` tuned);
+                    unset → extractive fallback.
+  CSAI415_CITE_MODE numbered (default) | hybrid | posthoc.
+  GROQ_API_KEY      required when the backend is Groq.
+  OLLAMA_BASE_URL   defaults to ``http://localhost:11434/v1``.
 """
 
 from __future__ import annotations
 
+import os
 import re
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # avoid a runtime import cycle with graphrag
     from csai415.graphrag import Citation
 
+REFUSAL = "I could not find relevant information in the retrieved context."
 
+# Latency/quality knobs — kept tight so a 3B model stays under the p95 ≤ 2s target.
+_MAX_CTX_CHARS = 1200   # truncate each source before it enters the prompt
+_MAX_TOKENS = 320       # cap generation length
+_TEMPERATURE = 0.0      # deterministic answers (so quality is reproducible)
+_DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
+_DEFAULT_OLLAMA_BASE = "http://localhost:11434/v1"
+
+_SYSTEM_PROMPT = (
+    "You are a precise research assistant. Answer the question using ONLY the numbered "
+    "sources provided. Cite every claim inline with [n], where n is the source number "
+    "you used. Keep the answer concise. If the sources do not contain the answer, reply "
+    f'with exactly "{REFUSAL}" and nothing else. Do not use any outside knowledge.'
+)
+
+
+# --- Backend resolution ----------------------------------------------------------------
+def resolve_backend() -> "tuple[object, str, str] | None":
+    """Return ``(client, model, kind)`` for the configured backend, or ``None`` if offline.
+
+    ``kind`` is "groq" or "ollama" (handy for the comparison notebook). ``openai`` is
+    imported lazily so importing this module never requires the SDK or a network/key —
+    that is what keeps the contract test runnable with no env set.
+    """
+    spec = (os.getenv("CSAI415_ANSWERER") or "").strip()
+    if not spec:
+        return None
+
+    from openai import OpenAI  # lazy — only when a backend is actually configured
+
+    low = spec.lower()
+    if low.startswith("groq:") or low.startswith("groq/"):
+        model = spec.split(":", 1)[-1].split("/", 1)[-1] or _DEFAULT_GROQ_MODEL
+        key = os.getenv("GROQ_API_KEY")
+        if not key:
+            raise RuntimeError("CSAI415_ANSWERER=groq but GROQ_API_KEY is not set.")
+        client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=key)
+        return client, model, "groq"
+    if low == "groq":
+        key = os.getenv("GROQ_API_KEY")
+        if not key:
+            raise RuntimeError("CSAI415_ANSWERER=groq but GROQ_API_KEY is not set.")
+        return OpenAI(base_url="https://api.groq.com/openai/v1", api_key=key), _DEFAULT_GROQ_MODEL, "groq"
+
+    # anything else → a local Ollama model (zero-shot or the D4-tuned GGUF)
+    base = os.getenv("OLLAMA_BASE_URL", _DEFAULT_OLLAMA_BASE)
+    client = OpenAI(base_url=base, api_key="ollama")  # Ollama ignores the key
+    return client, spec, "ollama"
+
+
+def current_backend() -> str:
+    """One-line description of the active backend (for notebook display / logging)."""
+    try:
+        b = resolve_backend()
+    except RuntimeError as e:
+        return f"misconfigured ({e})"
+    if b is None:
+        return "extractive-fallback (no CSAI415_ANSWERER set)"
+    _, model, kind = b
+    return f"{kind}:{model}  [cite_mode={os.getenv('CSAI415_CITE_MODE', 'numbered')}]"
+
+
+# --- Public contract -------------------------------------------------------------------
 def generate_answer(
     query: str,
     citations: "list[Citation]",
     contexts: list[str],
 ) -> tuple[str, list[int]]:
-    """Produce a grounded answer with inline ``[n]`` markers.
+    """Produce a grounded answer with inline ``[n]`` markers. Returns ``(text, used_idxs)``.
 
-    Returns ``(answer_text, used_idxs)`` where ``used_idxs`` are the 1-based citation
-    numbers actually cited. H0 STUB: extractive — stitches the lead sentence of the top
-    two contexts and cites them. Refuses cleanly when there is no context (this refusal
-    path is what D3-7's citation-faithfulness ideas build on).
+    ``used_idxs`` are the 1-based citation numbers actually cited (range-validated against
+    ``contexts``). Refuses cleanly when there is no context. Falls back to a deterministic
+    extractive answer when no backend is configured, so the pipeline always runs.
     """
     if not citations or not contexts:
-        return ("I could not find relevant information in the retrieved context.", [])
+        return (REFUSAL, [])
 
-    sentences: list[str] = []
-    used: list[int] = []
+    backend = resolve_backend()
+    if backend is None:
+        return _extractive(contexts)  # offline / contract path — still emits [1]
+
+    client, model, _kind = backend
+    mode = (os.getenv("CSAI415_CITE_MODE") or "numbered").strip().lower()
+    if mode == "numbered":
+        return _numbered_source(client, model, query, contexts)
+    if mode == "hybrid":
+        return _hybrid(client, model, query, citations, contexts)
+    if mode == "posthoc":
+        return _posthoc(client, model, query, citations, contexts)
+    raise ValueError(f"unknown CSAI415_CITE_MODE={mode!r}; expected numbered|hybrid|posthoc")
+
+
+# --- Strategy 1: numbered-source (shipped default) -------------------------------------
+def _numbered_source(client, model, query: str, contexts: list[str]) -> tuple[str, list[int]]:
+    """Single generation call; the model cites ``[n]`` inline. Fast, abstractive-constrained."""
+    sources = "\n".join(f"[{i}] {(c or '')[:_MAX_CTX_CHARS]}" for i, c in enumerate(contexts, 1))
+    user = f"Sources:\n{sources}\n\nQuestion: {query}\n\nAnswer (cite sources inline as [n]):"
+    resp = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": _SYSTEM_PROMPT},
+                  {"role": "user", "content": user}],
+        temperature=_TEMPERATURE,
+        max_tokens=_MAX_TOKENS,
+    )
+    text = (resp.choices[0].message.content or "").strip()
+    return text, _parse_citations(text, len(contexts))
+
+
+# --- Strategy 2 & 3: the owner's deep-dive (cite→verify→repair / post-hoc attribution) --
+# These are the comparison arms WAFIQ builds and benchmarks against `_numbered_source` on
+# (faithfulness × p95). Scaffolded as seams so the notebook can already select them; until
+# implemented they delegate to numbered-source so nothing in the pipeline breaks.
+def _hybrid(client, model, query, citations, contexts) -> tuple[str, list[int]]:
+    # TODO(WAFIQ): generate via _numbered_source, then verify each emitted [n] against
+    # contexts[n-1] (tiered: T1 lexical overlap → T2 embedding cosine → T3 NLI/cross-encoder),
+    # and repair/refuse on a failed citation. Sweep tier + repair policy in 04_answerer.ipynb.
+    return _numbered_source(client, model, query, contexts)
+
+
+def _posthoc(client, model, query, citations, contexts) -> tuple[str, list[int]]:
+    # TODO(WAFIQ): generate the answer WITHOUT citations, then attribute each sentence to its
+    # best-matching context (embedding cosine / cross-encoder) and inject [n]. Slower, more
+    # faithful — the high-latency end of the comparison table.
+    return _numbered_source(client, model, query, contexts)
+
+
+# --- Helpers ---------------------------------------------------------------------------
+def _parse_citations(text: str, n: int) -> list[int]:
+    """Extract in-range ``[n]`` markers (1..n), deduped in first-seen order."""
+    seen: list[int] = []
+    for m in re.findall(r"\[(\d+)\]", text):
+        idx = int(m)
+        if 1 <= idx <= n and idx not in seen:
+            seen.append(idx)
+    return seen
+
+
+def _extractive(contexts: list[str]) -> tuple[str, list[int]]:
+    """Deterministic, model-free fallback: lead sentence of the top two contexts + [n]."""
+    sentences, used = [], []
     for i, ctx in enumerate(contexts[:2], start=1):
         lead = re.split(r"(?<=[.!?])\s+", (ctx or "").strip())
         if lead and lead[0]:
             sentences.append(f"{lead[0]} [{i}]")
             used.append(i)
-
     if not sentences:
-        return ("I could not find relevant information in the retrieved context.", [])
+        return (REFUSAL, [])
     return (" ".join(sentences), used)

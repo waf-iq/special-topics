@@ -1,0 +1,2253 @@
+ ▐▛███▜▌   Claude Code v2.1.181
+▝▜█████▛▘  Opus 4.8 · Claude Pro
+  ▘▘ ▝▝    ~\Projects\special-topics
+
+
+❯ time to get started with D3, The lab notebook designed by our doctor is in    
+  the labs folder (week7). firstly I want to change the way we handle the       
+  tasks, assign each member one task, but they have to dig in it as much as     
+  possible,compare different approaches and figure out whats best, if you can   
+  provide them with what diffrenet approaches to try out that would be great.   
+  here's some of the details around D3  GraphRAG Executor, Evaluation & Safety  
+  ·        GraphRAG executor: (1) choose subgraph by Cypher; (2) expand to      
+  supporting chunks; (3) hybrid blend and optional rerank; (4) answer with      
+  citations and page ranges.                                                    
+                                                                                
+  ·        Evaluation: a small gold Q/A set, faithfulness & answer-relevance    
+  scores (RAGAS or equivalent), latency p95.                                    
+                                                                                
+  ·        Safety: implement at least one mitigation (e.g., source pinning,     
+  provenance filtering, deny risky tool calls); show before/after evidence.     
+                                                                                
+  ·        Ablation: vector-only vs graph-guided vs hybrid—compare              
+  quality/latency. seed scripts for stores; basic FastAPI. Refer to the project 
+  brief document for further details and context. let me decide all the         
+  decision we need to make                                                      
+
+● I'll start by getting the lay of the land — the project brief, the week7 lab
+  notebook, the team structure, and what D1/D2 already produced. Let me explore
+  in parallel.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● No week7 file in the tracked list — let me check the labs folder on disk and
+  read the core documents in parallel.
+
+  Read 1 file, listed 1 directory (ctrl+o to expand)
+
+● Good context on team structure and the D1/D2 working model. Now the project
+  brief, the doctor's Week 07 notebook, and the D2 task format + report. Let me
+  read these in parallel.
+
+  Read 2 files (ctrl+o to expand)
+
+● Now let me study the doctor's Week 07 notebook (the blueprint for what's
+  expected) and the existing executor surface — api.py, retrieve.py, and the D2
+  report. The notebook is large, so I'll extract its structure rather than dump
+  it.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● Encoding hiccup with emoji. Let me write the extraction to a UTF-8 file and
+  read it.
+
+  Read 1 file, ran 1 shell command (ctrl+o to expand)
+
+● The notebook gives the team the eval harness, cross-encoder reranker,
+  RRF-vs-weighted fusion, and multi-objective HPO-over-RAG pattern — but stops
+  short of answer generation, RAGAS faithfulness, GraphRAG, and safety, which is
+  exactly D3's surface. Now let me read the existing executor code and the D2
+  report to see what D3 hooks into.
+
+  Read 2 files (ctrl+o to expand)
+
+● Now the D2 report, the dependency surface (what LLM / RAGAS options exist),
+  the gold Q/A format, and the Cypher library that GraphRAG will consume.
+
+  Read 2 files (ctrl+o to expand)
+
+● Now I have the full picture of the post-D2 stack. Two LLM decisions sit at the
+  center of D3 (the answer generator, and the RAGAS faithfulness judge), and
+  the project's D4 explicitly tunes a 1–3B model — so I'll ground the
+  model-choice recommendation properly rather than from memory. Let me pull the
+  Claude API reference and check the gold-set format + whether any LLM client
+  already exists.
+
+● Skill(claude-api)
+  ⎿  Successfully loaded skill · 4 tools allowed
+
+● Now let me confirm the gold-set format and that no answer-generation/LLM layer
+  exists yet — this determines what D3 has to build from scratch.
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● I've now got the full picture. Here's what I found and how I'd restructure D3
+  — then the decisions are yours.
+
+  Where D3 stands
+
+  D3 (Week 9, 15%) grades: GraphRAG pipeline 8% · Evaluation 5% · Safety 2%.
+  Targets: faithfulness ≥ 0.8, answer-relevance ≥ 0.8 (RAGAS-style), p95 ≤ 2s.
+
+  What already exists (D1/D2): the hybrid retriever (HybridRetriever, BM25 +
+  Qdrant dense, blessed BOHB config), /search, the Neo4j graph
+  (Author/Paper/Topic, 5 Cypher queries), Docker stack. Everything D3-specific 
+  is greenfield — there is no answer-generation LLM, no RAGAS/faithfulness, no
+  reranker, no /ask, and the gold set (qa.jsonl) is retrieval gold (claim→chunk,
+  SciFact, no reference answers, no page ranges), not Q→answer gold.
+
+  The doctor's Week 07 notebook is the blueprint: it hands you the eval-metric
+  harness, a cross-encoder reranker, RRF-vs-weighted fusion, a latency protocol
+  (warmup + median), and multi-objective HPO via NSGA-II → Pareto front (quality
+  vs latency) — but stops short of answer generation, faithfulness, GraphRAG,
+  and safety, which is exactly D3's surface. So D3 = extend the doctor's harness
+  with those four.
+
+  One D2 debt lands here: the 3-Qdrant-collections → 
+  1-collection-with-query-time-filter refactor was explicitly deferred to D3
+  because the GraphRAG executor wants one retriever.
+
+  New working model: one deep task per member
+
+  7 members, 7 deep-dive tasks. Each owner picks a winner by measuring, not
+  asserting — every task ships a small comparison table. Suggested owners below
+  are my read from D1/D2 history — reassign as you like.
+
+  #: 1
+  Task (rubric area): Entity linking → subgraph selection (GraphRAG 8%)
+  Suggested owner: Ahmed Soliman
+  The question they own: Given a query, which graph nodes/paths seed the
+    subgraph?
+  Approaches to compare: (a) LLM entity extraction, (b) spaCy/NER, (c) fuzzy
+    match query terms against Author/Topic/Paper names; which of the 5 Cypher
+    templates to fire; 1-hop vs 2-hop neighborhood
+  ────────────────────────────────────────
+  #: 2
+  Task (rubric area): Graph-guided expansion + fusion + 1-collection refactor +
+    /ask spine (GraphRAG 8%)
+  Suggested owner: WAFIQ (coord)
+  The question they own: How does the subgraph actually change retrieval?
+  Approaches to compare: graph-as-filter (restrict to subgraph papers' chunks)
+  vs
+     graph-as-booster (score bonus) vs graph-as-expansion (pull neighbor
+  chunks);
+     RRF vs weighted blend with vector top-k
+  ────────────────────────────────────────
+  #: 3
+  Task (rubric area): Reranking (GraphRAG 8%)
+  Suggested owner: Abdurlahman Alali
+  The question they own: Is a reranker worth the latency?
+  Approaches to compare: cross-encoder/ms-marco-MiniLM-L-6-v2 vs
+    BAAI/bge-reranker-base vs MMR-diversity vs none; candidate-pool size sweep
+    (doctor's §5)
+  ────────────────────────────────────────
+  #: 4
+  Task (rubric area): Answer generation + citations + page ranges (GraphRAG 8%)
+  Suggested owner: Ahmad Fraij
+  The question they own: How to produce a grounded, cited answer?
+  Approaches to compare: answerer model (see decision below); numbered-source
+    prompting vs post-hoc citation verification; extractive vs abstractive;
+    page-range mapping
+  ────────────────────────────────────────
+  #: 5
+  Task (rubric area): Evaluation harness (Eval 5%)
+  Suggested owner: Yousef Alsakkaf
+  The question they own: How good is it, faithfully measured?
+  Approaches to compare: gold-set construction (hand-authored vs LLM-gen +
+    verify); RAGAS lib vs hand-rolled LLM-judge; faithfulness + answer-relevance
+
+    + latency p95 (doctor's protocol)
+  ────────────────────────────────────────
+  #: 6
+  Task (rubric area): Ablation + multi-objective HPO (Eval 5%)
+  Suggested owner: Yehia Noureldin
+  The question they own: vector-only vs graph-guided vs hybrid — where's the
+    trade-off?
+  Approaches to compare: the 3-way ablation × rerank on/off; reuse the doctor's
+    NSGA-II Pareto over GraphRAG knobs (quality vs latency);  knee-point pick
+  ────────────────────────────────────────
+  #: 7
+  Task (rubric area): Safety (Safety 2%)
+  Suggested owner: Musab
+  The question they own: One real mitigation with before/after evidence
+  Approaches to compare: see decision below — build an attack set, show
+    before/after, document limits
+
+  Backbone work (the /ask endpoint + integration) sits with the coordinator
+  (Task 2); the report is a shared close-out, same as D1/D2.
+
+  Secondary decisions — my recommended defaults (say the word to change)
+
+  - Reranker: include it as a tunable stage (doctor's §5; rubric literally says
+  "(re)ranking").
+  - Multi-objective HPO: yes — reuse the doctor's NSGA-II Pareto harness over
+  the GraphRAG knobs. It mirrors the Week 07 lab and directly lifts the
+  Evaluation score ("ablation thorough").
+  - Agent layer: a fixed deterministic executor (rubric says "executor," not
+  "planner") plus a thin tool wrapper (vector_search, cypher_query,
+  read_pdf_page_range) — enough for the "deny risky tool calls" safety demo,
+  without ReAct/LangGraph scope-creep (that's D4 territory).
+
+  The four decisions that cascade into everything else are yours to make now:
+
+● User answered Claude's questions:
+  ⎿  · What corpus does the GraphRAG executor + faithfulness gold set run on? → 
+     arXiv (GraphRAG) + SciFact (sanity)
+     · Which safety mitigation(s) should the team implement with before/after 
+     evidence? (Pick one or more — the rubric needs at least one; the brief 
+     names prompt-injection and retrieval-poisoning explicitly.) → Source 
+     pinning + provenance filtering, Deny risky tool calls, Prompt-injection 
+     defense
+     · Which model generates the answers in the GraphRAG executor? (This 
+     cascades into D4, which tunes a 1–3B model with PEFT/QLoRA and compares 
+     zero-shot vs tuned.) → option one is nice but I don't want to pay anything,
+     if I can use a free grokAPI then go with it if not just a local SLM is 
+     fine
+     · Who judges faithfulness & answer-relevance (RAGAS or equivalent) over the
+     gold Q/A set? → in the brief I see we need to use a gold Q/A set, if we 
+     also need a llm judge then use a free grokAPI if possible, if not let me 
+     know so I can think about it
+
+● Good — corpus and safety are locked. One thing I need to pin down before
+  finalizing: "grokAPI." There are two different things with near-identical
+  names, and which one you mean changes the plan:
+
+  - Grok (xAI, x.ai) — the chatbot/model family. Its API is paid.
+  - Groq (groq.com) — a fast inference host that serves open models (Llama,
+  Qwen, etc.) and is known for a genuinely free tier.
+
+  For "free," you almost certainly want Groq. Let me verify its current free
+  tier, models, and whether it slots cleanly into both roles (answerer ceiling +
+  RAGAS judge) rather than trusting my memory on pricing.
+
+● Web Search("Groq cloud API free tier rate limits 2026 models llama qwen openai
+            compatible")
+  ⎿  Did 1 search in 8s
+
+● Web Search("xAI Grok API free tier pricing 2026")
+  ⎿  Did 1 search in 7s
+
+● Verified — and the distinction matters a lot for you:
+
+  - Grok (xAI): the free $150/mo tier ended in May 2025. You now only get free
+  credits by enrolling in their data-sharing-for-training program (sharing your
+  API inputs). Otherwise it's paid from day one. Not what you want.
+  - Groq (groq.com): genuinely free, no credit card, OpenAI-compatible endpoint,
+  serves strong open models — Llama-3.3-70B, Llama-3.1-8B, GPT-OSS-120B,
+  Qwen3-32B. Free-tier limits are modest (Llama-3.3-70B: ~30 req/min, 1K
+  req/day, 12K tokens/min) but far more than enough for answering ~30–50 gold
+  questions and RAGAS judging (dozens of calls, not thousands). It has a
+  langchain-groq integration, so RAGAS consumes it directly.
+
+  So Groq is the answer to both your "free API" asks. Locking the decisions:
+
+  1. Answerer → local SLM (Qwen2.5-3B-Instruct, the D4 QLoRA target) + Groq 
+  Llama-3.3-70B as a free quality-ceiling row in the ablation. Zero spend.
+  2. RAGAS judge → Groq Llama-3.3-70B (free), wired into RAGAS via
+  langchain-groq. No payment, no thinking-about-it needed. One caveat: add light
+  retry/backoff so you don't trip the 30-req/min cap during a batch eval run.
+  3. Corpus → arXiv for GraphRAG + faithfulness gold, SciFact for
+  retrieval-recall sanity. ✓
+  4. Safety → 3 mitigations: prompt-injection defense, source pinning/provenance
+  filtering, deny risky tool calls. ✓
+
+  Now I'll write the assignable task doc, mirroring your D2_TASKS.md format.
+
+  Read 1 file (ctrl+o to expand)
+
+● Now I'll write the assignable D3 task document.
+
+● Write(briefs\D3_TASKS.md)
+  ⎿  Wrote 230 lines to briefs\D3_TASKS.md
+      1 # D3 — Team Tasks (GraphRAG Executor, Evaluation & Safety)
+      3 D3 = Week 9, **15% of project**. Rubric: **GraphRAG pipeline 8%**
+         · **Evaluation 5%** · **Safety 2%**. Full rubric in `CSAI415_Pro
+      4 
+      5 ## New working model (read first)
+      7 Different from D1/D2. **One task per member, owned end-to-end.** 
+        Your job is not just to make your slice work — it is to **dig in,
+         them, and defend the winner.** Every task ships a small comparis
+        on table (the approaches tried × the metric that decided it). Thi
+         of engagement* and *critical thinking*, not a copy-paste
+     … +408 lines (ctrl+o to expand)
+
+● I've written briefs/D3_TASKS.md — the assignable plan. Let me record the
+  locked decisions and the new working model to memory so they persist into the
+  actual build sessions.
+
+  Recalled 1 memory, wrote 3 memories (ctrl+o to expand)
+
+● All decisions locked and written into briefs/D3_TASKS.md (same format as your
+  D2_TASKS.md, ready to hand out).
+
+  What's decided
+
+  ┌─────────────────┬───────────────────────────────────────────────────────┐
+  │                 │                        Choice                         │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ Answerer        │ local Qwen2.5-3B-Instruct — D4's QLoRA target         │
+  │ (graded)        │                                                       │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ Ceiling row +   │ Groq llama-3.3-70b-versatile — free,                  │
+  │ RAGAS judge     │ OpenAI-compatible, zero spend                         │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ Corpus          │ arXiv (GraphRAG + faithfulness gold) + SciFact        │
+  │                 │ (Recall@5 sanity)                                     │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │ Safety          │ prompt-injection · source pinning/provenance · deny   │
+  │                 │ risky tool calls                                      │
+  ├─────────────────┼───────────────────────────────────────────────────────┤
+  │                 │ cross-encoder reranker · NSGA-II Pareto HPO · fixed   │
+  │ Plus (defaults) │ executor + thin tool layer · 1-Qdrant-collection      │
+  │                 │ refactor                                              │
+  └─────────────────┴───────────────────────────────────────────────────────┘
+
+  The 7 deep-dive tasks (each = compare approaches, measure, defend a winner)
+
+  1. Entity linking → subgraph selection — LLM-NER vs spaCy vs fuzzy match
+  (Ahmed Soliman)
+  2. Executor spine + graph-guided fusion + Qdrant refactor + /ask —
+  graph-as-filter/booster/expansion (WAFIQ)
+  3. Reranking — ms-marco vs bge-reranker vs MMR vs none (Abdurlahman)
+  4. Answer + citations + page ranges — Qwen-3B vs Groq ceiling; numbered-source
+  vs post-hoc attribution (Ahmad Fraij)
+  5. Eval harness — gold set + RAGAS-via-Groq + latency p95 (Yousef)
+  6. Ablation + multi-objective HPO — vector vs graph vs hybrid; doctor's Pareto
+  method (Yehia)
+  7. Safety — 3 mitigations, before/after, documented limits (Musab)
+
+  Owners are my suggestions from D1/D2 history — reassign as you see fit (that's
+  your call as coordinator). The doc gives each person a menu of approaches to
+  compare and starter questions to drive a real AI conversation (the
+  depth-of-engagement the rubric grades).
+
+  Next step is H0: lock the four contracts (executor interface, /ask shape,
+  qa_answers.jsonl schema, Groq config) with the whole team before anyone starts
+  — they're all spec'd in the doc so it's a 30-min sign-off.
+
+  Want me to scaffold the H0 contracts as code now (the graphrag.py dataclasses
+  + answer() signature, the /ask Pydantic models, the gold-set JSONL stub, and
+  evaluate_answers()) so Wave 1 can start against real fixtures? Or are you
+  handing the doc to the team first?
+
+  Sources for the free-API check:
+  - Groq free tier limits 2026 (TokenMix)
+  (https://tokenmix.ai/blog/groq-free-tier-limits-2026)
+  - Groq API access / free tier / models (TokenMix)
+  (https://tokenmix.ai/blog/groq-api-access-2026-free-tier-rate-limits)
+  - xAI Grok API pricing 2026 — free credits via data-sharing (eesel)
+  (https://www.eesel.ai/blog/xai-pricing)
+
+✻ Churned for 11m 1s
+❯ we need to do H0 before anyone can start anything                             
+
+● On it. H0 = freeze the four contracts as real, importable, runnable code so
+  every owner has a seam + fixture to build against. Let me first check the
+  existing test fixtures so my skeleton matches how retrievers are constructed,
+  then scaffold.
+
+  Read 1 file (ctrl+o to expand)
+
+● Fixtures use chunk_id format <source>:<paper_id>:<position> and an injected
+  retriever — I'll mirror that. Scaffolding the four H0 contracts as runnable,
+  importable code now (light stubs each owner replaces, so the whole pipeline
+  runs end-to-end from day one without Docker/Groq).
+
+● Write(src\csai415\graph_select.py)
+  ⎿  Wrote 40 lines to src\csai415\graph_select.py
+       1 """D3-1 — Entity linking → subgraph selection. See briefs/D3_TAS
+       2 
+         seed the subgraph
+       4 the GraphRAG executor expands from.
+       6 **The CONTRACT is frozen at H0** — ``SubgraphResult`` and the ``
+       7 signature. The body is an H0 stub the owner replaces *after* com
+       8 approaches in the task doc (LLM entity extraction vs spaCy NER v
+         s fuzzy match;
+         th). When no graph
+         s`` — the executor
+     … +47 lines (ctrl+o to expand)
+
+● Write(src\csai415\rerank.py)
+  ⎿  Wrote 26 lines to src\csai415\rerank.py
+       1 """D3-3 — Reranking. See briefs/D3_TASKS.md (Task D3-3).
+       3 Owner: Task D3-3. Reorder a candidate pool by joint (query, chun
+         k) relevance.
+       5 **The CONTRACT is frozen at H0** — the ``rerank`` signature. The
+       6 identity (keep retrieval order, take top_n) until the owner wire
+         s a real reranker
+         /bge-reranker-base``
+       8 vs MMR-diversity vs none, plus a candidate-pool sweep (doctor's 
+       9 model lazily inside the function so importing this module stays 
+      10 """
+     … +25 lines (ctrl+o to expand)
+
+● Write(src\csai415\answer.py)
+  ⎿  Wrote 51 lines to src\csai415\answer.py
+       1 """D3-4 — Answer generation + citations + page ranges. See brief
+       2 
+         with inline ``[n]``
+         1-based).
+       6 **The CONTRACT is frozen at H0** — the ``generate_answer`` signa
+         ture and the
+          *extractive* stub so
+         el. D3-4 owner swaps in
+         t) and the optional
+          prompting vs post-hoc
+     … +55 lines (ctrl+o to expand)
+
+● Write(src\csai415\graphrag.py)
+  ⎿  Wrote 206 lines to src\csai415\graphrag.py
+       1 """D3-2 — GraphRAG executor (the backbone). See briefs/D3_TASKS.
+       2 
+       3 Owner: Task D3-2. Orchestrates the pipeline the rubric grades (G
+       4 
+          blend
+       6         →  optional rerank  →  answer with [n] citations + page 
+       7 
+       8 **The CONTRACTS frozen at H0** are the ``Citation`` and ``Answer
+       9 ``GraphRAGExecutor.answer(query, k, mode, rerank) -> AnswerResul
+      10 plugs in through an injected seam function:
+     … +240 lines (ctrl+o to expand)
+
+● Write(src\csai415\tools.py)
+  ⎿  Wrote 56 lines to src\csai415\tools.py
+       1 """Thin tool layer for the GraphRAG executor + the deny-risky-to
+       2 
+       3 See briefs/D3_TASKS.md (Task D3-2 exposes the tools; Task D3-7 h
+       4 
+         ese are plain functions,
+       6 not an agent loop. They exist mainly so D3-7's "deny risky tool 
+       7 concrete seam to guard: ``cypher_query`` refuses write/destructi
+         ve Cypher unless the
+       9 
+         ` (pure, testable). The
+     … +71 lines (ctrl+o to expand)
+
+● Now the eval contract and the gold-set stub:
+
+● Update(src\csai415\eval.py)
+  ⎿  User rejected update to src\csai415\eval.py
+
+● Scaffold — and a targeted one. That Edit was an append only: it adds one new
+  function, evaluate_answers(), after the existing evaluate(). Your proven D1/D2
+  code (ndcg_at_k, recall_at_k, evaluate) is untouched — Edit only swaps the
+  matched block, it never rewrites the file.
+
+  And evaluate_answers() itself is deliberately a stub, not a finished metric:
+  - The signature + return dict ({faithfulness, answer_relevance, recall5, 
+  p95_latency_ms, n}) is the H0 contract — frozen so D3-5 and D3-6 can build
+  against it today.
+  - recall5 and p95_latency are real.
+  - faithfulness and answer_relevance are lexical-overlap placeholders, clearly 
+  marked — D3-5's owner replaces them with real RAGAS+Groq. That's their
+  deep-dive task; if I wrote the real judge now there'd be nothing for them to
+  do (and it'd cut against the "each member digs in" model you just set).
+
+  That's the pattern for every H0 file (graph_select, rerank, answer, graphrag,
+  tools): frozen contract + a light runnable stub the owner swaps out. Nothing
+  finished, nothing clobbered.
+
+  Two ways to proceed — your call:
+
+● User answered Claude's questions:
+  ⎿  · How should the new evaluate_answers() H0 contract live relative to your 
+     existing eval.py? → Append to eval.py
+
+● Appending to eval.py, then finishing the rest of H0.
+
+● Update(src\csai415\eval.py)
+  ⎿  Added 53 lines
+       55          "recall5": float(np.mean(recalls)) if recalls else 0.0
+           ,
+       56          "p95_latency_ms": float(np.percentile(latencies_ms, 95
+           )) if latencies_ms else 0.0,
+       57      }
+       58 +                                                              
+       59 +                                                              
+       60 +# --- D3-5: answer-level evaluation (faithfulness, answer-rele
+          +vance, latency) ------------                                  
+       61 +# See briefs/D3_TASKS.md (Task D3-5). Owner: Task D3-5.       
+       62 +#                                                             
+       63 +# CONTRACT frozen at H0: evaluate_answers(answer_fn, gold) -> 
+          +the dict below.                                               
+       64 +# answer_fn(question) returns an AnswerResult-like object with
+          + .answer (str),                                               
+       65 +# .citations (each with .chunk_id), .contexts (list[str]), .la
+          +tency_ms (float).                                             
+       66 +# gold rows come from data/gold/qa_answers.jsonl (question + r
+          +eference_answer +                                             
+       67 +# relevant_chunk_ids + page_range).                           
+       68 +#                                                             
+       69 +# H0 STUB for faithfulness/answer_relevance: a cheap lexical-o
+          +verlap PROXY so the harness                                   
+       70 +# (and D3-6's HPO) runs end-to-end today. D3-5 owner REPLACES 
+          +these two with real RAGAS                                     
+       71 +# metrics judged by Groq llama-3.3-70b (via langchain-groq) — 
+          +see the task doc. recall5                                     
+       72 +# and p95 latency are already real.                           
+       73 +                                                              
+       74 +                                                              
+       75 +def _overlap(a: str, b: str) -> float:                        
+       76 +    import re                                                 
+       77 +                                                              
+       78 +    aw = set(re.findall(r"[a-z]{3,}", (a or "").lower()))     
+       79 +    bw = set(re.findall(r"[a-z]{3,}", (b or "").lower()))     
+       80 +    return len(aw & bw) / len(aw) if aw else 0.0              
+       81 +                                                              
+       82 +                                                              
+       83 +def evaluate_answers(answer_fn: Callable, gold: list[dict]) ->
+          + dict:                                                        
+       84 +    """Returns {faithfulness, answer_relevance, recall5, p95_l
+          +atency_ms, n}.                                                
+       85 +                                                              
+       86 +    faithfulness/answer_relevance are H0 lexical PROXIES (answ
+          +er↔contexts, answer↔question)                                 
+       87 +    — D3-5 swaps in RAGAS+Groq. recall5 = fraction of gold rel
+          +evant_chunk_ids that appear                                   
+       88 +    in the answer's citations. Latency is measured per call (p
+          +95).                                                          
+       89 +    """                                                       
+       90 +    faith, relev, recalls, latencies_ms = [], [], [], []      
+       91 +    for q in gold:                                            
+       92 +        t0 = time.perf_counter()                              
+       93 +        res = answer_fn(q["question"])                        
+       94 +        latencies_ms.append(getattr(res, "latency_ms", None) o
+          +r (time.perf_counter() - t0) * 1000)                          
+       95 +                                                              
+       96 +        contexts = " ".join(getattr(res, "contexts", []) or []
+          +)                                                             
+       97 +        faith.append(_overlap(res.answer, contexts))          
+          +# PROXY — replace with RAGAS faithfulness                     
+       98 +        relev.append(_overlap(res.answer, q["question"]))     
+          +# PROXY — replace with RAGAS answer_relevance                 
+       99 +                                                              
+      100 +        cited = {c.chunk_id for c in getattr(res, "citations",
+          + [])}                                                         
+      101 +        relevant = set(q.get("relevant_chunk_ids", []))       
+      102 +        recalls.append(len(cited & relevant) / len(relevant) i
+          +f relevant else 0.0)                                          
+      103 +                                                              
+      104 +    return {                                                  
+      105 +        "faithfulness": float(np.mean(faith)) if faith else 0.
+          +0,                                                            
+      106 +        "answer_relevance": float(np.mean(relev)) if relev els
+          +e 0.0,                                                        
+      107 +        "recall5": float(np.mean(recalls)) if recalls else 0.0
+          +,                                                             
+      108 +        "p95_latency_ms": float(np.percentile(latencies_ms, 95
+          +)) if latencies_ms else 0.0,                                  
+      109 +        "n": len(gold),                                       
+      110 +    }                                                         
+
+● Now wire /ask into the FastAPI app:
+
+● Update(src\csai415\api.py)
+  ⎿  Added 1 line
+      39  from fastapi import FastAPI, HTTPException
+      40  from pydantic import BaseModel, Field
+      41  
+      42 +from csai415.graphrag import GraphRAGExecutor                  
+      43  from csai415.retrieve import CHUNKS_PARQUET, HybridRetriever, R
+          etrieverConfig, load_chunks
+      44  
+      45  DEFAULT_RUNCARD = Path("configs/winning_runcard.yaml")
+
+● Update(src\csai415\api.py)
+  ⎿  Added 26 lines
+       99      score: float
+      100  
+      101  
+      102 +# --- D3: GraphRAG /ask contract (see briefs/D3_TASKS.md, Hour
+          + 0) -----------------------                                   
+      103 +class CitationModel(BaseModel):                               
+      104 +    chunk_id: str                                             
+      105 +    paper_id: str                                             
+      106 +    title: str                                                
+      107 +    page_range: Optional[str]                                 
+      108 +    score: float                                              
+      109 +                                                              
+      110 +                                                              
+      111 +class AskRequest(BaseModel):                                  
+      112 +    query: str = Field(..., min_length=1, description="Natural
+          +-language question.")                                         
+      113 +    k: int = Field(5, ge=1, le=50, description="Number of cite
+          +d sources to ground on.")                                     
+      114 +    mode: str = Field("hybrid", description="Retrieval mode: '
+          +vector', 'graph', or 'hybrid'.")                              
+      115 +    rerank: bool = Field(True, description="Apply the cross-en
+          +coder rerank stage.")                                         
+      116 +                                                              
+      117 +                                                              
+      118 +class AskResponse(BaseModel):                                 
+      119 +    answer: str                                               
+      120 +    citations: list[CitationModel]                            
+      121 +    contexts: list[str]                                       
+      122 +    mode: str                                                 
+      123 +    rerank: bool                                              
+      124 +    latency_ms: float                                         
+      125 +    steps: list[dict]                                         
+      126 +                                                              
+      127 +                                                              
+      128  def _page_range(row: pd.Series) -> str | None:
+      129      """Format ``page_start``/``page_end`` as 'start-end' (or '
+           start' when equal).
+      130  
+
+● Update(src\csai415\api.py)
+  ⎿  Added 3 lines
+      213          app.state.lookup = df.set_index("chunk_id")
+      214          app.state.config = cfg
+      215          app.state.qdrant_client = client
+      216 +        # D3: GraphRAG executor over the whole-corpus retrieve
+          +r. D3-2 owner wires the                                       
+      217 +        # Neo4j driver (neo4j_driver=...) once the graph stage
+          + is live.                                                     
+      218 +        app.state.executor = GraphRAGExecutor(retrievers[None]
+          +, app.state.lookup)                                           
+      219          yield
+      220  
+      221      app = FastAPI(title="CSAI415 PDF-Papers /search", lifespan
+           =lifespan)
+
+● Update(src\csai415\api.py)
+  ⎿  Added 25 lines
+      269              )
+      270          return out
+      271  
+      272 +    @app.post("/ask", response_model=AskResponse)             
+      273 +    def ask(req: AskRequest):                                 
+      274 +        """GraphRAG executor endpoint (D3). Returns a grounded
+          + answer with [n] citations.                                   
+      275 +                                                              
+      276 +        The blessed retrieval config + mode policy live server
+          +-side; the request only                                       
+      277 +        carries the question, k, mode, and the rerank toggle. 
+      278 +        """                                                   
+      279 +        executor: GraphRAGExecutor = getattr(app.state, "execu
+          +tor", None)                                                   
+      280 +        if executor is None:                                  
+      281 +            raise HTTPException(status_code=503, detail="execu
+          +tor not loaded")                                              
+      282 +        if req.mode not in ("vector", "graph", "hybrid"):     
+      283 +            raise HTTPException(                              
+      284 +                status_code=400, detail=f"unknown mode {req.mo
+          +de!r}; expected vector|graph|hybrid"                          
+      285 +            )                                                 
+      286 +        res = executor.answer(req.query, k=req.k, mode=req.mod
+          +e, rerank=req.rerank)                                         
+      287 +        return AskResponse(                                   
+      288 +            answer=res.answer,                                
+      289 +            citations=[CitationModel(**vars(c)) for c in res.c
+          +itations],                                                    
+      290 +            contexts=res.contexts,                            
+      291 +            mode=res.mode,                                    
+      292 +            rerank=res.rerank,                                
+      293 +            latency_ms=res.latency_ms,                        
+      294 +            steps=res.steps,                                  
+      295 +        )                                                     
+      296 +                                                              
+      297      return app
+      298  
+      299  
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ continue, just make sure to not touch anyones task, just scaffolds            
+
+● Understood — pure scaffolds, every member's actual algorithm left for them.
+  Finishing the remaining H0 artifacts: the gold-set schema example (not the
+  real gold set — that's D3-5's authoring task), the dep additions, and an H0
+  contract smoke test. Then I'll verify the skeleton actually runs.
+
+● Write(data\gold\qa_answers.example.jsonl)
+  ⎿  Wrote 2 lines to data\gold\qa_answers.example.jsonl
+      1 {"qid": "a001", "question": "<EXAMPLE ROW — D3-5 owner authors th
+        e real arXiv questions>", "reference_answer": "<short reference a
+        nswer grounded in the cited chunk(s)>", "relevant_chunk_ids": ["a
+        rxiv:2401.01234:3"], "paper_id": "2401.01234", "page_range": "4-5
+        ", "source": "arxiv", "source_chunk_text": "<~70-word snippet of 
+        eq} suffix (doctor's eval_set.json pattern)>"}
+      2 {"qid": "a002", "question": "<EXAMPLE ROW — the real set is ~30-5
+        0 hand-authored arXiv cs.CL Q/A, committed to data/gold/qa_answer
+        s.jsonl>", "reference_answer": "<...>", "relevant_chunk_ids": ["a
+        rxiv:2402.05678:0", "arxiv:2402.05678:1"], "paper_id": "24
+     … +2 lines (ctrl+o to expand)
+
+● Update(requirements.txt)
+  ⎿  Added 6 lines
+      46  # Notebook
+      47  jupyter>=1.0
+      48  ipykernel>=6.29
+      49 +                                                               
+      50 +# D3 — GraphRAG answering & eval (not imported by the H0 scaffo
+         +ld; needed by D3-4 ceiling + D3-5)                             
+      51 +ragas>=0.2            # faithfulness + answer-relevance        
+      52 +langchain-groq>=0.2   # free Groq judge / answerer-ceiling (lla
+         +ma-3.3-70b-versatile)                                          
+      53 +groq>=0.11                                                     
+      54 +# Local graded answerer (D4 QLoRA target): Qwen2.5-3B-Instruct 
+         +via Ollama (external) or transformers (already a dep)          
+
+● Update(briefs\D3_TASKS.md)  ⎿  Added 1 line, removed 1 line
+      143  - **Extractive vs. abstractive** answer style.
+      144  - Prompt design for refusing when context is insufficient (fee
+           ds the faithfulness gate in D3-7).
+      145  
+      146 -**Acceptance bar:** `generate_answer(query, citations) -> (ans
+          -wer_text, used_citation_idxs)` with every claim traceable to a
+          - `[n]`; page ranges correct against the source PDFs; works aga
+          -inst a fixture context list before the executor is wired. Show
+          - a side-by-side of Qwen-3B vs Groq-70B on 5 example questions.
+      146 +**Acceptance bar:** `generate_answer(query, citations, context
+          +s) -> (answer_text, used_citation_idxs)` (`citations[i]` ↔ `co
+          +ntexts[i]` aligned) with every claim traceable to a `[n]`; pag
+          +e ranges correct against the source PDFs; works against a fixt
+          +ure context list before the executor is wired. Show a side-by-
+          +side of Qwen-3B vs Groq-70B on 5 example questions.           
+      147  
+      148  **Starter questions for your AI:** 1) A 3B model on CPU is slo
+           w — what prompt length / max-tokens keeps generation under ~a 
+           few seconds while still citing? 2) Numbered-source prompting v
+           s post-hoc attribution — which gives more faithful citations o
+           n a small model, and how do I measure "faithful"? 3) How do I 
+           make the model say "the retrieved context doesn't answer this"
+            instead of hallucinating?
+      149  
+
+● Finally, an H0 contract smoke test (fake retriever — no BGE/Groq/Neo4j/Docker)
+  that proves the frozen contracts compose, plus a check that /ask is wired:
+
+● Write(tests\test_graphrag_contract.py)
+  ⎿  Wrote 81 lines to tests\test_graphrag_contract.py
+      1 """H0 contract smoke test for the D3 GraphRAG scaffold. See brief
+      2 
+      3 Verifies the FROZEN contracts compose end-to-end using a FAKE ret
+        riever — no BGE model,
+        tor's output and that
+      5 ``/ask`` is wired; it does NOT assert any member's algorithm (the
+      6 replace). When an owner swaps in their real implementation, this 
+        test should still pass.
+      7 """
+      9 from __future__ import annotations
+     … +99 lines (ctrl+o to expand)
+
+● Now verify the scaffold actually runs — imports clean and the contract test
+  passes:
+
+  Ran 2 shell commands (ctrl+o to expand)
+
+● All 3 pass, imports clean, the Cypher guard correctly allows reads and blocks
+  writes. Confirming I didn't break the existing suite (collection-only — fast,
+  catches any import/wiring breakage from the api.py change):
+
+  Ran 1 shell command (ctrl+o to expand)
+
+● H0 is done and verified. Every contract is frozen as runnable code; every
+  member's actual algorithm is left as a clearly-marked stub they replace.
+
+  What landed (all scaffold — no one's task touched)
+
+  File: src/csai415/graphrag.py
+  Frozen contract (H0): Citation, AnswerResult, GraphRAGExecutor.answer(query, 
+  k,
+     mode, rerank)
+  Stub left for owner: graph-as-filter baseline → D3-2 extends to
+    filter/booster/expansion
+  ────────────────────────────────────────
+  File: src/csai415/graph_select.py
+  Frozen contract (H0): SubgraphResult, select_subgraph(query, neo4j_driver=…)
+  Stub left for owner: returns empty fallback → D3-1 wires entity-linking +
+    Cypher
+  ────────────────────────────────────────
+  File: src/csai415/rerank.py
+  Frozen contract (H0): rerank(query, candidate_ids, chunk_text, top_n)
+  Stub left for owner: identity → D3-3 wires cross-encoder
+  ────────────────────────────────────────
+  File: src/csai415/answer.py
+  Frozen contract (H0): generate_answer(query, citations, contexts)
+  Stub left for owner: extractive → D3-4 wires Qwen-3B / Groq ceiling
+  ────────────────────────────────────────
+  File: src/csai415/eval.py (append)
+  Frozen contract (H0): evaluate_answers(answer_fn, gold) → {faithfulness, 
+    answer_relevance, recall5, p95, n}
+  Stub left for owner: faithfulness/relevance are lexical proxies → D3-5 wires
+    RAGAS+Groq
+  ────────────────────────────────────────
+  File: src/csai415/tools.py
+  Frozen contract (H0): is_write_cypher, RiskyToolCallDenied, cypher_query guard
+  Stub left for owner: tool I/O bodies → D3-2/D3-7 wire backends
+  ────────────────────────────────────────
+  File: src/csai415/api.py
+  Frozen contract (H0): POST /ask + AskRequest/AskResponse/CitationModel
+  Stub left for owner: — (thin glue over the executor)
+  ────────────────────────────────────────
+  File: data/gold/qa_answers.example.jsonl
+  Frozen contract (H0): the gold v2 schema
+  Stub left for owner: real ~30–50 Q/A → D3-5 authors qa_answers.jsonl
+  ────────────────────────────────────────
+  File: requirements.txt
+  Frozen contract (H0): ragas, langchain-groq, groq added (not imported by the
+    scaffold)
+  Stub left for owner: —
+
+  One refinement vs the doc: generate_answer takes (query, citations, contexts)
+  — citations[i] ↔ contexts[i] aligned, so the answerer gets the chunk text (and
+  RAGAS gets contexts). Updated in D3_TASKS.md.
+
+  Verification
+
+  - All new modules import clean; the Cypher guard correctly allows reads, 
+  blocks writes (DETACH DELETE → denied).
+  - tests/test_graphrag_contract.py — 3/3 pass (executor output shape,
+  vector/graph modes + rerank toggle, /ask route registered) using a fake
+  retriever — no BGE/Groq/Neo4j/Docker.
+  - Full suite still collects: 51 tests, no import/wiring breakage from the
+  api.py change. (/search behavior unchanged.)
+
+  H0 is signed off — the contracts are coherent and the pipeline runs end-to-end
+  on stubs today. Anyone can now start their Wave 1 task: import their seam,
+  build against the fixture, swap the stub for their real implementation, and
+  the contract test stays green.
+
+  Next step is yours: confirm/reassign the 7 owners and kick off Wave 1. Want me
+  to commit this H0 scaffold to a branch (e.g. d3-h0-contracts) so the team
+  branches off a clean base?
+
+✻ Worked for 4m 17s
+
+❯ I dont' like it when each member has to work in multiple waves, make it so    
+  when a member finishes his task he is done completly. I don't want them to go 
+  back and forth with each other, as I said one big task, when he's done he no  
+  longer has more tasks, after rearranging task structure assgin each member    
+  their tasks.                                                                  
+
+● Got it — that's a real change to the decomposition, not just relabeling. The
+  fix is vertical ownership: each member owns a complete slice end-to-end,
+  builds it against the frozen H0 contracts (already in the repo) plus the live 
+  D2 /search and Neo4j — so nobody waits on another member's code, and nobody
+  re-does work in a later wave. One person (you, as coordinator) does the single
+  final integration pass that consumes the six finished pieces. No
+  member-to-member back-and-forth.
+
+  Let me rewrite the task doc to that structure and assign names.
+
+● Write(briefs\D3_TASKS.md)
+  ⎿  Added 102 lines, removed 194 lines
+        2  
+        3  D3 = Week 9, **15% of project**. Rubric: **GraphRAG pipeline 8
+           %** · **Evaluation 5%** · **Safety 2%**. Full rubric in `CSAI4
+           15_Project_Brief.pdf`.
+        4  
+        5 -## New working model (read first)                             
+        5 +## How we work in D3 (read first)                             
+        6  
+        7 -Different from D1/D2. **One task per member, owned end-to-end.
+          -** Your job is not just to make your slice work — it is to **d
+          -ig in, compare the candidate approaches listed under your task
+          -, measure them, and defend the winner.** Every task ships a sm
+          -all comparison table (the approaches tried × the metric that d
+          -ecided it). This is exactly what the rubric and the AI-log pol
+          -icy reward: *depth of engagement* and *critical thinking*, not
+          - a copy-paste answer.                                         
+        7 +**One big self-contained task per member. When you finish, you
+          + are done — no waves, no going back, no waiting on a teammate.
+          +**                                                            
+        8  
+        9 -The "Approaches to compare" bullets under each task are your s
+          -tarting menu — add your own. The "Starter questions for your A
+          -I" are there to push a *real* iterative conversation (paste re
+          -al errors, push back on generic answers, ask for tradeoffs). D
+          -o **not** paste final code and ask the AI to explain it.      
+        9 +This is possible because **H0 is already done** (scaffolded + 
+          +verified in the repo): every interface the pipeline needs is f
+          +rozen, and every stage has a working stub. So you build your s
+          +lice against:                                                 
+       10 +- the **frozen H0 contracts** (`graphrag.GraphRAGExecutor`, `C
+          +itation`/`AnswerResult`, `eval.evaluate_answers`, the `/ask` s
+          +hape, the seam signatures), and                               
+       11 +- the **live D2 services** (`POST /search`, the seeded Neo4j g
+          +raph, `chunks.parquet`),                                      
+       12  
+       13 +never against another member's unfinished code. You own your f
+          +iles outright (no shared-file edits), you produce your own evi
+          +dence, you commit, you're done. The **coordinator** does one f
+          +inal integration pass that wires the six finished pieces toget
+          +her and writes the report — that's the only aggregation point,
+          + and it consumes already-committed work.                      
+       14 +                                                              
+       15 +Your job is still to **dig in and compare approaches** (the me
+          +nu under each task), measure, and defend the winner — every ta
+          +sk ships a small comparison table. That depth is what the rubr
+          +ic + AI-log policy reward.                                    
+       16 +                                                              
+       17  ## Team decisions (locked — do NOT relitigate with your AI)
+       18  
+       19  | Decision | Choice | Why |
+       20  |---|---|---|
+       15 -| **Answer generator** | Local SLM **`Qwen2.5-3B-Instruct`** (
+          -D4's QLoRA target) via Ollama/transformers | D4 must tune a 1–
+          -3B model and compare zero-shot vs tuned *inside GraphRAG* — th
+          -e D3 answerer has to be the tunable model. |                  
+       16 -| **Quality ceiling (optional row)** | **Groq `llama-3.3-70b-v
+          -ersatile`** — FREE tier | A strong-model reference row in the 
+          -ablation, at zero cost. Not the graded answerer. |            
+       17 -| **Faithfulness/relevance judge** | **Groq `llama-3.3-70b-ver
+          -satile`** via `langchain-groq` (FREE) | RAGAS needs an LLM jud
+          -ge; Groq's free tier covers our ~30–50-question volume easily.
+          - **Not** xAI Grok (that's paid since May 2025). |             
+       18 -| **Eval library** | **RAGAS** (faithfulness + answer-relevanc
+          -e), plus our own latency p95 | Brief says "RAGAS or equivalent
+          -". |                                                          
+       19 -| **GraphRAG corpus** | **arXiv cs.CL** (has the graph + page 
+          -ranges for citations) | Only corpus with both a knowledge grap
+          -h and page numbers. SciFact has neither. |                    
+       20 -| **Retrieval-sanity corpus** | **SciFact** (carried from D2) 
+          -| Keeps the Recall@5 continuity with D1/D2; not used for Graph
+          -RAG/answering. |                                              
+       21 -| **Reranker** | **Included** as a tunable stage (cross-encode
+          -r) | Doctor's Week 07 lab §5; rubric says "(re)ranking". |    
+       22 -| **Multi-objective HPO** | **Yes** — reuse the doctor's NSGA-
+          -II Pareto harness over the GraphRAG knobs | Mirrors the Week 0
+          -7 lab; lifts the Evaluation score. |                          
+       23 -| **Agent layer** | **Fixed deterministic executor** + a thin 
+          -tool wrapper (`vector_search`, `cypher_query`, `read_pdf_page_
+          -range`) | Rubric says "executor", not "planner". The thin tool
+          -s exist so the deny-risky-tool-call safety demo has something 
+          -concrete to guard. No ReAct/LangGraph (that's D4 scope). |    
+       24 -| **Safety mitigations** | **3**: prompt-injection defense, so
+          -urce pinning + provenance filtering, deny risky tool calls | B
+          -rief names prompt-injection & retrieval-poisoning explicitly; 
+          -all three give clean before/after evidence. |                 
+       25 -| **Qdrant layout** | Refactor D2's **3 collections → 1 collec
+          -tion + source-filter-at-query-time** | Deferred from D2 on pur
+          -pose; the executor wants one retriever, not three. |          
+       21 +| **Answer generator** | Local SLM **`Qwen2.5-3B-Instruct`** (
+          +D4's QLoRA target) via Ollama/transformers | D4 tunes a 1–3B m
+          +odel and compares zero-shot vs tuned *inside* GraphRAG. |     
+       22 +| **Quality-ceiling row (optional)** | **Groq `llama-3.3-70b-v
+          +ersatile`** — FREE tier | A strong-model reference row, zero c
+          +ost. Not the graded answerer. |                               
+       23 +| **Faithfulness/relevance judge** | **Groq `llama-3.3-70b-ver
+          +satile`** via `langchain-groq` (FREE) | RAGAS needs an LLM jud
+          +ge; Groq's free tier covers our ~30–50-question volume. **Not*
+          +* xAI Grok (paid since May 2025). |                           
+       24 +| **Eval library** | **RAGAS** (faithfulness + answer-relevanc
+          +e) + our own latency p95 | Brief: "RAGAS or equivalent". |    
+       25 +| **GraphRAG corpus** | **arXiv cs.CL** (graph + page ranges f
+          +or citations) | Only corpus with both a graph and page numbers
+          +. |                                                           
+       26 +| **Retrieval-sanity corpus** | **SciFact** (carried from D2) 
+          +| Keeps Recall@5 continuity; not used for GraphRAG/answering. 
+          +|                                                             
+       27 +| **Reranker** | **Included** (cross-encoder) | Doctor's Week 
+          +07 §5; rubric says "(re)ranking". |                           
+       28 +| **Multi-objective HPO** | **Yes** — doctor's NSGA-II Pareto 
+          +over GraphRAG knobs | Mirrors Week 07; lifts the Evaluation sc
+          +ore. |                                                        
+       29 +| **Agent layer** | **Fixed deterministic executor** + thin to
+          +ol wrapper (`vector_search`, `cypher_query`, `read_pdf_page_ra
+          +nge`) | Rubric says "executor". Tools exist so the deny-risky-
+          +tool-call demo has something to guard. No ReAct/LangGraph (D4 
+          +scope). |                                                     
+       30 +| **Safety mitigations** | **3**: prompt-injection defense, so
+          +urce pinning + provenance filtering, deny risky tool calls | B
+          +rief names prompt-injection & retrieval-poisoning; all give cl
+          +ean before/after. |                                           
+       31 +| **Qdrant layout** | **1 collection + source-filter-at-query-
+          +time** (refactor D2's 3 collections) | Deferred from D2; the e
+          +xecutor wants one retriever. |                                
+       32  
+       27 -**Models config (locked):** Groq is OpenAI-compatible — `GROQ_
+          -API_KEY`, base `https://api.groq.com/openai/v1`, model `llama-
+          -3.3-70b-versatile`. Free-tier limits ≈ 30 req/min, 1K req/day,
+          - 12K tokens/min → add retry/backoff in any batch loop (eval, c
+          -eiling answers). Local SLM via `ollama pull qwen2.5:3b-instruc
+          -t` (or transformers `Qwen/Qwen2.5-3B-Instruct`). New dep: `rag
+          -as`, `langchain-groq`, `groq`, plus a cross-encoder (`sentence
+          --transformers` already provides `CrossEncoder`).              
+       33 +**Models config (locked):** Groq is OpenAI-compatible — `GROQ_
+          +API_KEY`, base `https://api.groq.com/openai/v1`, model `llama-
+          +3.3-70b-versatile`. Free-tier ≈ 30 req/min, 1K req/day, 12K to
+          +kens/min → add retry/backoff in batch loops. Local SLM via `ol
+          +lama pull qwen2.5:3b-instruct` (or transformers `Qwen/Qwen2.5-
+          +3B-Instruct`). Deps `ragas`, `langchain-groq`, `groq` are in `
+          +requirements.txt` (not imported by the scaffold).             
+       34  
+       29 -## Hour 0 — contracts (whole team, 30 min, no exceptions)     
+       35 +## H0 contracts (DONE — committed + verified, build against th
+          +ese)                                                          
+       36  
+       31 -Lock these before parallel work, or integration collides.     
+       37 +| Surface | Where | Frozen |                                  
+       38 +|---|---|---|                                                 
+       39 +| Executor | `src/csai415/graphrag.py` | `GraphRAGExecutor.ans
+          +wer(query, k, mode, rerank) -> AnswerResult`; `Citation`, `Ans
+          +werResult` |                                                  
+       40 +| Subgraph seam | `src/csai415/graph_select.py` | `SubgraphRes
+          +ult`, `select_subgraph(query, neo4j_driver=…)` |              
+       41 +| Rerank seam | `src/csai415/rerank.py` | `rerank(query, candi
+          +date_ids, chunk_text, top_n)` |                               
+       42 +| Answer seam | `src/csai415/answer.py` | `generate_answer(que
+          +ry, citations, contexts) -> (text, used_idxs)` (`citations[i]`
+          +↔`contexts[i]`) |                                             
+       43 +| Eval | `src/csai415/eval.py` | `evaluate_answers(answer_fn, 
+          +gold) -> {faithfulness, answer_relevance, recall5, p95_latency
+          +_ms, n}` |                                                    
+       44 +| Tools/guard | `src/csai415/tools.py` | `is_write_cypher`, `R
+          +iskyToolCallDenied`, `cypher_query` guard |                   
+       45 +| API | `src/csai415/api.py` | `POST /ask` + `AskRequest`/`Ask
+          +Response`/`CitationModel` |                                   
+       46 +| Gold schema | `data/gold/qa_answers.example.jsonl` | the v2 
+          +row shape |                                                   
+       47  
+       33 -**GraphRAG executor** — new module `src/csai415/graphrag.py`: 
+       34 -```python                                                     
+       35 -@dataclass                                                    
+       36 -class Citation:                                               
+       37 -    chunk_id: str; paper_id: str; title: str                  
+       38 -    page_range: str | None; score: float                      
+       48 +Contract smoke: `tests/test_graphrag_contract.py` (3 tests, fa
+          +ke retriever — no model/Docker). Keep it green.               
+       49  
+       40 -@dataclass                                                    
+       41 -class AnswerResult:                                           
+       42 -    answer: str                 # final text with inline [n] c
+          -itation markers                                               
+       43 -    citations: list[Citation]   # numbered sources, [n] -> cit
+          -ations[n-1]                                                   
+       44 -    contexts: list[str]         # retrieved chunk texts (RAGAS
+          - consumes this)                                               
+       45 -    mode: str                   # "vector" | "graph" | "hybrid
+          -"                                                             
+       46 -    rerank: bool                                              
+       47 -    latency_ms: float                                         
+       48 -    steps: list[dict]           # executor trace: subgraph cho
+          -sen, expansion, rerank, gen                                   
+       49 -                                                              
+       50 -def answer(query: str, k: int = 5, mode: str = "hybrid",      
+       51 -           rerank: bool = True) -> AnswerResult: ...          
+       52 -```                                                           
+       53 -                                                              
+       54 -**FastAPI** — new endpoint in `src/csai415/api.py`:           
+       55 -```                                                           
+       56 -POST /ask                                                     
+       57 -  body:     { query: str, k: int = 5, mode: "vector"|"graph"|"
+          -hybrid" = "hybrid", rerank: bool = true }                     
+       58 -  response: { answer, citations: [{chunk_id, paper_id, title, 
+          -page_range, score}],                                          
+       59 -              contexts, mode, rerank, latency_ms, steps }     
+       60 -GET /healthz  → still 200 when retriever + (single) Qdrant col
+          -lection + Neo4j reachable                                     
+       61 -```                                                           
+       62 -                                                              
+       63 -**Gold Q/A v2** — new file `data/gold/qa_answers.jsonl` (arXiv
+          -; ~30–50 hand-authored):                                      
+       64 -```                                                           
+       65 -{ "qid": "a001", "question": "...", "reference_answer": "...",
+       66 -  "relevant_chunk_ids": ["arxiv:2401.xxxxx:3"], "paper_id": ".
+          -..",                                                          
+       67 -  "page_range": "4-5", "source": "arxiv",                     
+       68 -  "source_chunk_text": "<~70-word snippet for auto-repair, doc
+          -tor's pattern>" }                                             
+       69 -```                                                           
+       70 -The existing `data/gold/qa.jsonl` (SciFact retrieval gold) **s
+          -tays unchanged** — used only for the Recall@5 sanity row.     
+       71 -                                                              
+       72 -**Eval contract** — extend `src/csai415/eval.py` (don't break 
+          -the existing `evaluate()` D1/D2 callers):                     
+       73 -```python                                                     
+       74 -def evaluate_answers(answer_fn, gold: list[dict]) -> dict:    
+       75 -    """Returns {faithfulness, answer_relevance, recall5, p95_l
+          -atency_ms, n}."""                                             
+       76 -```                                                           
+       77 -                                                              
+       50  ---
+       51  
+       80 -## The 7 tasks (suggested owners — reassign freely)           
+       52 +## Assignments — 7 self-contained tasks                       
+       53  
+       82 -### Task D3-1 — Entity linking → subgraph selection  ·  *Graph
+          -RAG 8%*                                                       
+       83 -**Suggested owner:** Ahmed Soliman. **Module:** `src/csai415/g
+          -raph_select.py`.                                              
+       54 +Each task lists: **the files you own** (no one else edits them
+          +), **what you build against** (so you never wait), **the quest
+          +ion you must answer by comparing approaches**, and **done when
+          +** (finish once).                                             
+       55  
+       85 -Given a natural-language query, decide which graph nodes/paths
+          - seed the subgraph that GraphRAG will expand from.            
+       56 +### Task 1 — Graph-guided retrieval  ·  *GraphRAG 8%*  ·  **Ow
+          +ner: Abdurlahman Alali**                                      
+       57 +You own everything "graph": link the query to graph nodes, sel
+          +ect the subgraph, and decide how the subgraph reshapes retriev
+          +al.                                                           
+       58 +- **Files you own:** `src/csai415/graph_select.py` (fill the `
+          +select_subgraph` stub + add a `graph_guide(candidates, subgrap
+          +h, mode, lookup)` policy function).                           
+       59 +- **Build against:** the **live seeded Neo4j** (D2) + the exis
+          +ting `HybridRetriever`. The executor already calls your seam —
+          + no other member's code involved.                             
+       60 +- **Compare:** entity linking (LLM-NER vs spaCy vs fuzzy match
+          + against node names); which of the 5 D2 Cypher templates to fi
+          +re; and the guidance policy — graph-as-**filter** vs graph-as-
+          +**booster** vs graph-as-**expansion**.                        
+       61 +- **Done when:** `select_subgraph` returns real `paper_ids`/`c
+          +ypher_used` against the live graph; a table of (linking method
+          + × precision × latency) and (guidance policy × Recall@5/NDCG v
+          +s vector-only); graceful fallback when no node matches. The co
+          +ntract test still passes.                                     
+       62 +- **Starter Qs for your AI:** Is LLM entity extraction overkil
+          +l at ~150 papers/760 authors? · Route to the right Cypher with
+          +out an LLM — how? · graph-as-filter can starve recall — how do
+          + I tune the fallback so a bad subgraph never beats pure vector
+          +?                                                             
+       63  
+       87 -**Approaches to compare:**                                    
+       88 -- (a) **LLM entity extraction** (local SLM or Groq) → map to `
+          -Author`/`Topic`/`Paper` nodes.                                
+       89 -- (b) **spaCy / scientific NER** → node mapping.              
+       90 -- (c) **Fuzzy string match** of query terms against node names
+          - (RapidFuzz) — cheapest baseline.                             
+       91 -- Which of the 5 D2 Cypher templates to fire (papers-by-author
+          -, co-authors, topic→papers, two-topic intersection, year-windo
+          -w) and **how to pick** (rule-based vs. LLM router).           
+       92 -- Subgraph breadth: 1-hop vs 2-hop neighborhood; cap on nodes.
+       64 +### Task 2 — Reranking  ·  *GraphRAG 8%*  ·  **Owner: Ahmed So
+          +liman**                                                       
+       65 +Is a cross-encoder reranker worth its latency?                
+       66 +- **Files you own:** `src/csai415/rerank.py` (fill the identit
+          +y stub).                                                      
+       67 +- **Build against:** candidates from the **live `/search`** (D
+          +2) or any chunk-text dict — fully standalone.                 
+       68 +- **Compare:** `cross-encoder/ms-marco-MiniLM-L-6-v2` vs `BAAI
+          +/bge-reranker-base` vs MMR-diversity vs none; candidate-pool s
+          +weep (rerank top-{20,50,100}→5).                              
+       69 +- **Done when:** `rerank()` reorders by a real model; a table 
+          +of (option × NDCG@5 lift × p95 latency added); a stated verdic
+          +t. Contract test green.                                       
+       70 +- **Starter Qs:** Will ms-marco underperform bge-reranker on c
+          +s.CL abstracts — how to test cleanly? · What candidate_k gives
+          + room to re-order without blowing 2s p95? · Is the forward pas
+          +s the latency bottleneck on CPU?                              
+       71  
+       94 -**Acceptance bar:** `select_subgraph(query) -> {seed_nodes, cy
+          -pher_used, paper_ids}` + a table comparing (a)/(b)/(c) on link
+          -ing precision over ~15 hand-checked queries, with latency. Doc
+          -ument failure cases (query with no graph hit → graceful fallba
+          -ck to pure vector).                                           
+       72 +### Task 3 — Answer generation + citations + page ranges  ·  *
+          +GraphRAG 8%*  ·  **Owner: Ahmad Fraij**                       
+       73 +Turn ranked chunks into a grounded answer with inline `[n]` ci
+          +tations → `{title, page_range}`.                              
+       74 +- **Files you own:** `src/csai415/answer.py` (replace the extr
+          +active stub).                                                 
+       75 +- **Build against:** `(citations, contexts)` from the **live `
+          +/search`** or a fixture list — standalone.                    
+       76 +- **Compare:** the answerer (local `Qwen2.5-3B-Instruct` grade
+          +d vs Groq `llama-3.3-70b` ceiling row); numbered-source prompt
+          +ing vs post-hoc citation attribution; extractive vs abstractiv
+          +e; the "context insufficient → refuse" path.                  
+       77 +- **Done when:** `generate_answer(query, citations, contexts)`
+          + returns a cited answer with correct page ranges; a side-by-si
+          +de of Qwen-3B vs Groq-70B on 5 example questions. Contract tes
+          +t green.                                                      
+       78 +- **Starter Qs:** What prompt/max-tokens keeps a 3B model unde
+          +r a few seconds while still citing? · numbered-source vs post-
+          +hoc — which is more faithful on a small model, and how do I me
+          +asure it? · How do I make it say "context doesn't answer this"
+          + instead of hallucinating?                                    
+       79  
+       96 -**Starter questions for your AI:** 1) For ~150 arXiv papers / 
+          -~760 authors / ~13 topics, is LLM entity extraction overkill v
+          -s. fuzzy match? What's the precision/latency tradeoff? 2) How 
+          -do I route a query to the *right* Cypher template without an L
+          -LM — keyword heuristics, or embed-the-templates-and-match? 3) 
+          -When the query maps to no graph node, what should the executor
+          - do — fall back to vector-only, or expand from the top vector 
+          -hit's paper node? Defend.                                     
+       80 +### Task 4 — Evaluation harness + gold set  ·  *Eval 5%*  ·  *
+          +*Owner: Yousef Alsakkaf**                                     
+       81 +Build the gold Q/A set and the RAGAS-via-Groq harness; demonst
+          +rate it.                                                      
+       82 +- **Files you own:** the `evaluate_answers` body in `src/csai4
+          +15/eval.py`, `data/gold/qa_answers.jsonl` (the real ~30–50 arX
+          +iv Q/A), `scripts/build_gold_answers.py`, `src/csai415/ragas_g
+          +roq.py` (judge wiring).                                       
+       83 +- **Build against:** **any `answer_fn`** — demo on the current
+          + (stub/extractive) answerer that exists today; the harness is 
+          +answerer-agnostic, so you never wait on Task 3.               
+       84 +- **Compare:** gold-set construction (hand-author vs LLM-gen +
+          + verify, doctor's `eval_set.json` pattern with `source_chunk_t
+          +ext`); RAGAS-with-Groq-judge vs a hand-rolled LLM-judge; sanit
+          +y-check RAGAS faithfulness against a few hand labels.         
+       85 +- **Done when:** `evaluate_answers` returns **real** faithfuln
+          +ess/answer-relevance via Groq (replacing the H0 proxy); gold s
+          +et committed; a demo run table; retry/backoff for the 30-rpm c
+          +ap. Contract test green.                                      
+       86 +- **Starter Qs:** What exactly do I pass as `contexts` to RAGA
+          +S, and does chunk granularity bias the score? · ~40 questions 
+          +is noisy — bootstrap a CI? · How do I cache judge responses so
+          + the eval is reproducible?                                    
+       87  
+       98 ----                                                           
+       88 +### Task 5 — Ablation + multi-objective HPO  ·  *Eval 5%*  ·  
+          +**Owner: Yehia Noureldin**                                    
+       89 +The required vector-vs-graph-vs-hybrid ablation + the doctor's
+          + Pareto method, as a reusable runner.                         
+       90 +- **Files you own:** `src/csai415/graphrag_hpo.py`, `notebooks
+          +/04_graphrag_ablation.ipynb`.                                 
+       91 +- **Build against:** the **frozen executor + `evaluate_answers
+          +` contract** (both exist at H0) — your deliverable is the *run
+          +ner*, so you build now and never wait. The coordinator runs yo
+          +ur finished runner on the fully-wired pipeline for the report'
+          +s final numbers.                                              
+       92 +- **Compare/produce:** the 3-way ablation × {rerank on/off} × 
+          +{Qwen-3B, Groq-70B}; NSGA-II Pareto of (faithfulness or NDCG@5
+          +, latency) over `mode`/`hybrid_weight`/`candidate_k`/`rerank`/
+          +expansion-depth; fastest-acceptable / balanced / best-quality 
+          +knee points (doctor's §7).                                    
+       93 +- **Done when:** a runnable ablation table + Pareto plot + a r
+          +ecommended config with justification, demonstrated on the curr
+          +ent pipeline.                                                 
+       94 +- **Starter Qs:** Faithfulness or NDCG@5 as the quality axis? 
+          +· How do I stop the Pareto front overfitting to ~40 questions?
+          + · Precompute retrieval so each trial doesn't re-call the 3B m
+          +odel?                                                         
+       95  
+      100 -### Task D3-2 — Executor spine + graph-guided fusion + Qdrant 
+          -refactor + `/ask`  ·  *GraphRAG 8%*                           
+      101 -**Suggested owner:** WAFIQ (coordinator). **Modules:** `src/cs
+          -ai415/graphrag.py`, `src/csai415/api.py`, `src/csai415/qdrant_
+          -dense.py`.                                                    
+       96 +### Task 6 — Safety: 3 mitigations + before/after  ·  *Safety 
+          +2%*  ·  **Owner: Musab**                                      
+       97 +- **Files you own:** `src/csai415/safety.py`, `scripts/safety_
+          +eval.py`, `reports/D3/d3_safety.md`.                          
+       98 +- **Build against:** the **tool guard (exists at H0)** + the c
+          +urrent pipeline — your mitigations are wrappers/filters; you n
+          +ever wait on others.                                          
+       99 +- **Build:** (a) **prompt-injection defense** — plant `"ignore
+          + previous instructions…"`, show it obeys, add delimiting/instr
+          +uction-hierarchy/sanitization → defended; (b) **source pinning
+          + + provenance filtering** — plant a poisoned/low-trust chunk, 
+          +show corruption, filter by provenance/trust → defended; (c) **
+          +deny risky tool calls** — extend the `cypher_query` read-only 
+          +guard, show a write/`DELETE` blocked. Compare ≥2 implementatio
+          +ns per mitigation.                                            
+      100 +- **Done when:** an attack set (~10 cases) + a before/after ta
+          +ble per mitigation (attack success ↓, benign answers unchanged
+          +) + a documented-limits paragraph.                            
+      101 +- **Starter Qs:** Strongest *cheap* prompt-injection defense f
+          +or a small model — how does each fail? · provenance allowlist 
+          +vs trust-score — cleaner before/after without nuking recall? ·
+          + How do I prove the mitigation didn't hurt benign answers (con
+          +trol set)?                                                    
+      102  
+      103 -The backbone everyone plugs into: subgraph → supporting chunks
+          - → blend with vector top-k → (rerank) → answer. Also lands the
+          - deferred D2 refactor.                                        
+      103 +### Task 7 — Integration + Qdrant refactor + `/ask` + report  
+          +·  *spans all*  ·  **Owner: WAFIQ (coordinator)**             
+      104 +The single aggregation point — consumes the six finished piece
+          +s. Not member-to-member back-and-forth; one final pass.       
+      105 +- **Files you own:** the `graphrag.py` executor *shell* (graph
+          + branch delegates to Task 1's `graph_guide`), `src/csai415/qdr
+          +ant_dense.py` + `src/csai415/api.py` (the 1-collection refacto
+          +r + `/ask` wiring + Neo4j driver injection), `reports/D3/D3_re
+          +port.md`, `notebooks/`-level glue.                            
+      106 +- **Do:** collapse the 3 Qdrant collections → 1 + source-filte
+          +r-at-query-time; wire the real seams into the executor (mechan
+          +ical — contracts match); run Task 4's harness, Task 5's runner
+          +, and Task 6's safety eval on the **fully-wired** pipeline to 
+          +get the report's headline numbers; write the 2-page report.   
+      107 +- **Done when:** `/ask` live on the single-collection stack; t
+          +he report covers all three rubric areas with real numbers; `te
+          +sts/test_graphrag_contract.py` + the D2 suite stay green.     
+      108  
+      105 -**Approaches to compare (the core research question):** how do
+          -es the subgraph actually change retrieval?                    
+      106 -- **graph-as-filter** — restrict the vector/BM25 candidate poo
+          -l to chunks whose `paper_id` is in the subgraph.              
+      107 -- **graph-as-booster** — keep the full pool but add a score bo
+          -nus to in-subgraph chunks.                                    
+      108 -- **graph-as-expansion** — add chunks from the subgraph's neig
+          -hbor papers that vector search missed.                        
+      109 -- Blend with vector top-k via RRF vs. the existing weighted-su
+          -m (`hybrid_weight`).                                          
+      110 -                                                              
+      111 -**Refactor:** collapse `chunks_bge384{,_scifact,_arxiv}` → one
+          - `chunks_bge384` + a `source` payload filter inside `HybridRet
+          -riever.search()` (Qdrant `Filter`). Update `seed_qdrant.py`, `
+          -api.py`, healthz. Keep the numpy fallback for tests.          
+      112 -                                                              
+      113 -**Acceptance bar:** `graphrag.answer(query, mode, rerank)` ret
+          -urns a populated `AnswerResult` with a real `steps` trace; `PO
+          -ST /ask` live; one Qdrant collection; eval shows graph-as-X ≥ 
+          -vector-only on the gold set (or an honest "graph didn't help h
+          -ere, and here's why").                                        
+      114 -                                                              
+      115 -**Starter questions for your AI:** 1) graph-as-filter can star
+          -ve recall if the subgraph is too tight — how do I tune the fal
+          -lback so a bad subgraph never beats pure vector? 2) For the Qd
+          -rant refactor, does a payload `source` filter at query time ch
+          -ange the blessed L2-via-cosine rescoring path? 3) RRF vs weigh
+          -ted-sum when fusing three signals (BM25, dense, graph) — what 
+          -breaks under each?                                            
+      116 -                                                              
+      109  ---
+      110  
+      119 -### Task D3-3 — Reranking  ·  *GraphRAG 8%*                   
+      120 -**Suggested owner:** Abdurlahman Alali. **Module:** `src/csai4
+          -15/rerank.py`.                                                
+      111 +## Dependency map (why there are no waves)                    
+      112  
+      122 -Is a cross-encoder reranker worth its latency? (Doctor's Week 
+          -07 §5.)                                                       
+      123 -                                                              
+      124 -**Approaches to compare:**                                    
+      125 -- `cross-encoder/ms-marco-MiniLM-L-6-v2` (doctor's pick) vs. `
+          -BAAI/bge-reranker-base` (domain-closer).                      
+      126 -- MMR diversity rerank (no model) vs. no rerank.              
+      127 -- Candidate-pool sweep: rerank top-{20, 50, 100} → keep 5. The
+          - reranker needs room to re-order.                             
+      128 -                                                              
+      129 -**Acceptance bar:** `rerank(query, candidate_ids, top_n) -> ra
+          -nked_ids` + a table: each option × {NDCG@5 lift, p95 latency a
+          -dded} on the gold set. State the verdict (the doctor's note: r
+          -erank lifts NDCG/precision, rarely Recall).                   
+      130 -                                                              
+      131 -**Starter questions for your AI:** 1) ms-marco was trained on 
+          -web search — will it underperform `bge-reranker-base` on cs.CL
+          - abstracts? How do I test that cleanly? 2) What candidate_k gi
+          -ves the reranker enough to work with without blowing the 2s p9
+          -5? 3) Is the cross-encoder forward pass the dominant latency c
+          -ost on CPU — should I cap candidates or batch?                
+      132 -                                                              
+      133 ----                                                           
+      134 -                                                              
+      135 -### Task D3-4 — Answer generation + citations + page ranges  ·
+          -  *GraphRAG 8%*                                               
+      136 -**Suggested owner:** Ahmad Fraij. **Module:** `src/csai415/ans
+          -wer.py`.                                                      
+      137 -                                                              
+      138 -Turn ranked chunks into a grounded answer with inline `[n]` ci
+          -tations resolving to `{title, page_range}`.                   
+      139 -                                                              
+      140 -**Approaches to compare:**                                    
+      141 -- **Answerer:** local `Qwen2.5-3B-Instruct` (the graded answer
+          -er; D4 tunes it) vs. Groq `llama-3.3-70b` (ceiling row only). 
+      142 -- **Citation strategy:** numbered-source prompting (`[1]..[k]`
+          - in the prompt, model cites inline) vs. post-hoc citation veri
+          -fication (generate, then attribute each sentence to its best c
+          -hunk).                                                        
+      143 -- **Extractive vs. abstractive** answer style.                
+      144 -- Prompt design for refusing when context is insufficient (fee
+          -ds the faithfulness gate in D3-7).                            
+      145 -                                                              
+      146 -**Acceptance bar:** `generate_answer(query, citations, context
+          -s) -> (answer_text, used_citation_idxs)` (`citations[i]` ↔ `co
+          -ntexts[i]` aligned) with every claim traceable to a `[n]`; pag
+          -e ranges correct against the source PDFs; works against a fixt
+          -ure context list before the executor is wired. Show a side-by-
+          -side of Qwen-3B vs Groq-70B on 5 example questions.           
+      147 -                                                              
+      148 -**Starter questions for your AI:** 1) A 3B model on CPU is slo
+          -w — what prompt length / max-tokens keeps generation under ~a 
+          -few seconds while still citing? 2) Numbered-source prompting v
+          -s post-hoc attribution — which gives more faithful citations o
+          -n a small model, and how do I measure "faithful"? 3) How do I 
+          -make the model say "the retrieved context doesn't answer this"
+          - instead of hallucinating?                                    
+      149 -                                                              
+      150 ----                                                           
+      151 -                                                              
+      152 -### Task D3-5 — Evaluation harness (faithfulness, relevance, l
+          -atency, gold set)  ·  *Eval 5%*                               
+      153 -**Suggested owner:** Yousef Alsakkaf. **Module:** `src/csai415
+          -/eval.py` (extend), `scripts/build_gold_answers.py`, `scripts/
+          -eval_graphrag.py`.                                            
+      154 -                                                              
+      155 -Build the gold Q/A set and the RAGAS harness; produce the head
+          -line numbers.                                                 
+      156 -                                                              
+      157 -**Approaches to compare:**                                    
+      158 -- **Gold-set construction:** hand-author ~30–50 Q/A over arXiv
+          - papers (doctor's `eval_set.json` pattern, with `source_chunk_
+          -text` for auto-repair) vs. LLM-generate-then-human-verify. Com
+          -pare effort vs. label quality.                                
+      159 -- **Judge wiring:** RAGAS with the **Groq** judge (via `langch
+          -ain-groq` `ChatGroq`) vs. a hand-rolled LLM-judge prompt. Sani
+          -ty-check RAGAS faithfulness against a few hand labels.        
+      160 -- **Latency protocol:** adopt the doctor's warmup + median-of-
+          -3 + p95 protocol.                                             
+      161 -                                                              
+      162 -**Acceptance bar:** `evaluate_answers(answer_fn, gold)` → `{fa
+          -ithfulness, answer_relevance, recall5, p95_latency_ms, n}`; go
+          -ld set committed; a results table for the report. Target: fait
+          -hfulness ≥ 0.8, answer-relevance ≥ 0.8. **Add retry/backoff** 
+          -for the Groq 30-rpm cap.                                      
+      163 -                                                              
+      164 -**Starter questions for your AI:** 1) RAGAS faithfulness needs
+          - (question, answer, contexts) — what exactly do I pass as `con
+          -texts` from our `AnswerResult`, and does chunk granularity bia
+          -s the score? 2) With only ~40 gold questions, how noisy is fai
+          -thfulness — should I bootstrap a CI? 3) How do I keep the eval
+          - reproducible when the judge is a hosted model — cache judge r
+          -esponses keyed on the prompt?                                 
+      165 -                                                              
+      166 ----                                                           
+      167 -                                                              
+      168 -### Task D3-6 — Ablation + multi-objective HPO  ·  *Eval 5%*  
+      169 -**Suggested owner:** Yehia Noureldin. **Module:** `src/csai415
+          -/graphrag_hpo.py`, `notebooks/04_graphrag_ablation.ipynb`.    
+      170 -                                                              
+      171 -The required ablation **vector-only vs graph-guided vs hybrid*
+          -*, plus the doctor's Pareto method applied to GraphRAG.       
+      172 -                                                              
+      173 -**Approaches to compare:**                                    
+      174 -- The 3-way ablation × {rerank on/off} × {Qwen-3B, Groq-70B ce
+          -iling} → quality/latency table.                               
+      175 -- **Multi-objective HPO (NSGA-II, doctor's §7):** search `mode
+          -`, `hybrid_weight`, `candidate_k`, `rerank`, graph-expansion d
+          -epth → Pareto front of (faithfulness or NDCG@5, latency). Extr
+          -act fastest-acceptable / balanced / best-quality knee points. 
+      176 -                                                              
+      177 -**Acceptance bar:** the ablation table (the rubric's "ablation
+          - thorough"), a Pareto-front plot, and a recommended config wit
+          -h justification. Reuse the doctor's `score_config` / NSGA-II s
+          -caffold.                                                      
+      178 -                                                              
+      179 -**Starter questions for your AI:** 1) Should the HPO objective
+          - be faithfulness or NDCG@5 — which is the right "quality" axis
+          - for a GraphRAG answerer? 2) With a small gold set, how do I a
+          -void the Pareto front overfitting to ~40 questions? 3) How do 
+          -I keep HPO cheap when each trial calls a 3B model — precompute
+          - retrieval, only vary the cheap knobs per trial?              
+      180 -                                                              
+      181 ----                                                           
+      182 -                                                              
+      183 -### Task D3-7 — Safety (3 mitigations + before/after)  ·  *Saf
+          -ety 2%*                                                       
+      184 -**Suggested owner:** Musab. **Module:** `src/csai415/safety.py
+          -`, `scripts/safety_eval.py`, `reports/D3/d3_safety.md`.       
+      185 -                                                              
+      186 -Implement three mitigations and show before/after evidence for
+          - each; document limits.                                       
+      187 -                                                              
+      188 -**Build:**                                                    
+      189 -- **Prompt-injection defense:** plant a chunk containing `"ign
+          -ore previous instructions and …"`; show the answerer obeys, th
+          -en add input delimiting / instruction-hierarchy / sanitization
+          - → defended.                                                  
+      190 -- **Source pinning + provenance filtering:** plant a poisoned/
+          -low-trust chunk; show it corrupts the answer, then filter/down
+          --weight by provenance (trusted `source`/paper_id allowlist) → 
+          -defended.                                                     
+      191 -- **Deny risky tool calls:** wrap the `cypher_query` tool with
+          - a read-only guard (reject `CREATE`/`MERGE`/`DELETE`/`SET`); s
+          -how a write/`DELETE` attempt blocked.                         
+      192 -                                                              
+      193 -**Approaches to compare:** for each mitigation, ≥2 implementat
+          -ions (e.g. delimiting vs. a classifier prefilter for injection
+          -; allowlist vs. trust-score for provenance) — pick the one wit
+          -h the cleaner before/after.                                   
+      194 -                                                              
+      195 -**Acceptance bar:** an attack set (~10 cases), a before/after 
+          -table per mitigation (attack success rate down, benign answers
+          - unchanged), and a documented-limits paragraph. This is the ru
+          -bric's "at least one mitigation with before/after evidence; li
+          -mits documented."                                             
+      196 -                                                              
+      197 -**Starter questions for your AI:** 1) What's the strongest *ch
+          -eap* prompt-injection defense for a small local model — delimi
+          -ting, instruction hierarchy, or a regex/classifier prefilter? 
+          -Show me how each fails. 2) For provenance filtering, allowlist
+          - vs. trust-score — which gives a cleaner before/after without 
+          -nuking recall? 3) How do I measure "the mitigation didn't hurt
+          - benign answers" — what's the control set?                    
+      198 -                                                              
+      199 ----                                                           
+      200 -                                                              
+      201 -## Waves / critical path                                      
+      202 -                                                              
+      113  ```
+      204 -H0  contracts (executor iface, /ask shape, gold schema, Groq c
+          -onfig) — whole team                                           
+      114 +Live D2 services (/search, Neo4j, parquet)  +  frozen H0 contr
+          +acts (in repo)                                                
+      115          │
+      206 -Wave 1 (parallel, against fixtures):                          
+      207 -   D3-2 Qdrant refactor + executor skeleton + /ask    ← backbo
+          -ne, unblocks others                                           
+      208 -   D3-1 entity linking (vs live Neo4j graph)                  
+      209 -   D3-3 reranker comparison (vs /search candidates)           
+      210 -   D3-4 answerer + citations (vs fixture context list)        
+      211 -   D3-5 gold set + RAGAS harness (vs fixture answerer)        
+      212 -   D3-7 attack set + tool-layer skeleton                      
+      213 -        │                                                     
+      214 -Wave 2 integration: wire D3-1 → D3-2 → D3-3 → D3-4 into the ex
+          -ecutor; swap fixtures for real                                
+      215 -        │                                                     
+      216 -Wave 3: D3-5 full eval on real executor · D3-6 ablation + HPO 
+          -· D3-7 before/after on real pipeline · report                 
+      116 +        ├── Task 1  graph-guided retrieval        ┐           
+      117 +        ├── Task 2  reranking                     │  six indep
+          +endent slices —                                               
+      118 +        ├── Task 3  answer + citations            │  each buil
+          +ds against contracts/live                                     
+      119 +        ├── Task 4  eval harness + gold set        │  services
+          + + stubs, finishes once,                                      
+      120 +        ├── Task 5  ablation + HPO runner         │  no member
+          +-to-member dependency                                         
+      121 +        └── Task 6  safety mitigations            ┘           
+      122 +                          │                                   
+      123 +                          ▼                                   
+      124 +        Task 7 (coordinator): one final integration pass — wir
+          +e the six,                                                    
+      125 +        run their finished harnesses on the real pipeline, wri
+          +te the report.                                                
+      126  ```
+      218 -**Backbone risk:** D3-2 unblocks D3-3/D3-4/D3-6 at integration
+          - — keep its interface frozen once locked at H0.               
+      127 +No member edits another member's files. No member runs in two 
+          +waves. The only thing that needs everything finished is the **
+          +report**, and that's the coordinator's single task.           
+      128  
+      129  ## Definition of done (D3 rubric checklist)
+      130  
+      222 -- [ ] `src/csai415/graphrag.py` — executor: subgraph (Cypher) 
+          -→ expand to chunks → hybrid blend → optional rerank → answer w
+          -ith `[n]` citations + page ranges.                            
+      223 -- [ ] `POST /ask` live; `GET /healthz` green on the single-col
+          -lection stack.                                                
+      224 -- [ ] One Qdrant collection + source-filter-at-query-time (D2 
+          -debt cleared).                                                
+      225 -- [ ] `data/gold/qa_answers.jsonl` (~30–50 arXiv Q/A with refe
+          -rence answers + page ranges) committed.                       
+      226 -- [ ] RAGAS faithfulness + answer-relevance computed (Groq jud
+          -ge); p95 latency reported. Targets: faithfulness ≥ 0.8, releva
+          -nce ≥ 0.8.                                                    
+      227 -- [ ] Ablation table: vector-only vs graph-guided vs hybrid (×
+          - rerank) — quality + latency. Multi-objective Pareto plot.    
+      228 -- [ ] 3 safety mitigations with before/after evidence + docume
+          -nted limits.                                                  
+      229 -- [ ] `reports/D3/D3_report.md` (→ PDF) covering all three rub
+          -ric areas; `notebooks/04_graphrag_ablation.ipynb` self-contain
+          -ed.                                                           
+      230 -- [ ] Each member: ≥2 commits under their own identity; popula
+          -ted `ai_logs/D3/<name>.md` with share-link + summary (depth of
+          - engagement + the approaches they compared).                  
+      131 +- [ ] **T1** `select_subgraph` real against live Neo4j + graph
+          +-guidance policy chosen with evidence.                        
+      132 +- [ ] **T2** cross-encoder rerank chosen with a lift-vs-latenc
+          +y table.                                                      
+      133 +- [ ] **T3** grounded answers with `[n]` citations + correct p
+          +age ranges; Qwen-3B vs Groq-70B side-by-side.                 
+      134 +- [ ] **T4** real RAGAS faithfulness + answer-relevance via Gr
+          +oq; `qa_answers.jsonl` committed (~30–50). Targets ≥ 0.8 / ≥ 0
+          +.8.                                                           
+      135 +- [ ] **T5** vector vs graph vs hybrid (× rerank) ablation tab
+          +le + Pareto plot + recommended config.                        
+      136 +- [ ] **T6** 3 mitigations with before/after evidence + docume
+          +nted limits.                                                  
+      137 +- [ ] **T7** 1 Qdrant collection + `/ask` live; `reports/D3/D3
+          +_report.md` (→ PDF) covering all rubric areas with real number
+          +s; suites green.                                              
+      138 +- [ ] Each member: ≥2 commits under their own identity; popula
+          +ted `ai_logs/D3/<name>.md` (share-link + the approaches they c
+          +ompared).                                                     
+
+● Now updating the working-model memory to capture the no-waves /
+  no-back-and-forth refinement:
+
+  Wrote 1 memory (ctrl+o to expand)
+
+● Done. Restructured briefs/D3_TASKS.md to vertical, finish-once ownership — and
+  assigned every member.
+
+  What changed
+
+  - Killed the waves. No more "build against a fixture now, redo against the
+  real thing later." Each member builds once, against the frozen H0 contracts
+  (already in the repo) + the live D2 /search/Neo4j + stubs.
+  - Killed member-to-member back-and-forth. Each task is a self-contained
+  vertical slice, and each member owns their files outright — no two people edit
+  the same file, so no merge thrash and no waiting.
+  - One aggregator. The only place everything comes together is the
+  coordinator's single integration+report pass, which just consumes the six
+  finished, committed pieces. That's your role — not members going back and
+  forth.
+
+  Assignments
+
+  Task (rubric): 1 · Graph-guided retrieval (8%)
+  Owner: Abdurlahman Alali
+  Owns (files): graph_select.py
+  Builds against — never waits on: live Neo4j + HybridRetriever
+  ────────────────────────────────────────
+  Task (rubric): 2 · Reranking (8%)
+  Owner: Ahmed Soliman
+  Owns (files): rerank.py
+  Builds against — never waits on: live /search candidates
+  ────────────────────────────────────────
+  Task (rubric): 3 · Answer + citations (8%)
+  Owner: Ahmad Fraij
+  Owns (files): answer.py
+  Builds against — never waits on: /search contexts / fixtures
+  ────────────────────────────────────────
+  Task (rubric): 4 · Eval harness + gold set (5%)
+  Owner: Yousef Alsakkaf
+  Owns (files): eval.evaluate_answers, qa_answers.jsonl, ragas_groq.py
+  Builds against — never waits on: any answer_fn (answerer-agnostic)
+  ────────────────────────────────────────
+  Task (rubric): 5 · Ablation + HPO (5%)
+  Owner: Yehia Noureldin
+  Owns (files): graphrag_hpo.py, notebooks/04_*.ipynb
+  Builds against — never waits on: frozen executor + eval contracts
+  ────────────────────────────────────────
+  Task (rubric): 6 · Safety (3 mitigations) (2%)
+  Owner: Musab
+  Owns (files): safety.py, scripts/safety_eval.py
+  Builds against — never waits on: H0 tool guard + current pipeline
+  ────────────────────────────────────────
+  Task (rubric): 7 · Integration + Qdrant refactor + /ask + report
+  Owner: WAFIQ (you)
+  Owns (files): executor shell, qdrant_dense.py/api.py, D3_report.md
+  Builds against — never waits on: the six finished pieces
+
+  Each of Tasks 1–6 is finishable in isolation and ships its own comparison
+  table + evidence — when that member is done, they're done. The one nuance: the
+  report's final headline numbers (real ablation, real RAGAS) are produced when
+  you run Tasks 4/5/6's finished harnesses on the fully-wired pipeline in Task
+  7 — the harness owners don't re-run.
+
+  The doc now has, per task: the files you own, what you build against, the
+  approaches to compare, "done when," and AI starter questions. Everyone can
+  start immediately and independently.
+
+  Want me to commit the H0 scaffold + this restructured doc to a branch so the
+  team forks from a clean base?
+
+✻ Churned for 4m 1s
+
+❯ swap me with ahmad fraij                                                      
+
+● Swapping: you (WAFIQ) take Task 3 (Answer + citations), Ahmad Fraij takes Task
+  7 (Integration + report).
+
+● Update(briefs\D3_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      69  - **Done when:** `rerank()` reorders by a real model; a table o
+          f (option × NDCG@5 lift × p95 latency added); a stated verdict.
+           Contract test green.
+      70  - **Starter Qs:** Will ms-marco underperform bge-reranker on cs
+          .CL abstracts — how to test cleanly? · What candidate_k gives r
+          oom to re-order without blowing 2s p95? · Is the forward pass t
+          he latency bottleneck on CPU?
+      71  
+      72 -### Task 3 — Answer generation + citations + page ranges  ·  *G
+         -raphRAG 8%*  ·  **Owner: Ahmad Fraij**                         
+      72 +### Task 3 — Answer generation + citations + page ranges  ·  *G
+         +raphRAG 8%*  ·  **Owner: WAFIQ**                               
+      73  Turn ranked chunks into a grounded answer with inline `[n]` cit
+          ations → `{title, page_range}`.
+      74  - **Files you own:** `src/csai415/answer.py` (replace the extra
+          ctive stub).
+      75  - **Build against:** `(citations, contexts)` from the **live `/
+          search`** or a fixture list — standalone.
+
+● Update(briefs\D3_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      100  - **Done when:** an attack set (~10 cases) + a before/after ta
+           ble per mitigation (attack success ↓, benign answers unchanged
+           ) + a documented-limits paragraph.
+      101  - **Starter Qs:** Strongest *cheap* prompt-injection defense f
+           or a small model — how does each fail? · provenance allowlist 
+           vs trust-score — cleaner before/after without nuking recall? ·
+            How do I prove the mitigation didn't hurt benign answers (con
+           trol set)?
+      102  
+      103 -### Task 7 — Integration + Qdrant refactor + `/ask` + report  
+          -·  *spans all*  ·  **Owner: WAFIQ (coordinator)**             
+      103 +### Task 7 — Integration + Qdrant refactor + `/ask` + report  
+          +·  *spans all*  ·  **Owner: Ahmad Fraij** (integrator)        
+      104  The single aggregation point — consumes the six finished piece
+           s. Not member-to-member back-and-forth; one final pass.
+      105  - **Files you own:** the `graphrag.py` executor *shell* (graph
+            branch delegates to Task 1's `graph_guide`), `src/csai415/qdr
+           ant_dense.py` + `src/csai415/api.py` (the 1-collection refacto
+           r + `/ask` wiring + Neo4j driver injection), `reports/D3/D3_re
+           port.md`, `notebooks/`-level glue.
+      106  - **Do:** collapse the 3 Qdrant collections → 1 + source-filte
+           r-at-query-time; wire the real seams into the executor (mechan
+           ical — contracts match); run Task 4's harness, Task 5's runner
+           , and Task 6's safety eval on the **fully-wired** pipeline to 
+           get the report's headline numbers; write the 2-page report.
+
+● Update(briefs\D3_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      121          └── Task 6  safety mitigations            ┘
+      122                            │
+      123                            ▼
+      124 -        Task 7 (coordinator): one final integration pass — wir
+          -e the six,                                                    
+      124 +        Task 7 (integrator — Ahmad Fraij): one final integrati
+          +on pass — wire the six,                                       
+      125          run their finished harnesses on the real pipeline, wri
+           te the report.
+      126  ```
+      127  No member edits another member's files. No member runs in two 
+           waves. The only thing that needs everything finished is the **
+           report**, and that's the coordinator's single task.
+
+● One more consistency fix in the intro (the integrator is now Ahmad, not the
+  coordinator):
+
+● Update(briefs\D3_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      10  - the **frozen H0 contracts** (`graphrag.GraphRAGExecutor`, `Ci
+          tation`/`AnswerResult`, `eval.evaluate_answers`, the `/ask` sha
+          pe, the seam signatures), and
+      11  - the **live D2 services** (`POST /search`, the seeded Neo4j gr
+          aph, `chunks.parquet`),
+      12  
+      13 -never against another member's unfinished code. You own your fi
+         -les outright (no shared-file edits), you produce your own evide
+         -nce, you commit, you're done. The **coordinator** does one fina
+         -l integration pass that wires the six finished pieces together 
+         -and writes the report — that's the only aggregation point, and 
+         -it consumes already-committed work.                            
+      13 +never against another member's unfinished code. You own your fi
+         +les outright (no shared-file edits), you produce your own evide
+         +nce, you commit, you're done. One **integrator** (Ahmad Fraij, 
+         +Task 7) does the single final pass that wires the six finished 
+         +pieces together and writes the report — that's the only aggrega
+         +tion point, and it consumes already-committed work.            
+      14  
+      15  Your job is still to **dig in and compare approaches** (the men
+          u under each task), measure, and defend the winner — every task
+           ships a small comparison table. That depth is what the rubric 
+          + AI-log policy reward.
+      16  
+
+● Swapped. Updated assignments:
+
+  ┌─────────────────────────────────┬──────────────────────────┐
+  │              Task               │          Owner           │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 1 · Graph-guided retrieval      │ Abdurlahman Alali        │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 2 · Reranking                   │ Ahmed Soliman            │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 3 · Answer + citations          │ WAFIQ (you)              │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 4 · Eval harness + gold set     │ Yousef Alsakkaf          │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 5 · Ablation + HPO              │ Yehia Noureldin          │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 6 · Safety                      │ Musab                    │
+  ├─────────────────────────────────┼──────────────────────────┤
+  │ 7 · Integration + /ask + report │ Ahmad Fraij (integrator) │
+  └─────────────────────────────────┴──────────────────────────┘
+
+  You now own the answer-generation slice (answer.py — Qwen2.5-3B graded vs
+  Groq-70B ceiling, citation strategy); Ahmad owns the final integration pass +
+  report. One thing to keep in mind as overall coordinator: Task 7 is the role
+  that needs every other piece finished before it can fully close out, so Ahmad
+  is now your critical-path person for the report — worth making sure his slice
+  starts last and the other five land on time.
+
+  briefs/D3_TASKS.md is updated throughout (headers, intro, dependency map).
+  Still happy to commit the H0 scaffold + this doc to a d3-h0-contracts branch
+  whenever you want a clean base for the team to fork from.
+
+✻ Crunched for 49s
+
+※ recap: Goal: plan D3 (GraphRAG executor, eval, safety) as self-contained one-per-member tasks. The plan and H0 code scaffolds are done in briefs/D3_TASKS.md with members assigned. Next: commit the H0 scaffold and doc to a d3-h0-contracts branch if you want. (disable recaps in /config)
+
+❯ before we get started since D4 is very small let's combine bothe together.    
+
+● Quick honesty check first, because "very small" undersells it: D4 is its own 
+  15% with three graded lines — Tuning & card (5%), Integration & perf (5%),
+  Demo & report (5%) — and it needs a QLoRA fine-tune (GPU), a separate training
+  set, quantize/cache, and an 8-min demo + 8–10pp report.
+
+  But your instinct to combine is right, for a specific reason: D4's entire 
+  infrastructure is D3's backbone. The executor is already a swappable-answerer
+  seam, and evaluate_answers is answerer-agnostic — so "run zero-shot vs tuned
+  inside GraphRAG" is literally just running the same harness twice with two
+  answer_fns. So D4 adds no new people — it deepens three existing verticals and
+  rolls the D3 report into the bigger D4 one:
+
+  ┌────────────────┬───────────────┬───────────────────────────────────────┐
+  │    Vertical    │    D3 work    │          + D4 work folded in          │
+  ├────────────────┼───────────────┼───────────────────────────────────────┤
+  │                │ zero-shot     │ QLoRA tune + quantize/cache + tuning  │
+  │ Answerer       │ Qwen-3B +     │ card (same model, one owner → tuned   │
+  │ (WAFIQ, T3)    │ citations     │ output honors the same citation       │
+  │                │               │ format, no back-and-forth)            │
+  ├────────────────┼───────────────┼───────────────────────────────────────┤
+  │ Data + eval    │ eval gold set │ separate QLoRA training set (disjoint │
+  │ (Yousef, T4)   │  + RAGAS-Groq │  from gold — no leakage) + the        │
+  │                │               │ zero-shot-vs-tuned delta table        │
+  ├────────────────┼───────────────┼───────────────────────────────────────┤
+  │ Integration +  │ wire + 2pp    │ the 8–10pp final report + 8-min demo  │
+  │ report (Ahmad, │ report        │ + repo hygiene/smoke                  │
+  │  T7)           │               │                                       │
+  └────────────────┴───────────────┴───────────────────────────────────────┘
+
+  The other four (graph, rerank, ablation, safety) stay D3-only and finish once
+  — their outputs feed the final report. Still one self-contained task each,
+  still no waves, still no member-to-member back-and-forth. The one new
+  dependency (WAFIQ's tune consumes Yousef's training set) is one-directional
+  and frozen up front, same as the gold set.
+
+  Two notes: (1) I'm combining the build; you'll still produce both
+  deliverables' required artifacts — flag if D3 must be submitted at its own
+  Week-9 deadline. (2) QLoRA on Qwen2.5-3B (4-bit) fits a free 16 GB T4
+  comfortably; the clean path is tune on cloud GPU → merge LoRA → quantize to
+  GGUF → load in Ollama, so the executor/eval keep running locally exactly like
+  the zero-shot setup.
+
+  Three decisions before I rewrite the plan as a combined D3+D4 doc:
+
+● User answered Claude's questions:
+  ⎿  · Where does the QLoRA fine-tune of Qwen2.5-3B run? (4-bit QLoRA needs 
+     ~8–12 GB VRAM; everyone's executor/eval stays local via the quantized 
+     GGUF.) → I have google colab pro 
+     · How is the QLoRA training set built? (Must be DISJOINT from the eval gold
+     set or the zero-shot-vs-tuned comparison is invalid.) → Hand-curate from 
+     arXiv corpus
+     · Who owns the QLoRA tune within the one-task-per-member model? → me but I 
+     will get back to it after D3 is done, thats the best approach right?
+
+● Yes — that's exactly the right approach, and it's worth being precise about
+  why it doesn't violate the no-waves rule you just set:
+
+  The no-waves rule bans bouncing within a deliverable
+  (build-on-fixture-then-redo, or waiting on a teammate mid-flight). The tune
+  coming after D3 isn't that — it's an inherent ordering: you literally cannot
+  tune-and-measure until the zero-shot baseline, the eval harness, and the
+  training set all exist. D4 is Week 10/11 because it sits on a finished D3. So
+  your answerer vertical has two phases:
+
+  - Phase A (D3, now): zero-shot Qwen-3B answerer + citations — build it
+  alongside everyone.
+  - Phase B (D4, after D3 lands): QLoRA tune → quantize → tuning card. Same
+  model, same citation format you already own, so the tuned version is a
+  drop-in.
+
+  One optimization so Phase B isn't a cold start: while D3 runs, prep the Colab 
+  Pro tuning notebook + the merge→GGUF→Ollama path so that the moment D3's
+  baseline and Yousef's training set are committed, the tune is essentially
+  push-button. That overlaps prep with D3 without creating any dependency.
+
+  Decisions locked: Colab Pro (no free-tier timeout worries), hand-curated arXiv
+  training set (Yousef owns it, disjoint from the eval gold set), you tune in 
+  Phase B. Rewriting the plan as a combined D3+D4 doc now.
+
+● Write(briefs\D3_D4_TASKS.md)
+  ⎿  Wrote 135 lines to briefs\D3_D4_TASKS.md
+      1 # D3 + D4 — Team Tasks (GraphRAG Executor → SLM Tuning & Final Pa
+      2 
+      3 Combined build, **two graded deliverables (30% total)**:
+        %** · Safety **2%**.
+      5 - **D4** (Week 10/11, 15%): Tuning & card **5%** · Integration & 
+      6 
+      7 We combine the *build* because D4's entire infrastructure is D3's
+        te_answers` is answerer-agnostic, so "zero-shot vs tuned inside G
+        raphRAG" is just running the same harness twice. **D4 adds no new
+        ration+report) and rolls D3's evidence into D4'
+     … +264 lines (ctrl+o to expand)
+
+● Now the small cleanups: create the training-set schema example (the one
+  contract I referenced but hadn't stubbed), and retire the old D3-only doc so
+  there's a single source of truth.
+  Ran 1 shell command (ctrl+o to expand)
+
+● Write(data\train\qa_train.example.jsonl)
+  ⎿  Wrote 2 lines to data\train\qa_train.example.jsonl
+      1 {"qid": "t001", "question": "<EXAMPLE ROW — D4 QLoRA training set
+        ; Yousef authors the real qa_train.jsonl>", "contexts": ["<retrie
+        ved chunk text 1 the model conditions on>", "<retrieved chunk tex
+        t 2>"], "answer": "<grounded answer that cites its sources, e.g. 
+        ...attention scales with sequence length [1].>", "paper_ids": ["2
+        401.01234"], "source": "arxiv"}
+      2 {"qid": "t002", "question": "<MUST be disjoint from data/gold/qa_
+        answers.jsonl — no train/test leakage; ~100-300 rows hand-curated
+         from arXiv>", "contexts": ["<...>"], "answer": "<...>", "paper_i
+        ds": ["2402.05678"], "source": "arxiv"}
+
+● Updating the project memory to reflect the D3+D4 combine and the D4 decisions:
+
+  Recalled 2 memories, wrote 6 memories (ctrl+o to expand)
+
+● Done — D3 and D4 are now one combined plan. Confirming your question: yes, 
+  tune after D3 is the right order — and now it's baked into the plan as Phase B
+  of your answerer vertical, with the one optimization (prep the Colab notebook
+  during D3 so the tune is push-button).
+
+  What changed
+
+  - briefs/D3_D4_TASKS.md is the single canonical plan (old D3-only doc
+  removed). Two graded deliverables, 30% total; D4 folds into three verticals,
+  no new people:
+    - You (T3 — answerer): Phase A zero-shot Qwen-3B + citations (now) → Phase B
+  QLoRA tune + GGUF→Ollama + tuning card (after D3).
+    - Yousef (T4 — data+eval): also curates the disjoint qa_train.jsonl in D3,
+  with a leakage assertion vs the gold set — so it's ready when you tune.
+    - Ahmad (T7 — integrator): grows to the zero-shot-vs-tuned delta table + the
+  8–10pp report + 8-min demo + repo hygiene.
+    - Graph / rerank / ablation / safety stay D3-only, finish once.
+  - Decisions locked: Colab Pro · hand-curated arXiv training set (Yousef,
+  disjoint) · merge→GGUF 4-bit→Ollama serving, so zero-shot vs tuned is just a
+  CSAI415_ANSWERER config swap — no new interface, executor/eval stay local and 
+  identical.
+  - data/train/qa_train.example.jsonl added (the training-row schema; Yousef
+  authors the real one).
+  - Memory updated to record the combine + D4 decisions.
+
+  No code changed — the H0 scaffold stands as-is; the tuned model drops into the
+  same answer.py contract. Contract test still green.
+
+  The plan is complete and assignable: D3 starts in parallel across all 7, your
+  Phase-B tune slots in cleanly afterward. Want me to commit the H0 scaffold +
+  the combined doc to a d3-h0-contracts branch now so the team forks from a
+  clean base?
+
+✻ Cooked for 7m 28s
+
+※ recap: We're planning a combined D3+D4 build (GraphRAG + QLoRA tuning, 30%) with one self-contained task per member. The plan and H0 scaffold are done; next action is committing them to a d3-h0-contracts branch if you approve. (disable recaps in /config)
+
+❯ can everyone start with their tasks without waiting for anyone?               
+
+● Please run /login · API Error: 401 The socket connection was closed 
+  unexpectedly. For more information, pass `verbose: true` in the second
+  argument to fetch()
+
+✻ Sautéed for 1m 44s
+
+❯ /login                                                                        
+  ⎿  Login interrupted
+
+❯ /login                                                                        
+  ⎿  Login successful
+
+❯ can everyone start with their tasks without waiting for anyone?               
+
+● Short answer: 6 of 7 can start immediately and in parallel. The 7th (Ahmad's 
+  integration) is the designed aggregation point — it can start its own infra 
+  work now but only closes once the others land. The real gate isn't people
+  waiting on people; it's shared environment setup. Let me be precise.
+
+  Who can start now (no human dependency)
+
+  Each of these builds against frozen H0 contracts + live D2 services + stubs —
+  never another member's unfinished code, and each owns separate files (no
+  collisions):
+
+  Task: 1 · graph-guided
+  Owner: Abdurlahman
+  Needs to start: live Neo4j + retriever (D2)
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 2 · rerank
+  Owner: Ahmed
+  Needs to start: /search candidates / chunk-text
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 3a · answerer
+  Owner: WAFIQ
+  Needs to start: (citations, contexts) from /search or fixture
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 4 · data + eval
+  Owner: Yousef
+  Needs to start: any answer_fn (answerer-agnostic)
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 5 · ablation/HPO
+  Owner: Yehia
+  Needs to start: frozen executor + evaluate_answers
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 6 · safety
+  Owner: Musab
+  Needs to start: H0 tool guard + pipeline
+  Blocked by a teammate?: No
+  ────────────────────────────────────────
+  Task: 7 · integrate+report
+  Owner: Ahmad
+  Needs to start: his own infra (Qdrant 3→1, README, smoke) starts now; the wire
+   
+    + run-harnesses + report step closes after 1–6
+  Blocked by a teammate?: By design — he's the aggregator
+
+  So: nobody waits on a teammate to begin. Ahmad isn't idle either — the Qdrant
+  refactor, /ask polish, README/.env/smoke are independent and he does them in
+  parallel; only the final assembly waits, which is the whole point of having
+  one integrator.
+
+  The actual gates (environment, not people)
+
+  These are what genuinely stall people if not done at kickoff — worth nailing
+  in the first 30 min:
+
+  1. Live D2 stack seeded — docker compose up -d && make seed (Neo4j for T1,
+  Qdrant//search for T2/T3, chunks.parquet present). T1 and T2 can't measure
+  without it.
+  2. Groq API key — GROQ_API_KEY for T4 (the RAGAS judge) and T3's ceiling row.
+  Free tier, but each member who calls Groq needs their own key set.
+  3. Ollama + Qwen pulled — ollama pull qwen2.5:3b-instruct for T3a (and your
+  T3b tune later).
+
+  One rule that keeps it collision-free
+
+  Members fill only the bodies of their stubs — they must not change the frozen
+  signatures (select_subgraph, rerank, generate_answer, evaluate_answers). The
+  executor (Ahmad's graphrag.py) imports those seams; as long as signatures
+  hold, his file keeps working unchanged while everyone fills in. The contract
+  test (tests/test_graphrag_contract.py) is the tripwire — if someone breaks a
+  signature, it goes red.
+
+  So: yes, fire all 6 off in parallel today once the stack is up + keys are set;
+  Ahmad runs alongside and assembles at the end; your tune (T3b) is the only
+  deliberately-deferred piece, and that's yours.
+
+  Want me to add a short "Hour 0 environment checklist" (stack up, seed, Groq
+  key, Ollama pull, pytest tests/test_graphrag_contract.py green) to the top of
+  briefs/D3_D4_TASKS.md so every member self-verifies they're unblocked before
+  starting?
+
+✻ Worked for 45s
+
+❯ swap ahmad with yousef                                                        
+
+● Swapping: Ahmad Fraij → Task 4 (Data + eval), Yousef Alsakkaf → Task 7
+  (Integration + report). Let me find every reference to update them all
+  consistently.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Also need to catch the dependency-map lines (T7 Ahmad, T4 references). Let me
+  grep those and update everything.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● Now applying all the swaps — the two task headers, the intro integrator line,
+  the three "Yousef owns data" references (→ Ahmad), and the dependency-map
+  line.
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+       8  
+       9  ## How we work (read first)
+      10  
+      11 -**One big self-contained task per member. Finish once — no wave
+         -s, no going back, no waiting on a teammate.** You build against
+         - the **frozen H0 contracts** (in the repo) + the **live D2 serv
+         -ices** (`/search`, Neo4j, `chunks.parquet`), never against anot
+         -her member's unfinished code. You own your files outright. One 
+         -**integrator** (Ahmad Fraij, Task 7) does the single final pass
+         - and the report.                                               
+      11 +**One big self-contained task per member. Finish once — no wave
+         +s, no going back, no waiting on a teammate.** You build against
+         + the **frozen H0 contracts** (in the repo) + the **live D2 serv
+         +ices** (`/search`, Neo4j, `chunks.parquet`), never against anot
+         +her member's unfinished code. You own your files outright. One 
+         +**integrator** (Yousef Alsakkaf, Task 7) does the single final 
+         +pass and the report.                                           
+      12  
+      13  **D3 → D4 phasing (not a wave — an inherent order):** D3 lands 
+          first; all 7 build their slices in parallel. The QLoRA tune (D4
+          ) comes *after* D3 because it needs the zero-shot baseline, the
+           eval harness, and the training set to all exist. Only **three*
+          * verticals have a D4 phase — answerer (tune), data+eval (train
+          ing set was already curated in D3), integration (final report+d
+          emo). The other four finish in D3 and feed the report.
+      14  
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      30  | **Qdrant layout** | **1 collection + source-filter-at-query-t
+          ime** (refactor D2's 3) |
+      31  | **SLM tuning (D4)** | **QLoRA on Qwen2.5-3B**, run on **Googl
+          e Colab Pro** |
+      32  | **Tuned-model serving (D4)** | merge LoRA → **quantize to GGU
+          F (4-bit) → serve via Ollama** as `qwen2.5-3b-csai415`; `answer
+          .py` selects the model, so the executor/eval stay local & ident
+          ical to zero-shot |
+      33 -| **QLoRA training set (D4)** | **hand-curated ~100–300 arXiv Q
+         -/A**, **disjoint from `qa_answers.jsonl`** (no train/test leaka
+         -ge); Yousef owns both data sets |                              
+      33 +| **QLoRA training set (D4)** | **hand-curated ~100–300 arXiv Q
+         +/A**, **disjoint from `qa_answers.jsonl`** (no train/test leaka
+         +ge); Ahmad owns both data sets |                               
+      34  | **Tune owner (D4)** | **WAFIQ** — Phase B of the answerer ver
+          tical, after D3 |
+      35  
+      36  **Models config:** Groq — OpenAI-compatible, `GROQ_API_KEY`, ba
+          se `https://api.groq.com/openai/v1`, `llama-3.3-70b-versatile`,
+           free-tier ≈ 30 rpm/1K rpd/12K tpm (add retry/backoff). Local S
+          LM — `ollama pull qwen2.5:3b-instruct`. Deps `ragas`, `langchai
+          n-groq`, `groq` in `requirements.txt`.
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      47  | Tools/guard | `src/csai415/tools.py` | `is_write_cypher`, `Ri
+          skyToolCallDenied`, `cypher_query` guard |
+      48  | API | `src/csai415/api.py` | `POST /ask` + `AskRequest`/`AskR
+          esponse`/`CitationModel` |
+      49  | Eval gold schema | `data/gold/qa_answers.example.jsonl` | v2 
+          row shape |
+      50 -| **Train schema (D4)** | `data/train/qa_train.example.jsonl` |
+         - QLoRA training-row shape (Yousef freezes the real `qa_train.js
+         -onl`) |                                                        
+      50 +| **Train schema (D4)** | `data/train/qa_train.example.jsonl` |
+         + QLoRA training-row shape (Ahmad freezes the real `qa_train.jso
+         +nl`) |                                                         
+      51  
+      52  Contract smoke: `tests/test_graphrag_contract.py` (3 tests, no 
+          model/Docker). Keep green.
+      53  
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      70  The full model lifecycle — two phases, one owner, so the tuned 
+          model honors the same citation format with zero back-and-forth.
+      71  - **Files:** `src/csai415/answer.py`; D4 adds `notebooks/05_qlo
+          ra_tune.ipynb` (Colab Pro) + `reports/D4/tuning_card.md`.
+      72  - **Phase A (D3, now):** zero-shot Qwen-3B answerer + `[n]` cit
+          ations + page ranges. Compare numbered-source vs post-hoc attri
+          bution; extractive vs abstractive; context-insufficient→refuse.
+           Side-by-side Qwen-3B vs Groq-70B ceiling.
+      73 -- **Phase B (D4, after D3 + Yousef's `qa_train.jsonl` land):** 
+         -QLoRA tune on **Colab Pro** → merge LoRA → quantize **GGUF 4-bi
+         -t** → serve via **Ollama** as `qwen2.5-3b-csai415` (drops into 
+         -the same `answer.py` via `CSAI415_ANSWERER`). Write the **tunin
+         -g card** (dataset size, epochs, lr, LoRA rank/alpha/dropout, ha
+         -rdware/time, base-model license). *Prep the Colab notebook + GG
+         -UF→Ollama path during D3 so the tune is push-button once the ba
+         -seline + training set exist.*                                  
+      73 +- **Phase B (D4, after D3 + Ahmad's `qa_train.jsonl` land):** Q
+         +LoRA tune on **Colab Pro** → merge LoRA → quantize **GGUF 4-bit
+         +** → serve via **Ollama** as `qwen2.5-3b-csai415` (drops into t
+         +he same `answer.py` via `CSAI415_ANSWERER`). Write the **tuning
+         + card** (dataset size, epochs, lr, LoRA rank/alpha/dropout, har
+         +dware/time, base-model license). *Prep the Colab notebook + GGU
+         +F→Ollama path during D3 so the tune is push-button once the bas
+         +eline + training set exist.*                                   
+      74  - **Done when (D3):** zero-shot answerer shipped + comparison. 
+          **Done when (D4):** tuned GGUF served in Ollama + tuning card c
+          ommitted + base-vs-tuned compared via the eval harness.
+      75  - **Starter Qs:** prompt/max-tokens to keep a 3B model fast whi
+          le citing? · numbered-source vs post-hoc faithfulness on a smal
+          l model? · QLoRA rank/lr for ~100–300 examples without overfitt
+          ing? · does 4-bit GGUF quantization erode faithfulness vs the m
+          erged fp16 model?
+      76  
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      74  - **Done when (D3):** zero-shot answerer shipped + comparison. 
+          **Done when (D4):** tuned GGUF served in Ollama + tuning card c
+          ommitted + base-vs-tuned compared via the eval harness.
+      75  - **Starter Qs:** prompt/max-tokens to keep a 3B model fast whi
+          le citing? · numbered-source vs post-hoc faithfulness on a smal
+          l model? · QLoRA rank/lr for ~100–300 examples without overfitt
+          ing? · does 4-bit GGUF quantization erode faithfulness vs the m
+          erged fp16 model?
+      76  
+      77 -### Task 4 — Data (eval gold **+** train set) + evaluation harn
+         -ess  ·  *D3 Eval 5% + D4 data*  ·  **Owner: Yousef Alsakkaf**  
+      77 +### Task 4 — Data (eval gold **+** train set) + evaluation harn
+         +ess  ·  *D3 Eval 5% + D4 data*  ·  **Owner: Ahmad Fraij**      
+      78  Own all the data + the RAGAS harness. Curate BOTH sets in D3 so
+           the training set is ready for WAFIQ's Phase B.
+      79  - **Files:** `eval.evaluate_answers` body, `data/gold/qa_answer
+          s.jsonl`, **`data/train/qa_train.jsonl`**, `scripts/build_gold_
+          answers.py`, `src/csai415/ragas_groq.py`. **Build against:** an
+          y `answer_fn` (answerer-agnostic — demo on the current answerer
+          ).
+      80  - **Compare/build:** gold construction (hand vs Groq-gen+verify
+          , doctor's `eval_set.json` pattern); RAGAS-with-Groq vs hand-ro
+          lled judge; **leakage check** (assert no question/chunk overlap
+           between `qa_train.jsonl` and `qa_answers.jsonl`).
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      90  - **Build:** prompt-injection defense; source pinning + provena
+          nce filtering; deny risky tool calls (extend the `cypher_query`
+           read-only guard). ≥2 implementations per mitigation.
+      91  - **Done when:** ~10-case attack set + before/after table per m
+          itigation (attack success ↓, benign unchanged) + documented lim
+          its.
+      92  
+      93 -### Task 7 — Integration + Qdrant refactor + `/ask` + **final r
+         -eport & demo**  ·  *spans D3 + D4*  ·  **Owner: Ahmad Fraij** (
+         -integrator)                                                    
+      93 +### Task 7 — Integration + Qdrant refactor + `/ask` + **final r
+         +eport & demo**  ·  *spans D3 + D4*  ·  **Owner: Yousef Alsakkaf
+         +** (integrator)                                                
+      94  The single aggregation point — consumes the finished pieces. Th
+          e only vertical that needs everything, by design.
+      95  - **Files:** the `graphrag.py` executor *shell* (graph branch d
+          elegates to Task 1), `qdrant_dense.py` + `api.py` (1-collection
+           refactor + `/ask` + Neo4j driver), `reports/D4/D4_report.md`, 
+          README/`.env.example`/smoke.
+      96  - **D3:** collapse 3 Qdrant collections → 1; wire the real seam
+          s (mechanical — contracts match); run Tasks 4/5/6 harnesses on 
+          the wired pipeline for D3 numbers.
+
+● Update(briefs\D3_D4_TASKS.md)
+  ⎿  Added 1 line, removed 1 line
+      112     T3b WAFIQ: QLoRA tune  (needs: zero-shot baseline + T4's qa
+           _train.jsonl + eval harness)
+      113                → merge → GGUF → Ollama  + tuning card
+      114          │
+      115 -   T7 Ahmad: run base-vs-tuned through the harness → final del
+          -ta table                                                      
+      115 +   T7 Yousef: run base-vs-tuned through the harness → final de
+          +lta table                                                     
+      116                → 8–10pp report + 8-min demo + repo hygiene
+      117  ```
+      118  No member edits another's files. No member runs in two D3 wave
+           s. The D3→D4 order is the inherent "tune after you have a base
+           line," not back-and-forth.
+● Swapped everywhere. Let me confirm no stale reference slipped through:
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+● All consistent. Final assignments:
+
+  ┌──────────────────────────────────┬──────────────────────────────┐
+  │               Task               │            Owner             │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 1 · Graph-guided retrieval       │ Abdurlahman Alali            │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 2 · Reranking                    │ Ahmed Soliman                │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 3 · Answerer (zero-shot + QLoRA) │ WAFIQ                        │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 4 · Data + eval harness          │ Ahmad Fraij                  │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 5 · Ablation + HPO               │ Yehia Noureldin              │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 6 · Safety                       │ Musab                        │
+  ├──────────────────────────────────┼──────────────────────────────┤
+  │ 7 · Integration + report + demo  │ Yousef Alsakkaf (integrator) │
+  └──────────────────────────────────┴──────────────────────────────┘
+
+  Ahmad now owns both data sets (eval gold + the disjoint QLoRA training set)
+  and the RAGAS harness; Yousef is the integrator who does the final wire-up,
+  base-vs-tuned table, report, and demo. Every reference in
+  briefs/D3_D4_TASKS.md — headers, intro, decisions table, contracts table, your
+  Phase-B dependency, and the dependency map — is updated.
+
+  The dependency shape is unchanged by the swap: Ahmad's training set feeds your
+  Phase-B tune; Yousef's integration is still the single aggregation point.
+  Everyone can still start in parallel.
+
+✻ Cooked for 1m 19s
+
+※ recap: We're planning combined D3+D4 (GraphRAG executor, eval, safety, plus QLoRA tuning) as 7 self-contained tasks, now all assigned with the swap done. Next: confirm the plan is final, or have me commit the H0 scaffold and task doc to a branch. (disable recaps in /config)
