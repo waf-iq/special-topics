@@ -263,12 +263,20 @@ def _posthoc(client, model, query, citations, contexts) -> tuple[str, list[int]]
 
 # --- Helpers ---------------------------------------------------------------------------
 def _parse_citations(text: str, n: int) -> list[int]:
-    """Extract in-range ``[n]`` markers (1..n), deduped in first-seen order."""
+    """Extract in-range citation numbers (1..n) from bracket groups, deduped in first-seen order.
+
+    Lenient on purpose: small models malform the marker (``[B1]``, ``[n.1]``, ``[Source 1]``,
+    ``[1, 2]``) often enough that a strict ``[\\d+]`` match silently drops real citations. We pull
+    any digit-run *inside* a ``[...]`` group and keep those in range — the 1..n bound still rejects
+    junk like a stray ``[2024]``. (``[n]`` with no digit yields nothing, so the template artifact
+    is ignored rather than miscounted.)
+    """
     seen: list[int] = []
-    for m in re.findall(r"\[(\d+)\]", text):
-        idx = int(m)
-        if 1 <= idx <= n and idx not in seen:
-            seen.append(idx)
+    for inner in re.findall(r"\[([^\[\]]*)\]", text):
+        for d in re.findall(r"\d+", inner):
+            idx = int(d)
+            if 1 <= idx <= n and idx not in seen:
+                seen.append(idx)
     return seen
 
 
