@@ -1,0 +1,7 @@
+backend,role,strategy,faith_proxy,avg_citations,median_latency_ms,p95_latency_ms
+groq-70b,ceiling,numbered,0.746,1.00,295.5,408.4
+groq-70b,ceiling,hybrid,0.762,1.00,322.7,610.0
+groq-70b,ceiling,posthoc,0.746,1.00,412.2,528.4
+qwen-3b,graded,numbered,0.916,1.00,957.7,1222.2
+qwen-3b,graded,hybrid,0.916,1.00,849.4,954.7
+qwen-3b,graded,posthoc,0.916,1.00,859.1,1203.9
