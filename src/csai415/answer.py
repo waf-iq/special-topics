@@ -50,6 +50,14 @@ _TEMPERATURE = 0.0      # deterministic answers (so quality is reproducible)
 _DEFAULT_GROQ_MODEL = "llama-3.3-70b-versatile"
 _DEFAULT_OLLAMA_BASE = "http://localhost:11434/v1"
 
+# Hybrid verifier knobs (read from env at call time so the notebook can sweep them):
+#   CSAI415_VERIFY_TIER       t1 (lexical) | t2 (embedding cosine) | t3 (cross-encoder)
+#   CSAI415_VERIFY_THRESHOLD  support score below which a citation is treated as unsupported
+#   CSAI415_REPAIR_POLICY     drop | reattribute | flag
+_DEFAULT_VERIFY_THRESHOLD = {"t1": 0.30, "t2": 0.50, "t3": 0.50}
+_EMBEDDER_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+_embedder = None  # lazy SentenceTransformer cache (T2)
+
 _SYSTEM_PROMPT = (
     "You are a precise research assistant. Answer the question using ONLY the numbered "
     "sources provided. Cite every claim inline with [n], where n is the source number "
@@ -155,10 +163,90 @@ def _numbered_source(client, model, query: str, contexts: list[str]) -> tuple[st
 # (faithfulness × p95). Scaffolded as seams so the notebook can already select them; until
 # implemented they delegate to numbered-source so nothing in the pipeline breaks.
 def _hybrid(client, model, query, citations, contexts) -> tuple[str, list[int]]:
-    # TODO(WAFIQ): generate via _numbered_source, then verify each emitted [n] against
-    # contexts[n-1] (tiered: T1 lexical overlap → T2 embedding cosine → T3 NLI/cross-encoder),
-    # and repair/refuse on a failed citation. Sweep tier + repair policy in 04_answerer.ipynb.
-    return _numbered_source(client, model, query, contexts)
+    """cite → verify → repair.
+
+    Generate with numbered-source (one fast call), then check every emitted ``[n]``: does the
+    sentence it sits in actually align with ``contexts[n-1]``? A citation that scores below the
+    tier's threshold is *unsupported* — the model cited the wrong source or invented the number.
+    Repair policy decides what happens to it (``drop`` / ``reattribute`` / ``flag``). This buys
+    numbered-source's latency with post-hoc-style faithfulness; tier + threshold + policy are the
+    knobs you sweep against the pure ``numbered`` arm.
+    """
+    text, _ = _numbered_source(client, model, query, contexts)
+    if not text or text.strip() == REFUSAL:
+        return text, []
+
+    tier = (os.getenv("CSAI415_VERIFY_TIER") or "t1").strip().lower()
+    policy = (os.getenv("CSAI415_REPAIR_POLICY") or "drop").strip().lower()
+    thr_env = os.getenv("CSAI415_VERIFY_THRESHOLD")
+    threshold = float(thr_env) if thr_env else _DEFAULT_VERIFY_THRESHOLD.get(tier, 0.3)
+
+    sentences = re.split(r"(?<=[.!?])\s+", text.strip())
+    repaired = [_repair_sentence(s, contexts, tier, threshold, policy) for s in sentences]
+    new_text = re.sub(r"\s+([.,;])", r"\1", " ".join(p for p in repaired if p.strip()))
+    return new_text.strip(), _parse_citations(new_text, len(contexts))
+
+
+def _repair_sentence(sentence: str, contexts, tier: str, threshold: float, policy: str) -> str:
+    """Verify each ``[n]`` in one sentence against its context; apply the repair policy."""
+    claim = re.sub(r"\[\d+\]", "", sentence).strip()  # the sentence text, markers stripped
+    if not claim:
+        return sentence
+
+    def fix(m: "re.Match") -> str:
+        n = int(m.group(1))
+        if not (1 <= n <= len(contexts)):
+            return ""  # out-of-range marker is always a hallucination → drop
+        if _support(claim, contexts[n - 1], tier) >= threshold:
+            return m.group(0)  # supported — keep as-is
+        if policy == "reattribute":
+            best, score = _best_context(claim, contexts, tier)
+            return f"[{best + 1}]" if score >= threshold else ""
+        if policy == "flag":
+            return f"{m.group(0)}?"  # keep but mark unsupported (for inspection), ASCII-safe
+        return ""  # policy == "drop" (default)
+
+    return re.sub(r"\[(\d+)\]", fix, sentence)
+
+
+# --- Tiered support scorer (the verifier) ----------------------------------------------
+def _support(claim: str, context: str, tier: str) -> float:
+    """How well ``context`` supports ``claim``, in [0, 1]. Higher tier = stronger (slower) signal."""
+    if tier == "t1":
+        return _lexical_overlap(claim, context)
+    if tier == "t2":
+        return _embed_cosine(claim, context)
+    if tier == "t3":
+        # TODO(WAFIQ): wire a cross-encoder NLI/relevance model (reuse Task 2's reranker model
+        # family, e.g. cross-encoder/ms-marco-MiniLM-L-6-v2) and map its score to [0, 1]. This is
+        # the strongest/slowest tier — the high-faithfulness, high-latency end of the comparison.
+        raise NotImplementedError("verify tier t3 (cross-encoder) is a wired seam — implement before use")
+    raise ValueError(f"unknown CSAI415_VERIFY_TIER={tier!r}; expected t1|t2|t3")
+
+
+def _best_context(claim: str, contexts, tier: str) -> tuple[int, float]:
+    """Index + score of the context that best supports the claim (for reattribution)."""
+    scores = [_support(claim, c or "", tier) for c in contexts]
+    j = max(range(len(scores)), key=scores.__getitem__)
+    return j, scores[j]
+
+
+def _lexical_overlap(a: str, b: str) -> float:
+    """T1: fraction of the claim's content words found in the context (cheap, no model)."""
+    aw = set(re.findall(r"[a-z]{3,}", (a or "").lower()))
+    bw = set(re.findall(r"[a-z]{3,}", (b or "").lower()))
+    return len(aw & bw) / len(aw) if aw else 0.0
+
+
+def _embed_cosine(a: str, b: str) -> float:
+    """T2: cosine of sentence embeddings (lazy-loads a small SentenceTransformer once)."""
+    global _embedder
+    if _embedder is None:
+        from sentence_transformers import SentenceTransformer  # lazy — only when tier=t2
+
+        _embedder = SentenceTransformer(_EMBEDDER_MODEL)
+    va, vb = _embedder.encode([a or "", b or ""], normalize_embeddings=True)
+    return max(0.0, float(va @ vb))  # clamp the [-1,1] cosine to [0,1]
 
 
 def _posthoc(client, model, query, citations, contexts) -> tuple[str, list[int]]:
