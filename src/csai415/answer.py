@@ -60,9 +60,11 @@ _embedder = None  # lazy SentenceTransformer cache (T2)
 
 _SYSTEM_PROMPT = (
     "You are a precise research assistant. Answer the question using ONLY the numbered "
-    "sources provided. Cite every claim inline with [n], where n is the source number "
-    "you used. Keep the answer concise. If the sources do not contain the answer, reply "
-    f'with exactly "{REFUSAL}" and nothing else. Do not use any outside knowledge.'
+    "sources provided. After each claim, cite the source you used by writing its number in "
+    "square brackets, for example [1] or [2]. Always use the actual digit of the source — "
+    "never write the literal letter n or 'n.1'. Keep the answer concise. If the sources do "
+    f'not contain the answer, reply with exactly "{REFUSAL}" and nothing else. Do not use '
+    "any outside knowledge."
 )
 
 
@@ -146,7 +148,10 @@ def generate_answer(
 def _numbered_source(client, model, query: str, contexts: list[str]) -> tuple[str, list[int]]:
     """Single generation call; the model cites ``[n]`` inline. Fast, abstractive-constrained."""
     sources = "\n".join(f"[{i}] {(c or '')[:_MAX_CTX_CHARS]}" for i, c in enumerate(contexts, 1))
-    user = f"Sources:\n{sources}\n\nQuestion: {query}\n\nAnswer (cite sources inline as [n]):"
+    user = (
+        f"Sources:\n{sources}\n\nQuestion: {query}\n\n"
+        "Answer (cite each claim with its source's number in square brackets, e.g. [1]):"
+    )
     resp = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": _SYSTEM_PROMPT},
