@@ -8,7 +8,7 @@ We combine the *build* because D4's entire infrastructure is D3's backbone — t
 
 ## How we work (read first)
 
-**One big self-contained task per member. Finish once — no waves, no going back, no waiting on a teammate.** You build against the **frozen H0 contracts** (in the repo) + the **live D2 services** (`/search`, Neo4j, `chunks.parquet`), never against another member's unfinished code. You own your files outright. One **integrator** (Yousef Alsakkaf, Task 7) does the single final pass and the report.
+**One big self-contained task per member. Finish once — no waves, no going back, no waiting on a teammate.** You build against the **frozen H0 contracts** (in the repo) + the **live D2 services** (`/search`, Neo4j, `chunks.parquet`), never against another member's unfinished code. You own your files outright. One **integrator** (Abdurlahman Alali, Task 7) does the single final pass and the report.
 
 **D3 → D4 phasing (not a wave — an inherent order):** D3 lands first; all 7 build their slices in parallel. The QLoRA tune (D4) comes *after* D3 because it needs the zero-shot baseline, the eval harness, and the training set to all exist. Only **three** verticals have a D4 phase — answerer (tune), data+eval (training set was already curated in D3), integration (final report+demo). The other four finish in D3 and feed the report.
 
@@ -55,7 +55,7 @@ Contract smoke: `tests/test_graphrag_contract.py` (3 tests, no model/Docker). Ke
 
 ## Assignments — 7 self-contained tasks
 
-### Task 1 — Graph-guided retrieval  ·  *D3 GraphRAG 8%*  ·  **Owner: Abdurlahman Alali**
+### Task 1 — Graph-guided retrieval  ·  *D3 GraphRAG 8%*  ·  **Owner: Yousef Alsakkaf**
 Own everything "graph": link query→nodes, select subgraph, decide how it reshapes retrieval.
 - **Files:** `src/csai415/graph_select.py`. **Build against:** live Neo4j + `HybridRetriever`.
 - **Compare:** entity linking (LLM-NER vs spaCy vs fuzzy); which Cypher template fires; guidance policy — graph-as-**filter** vs **booster** vs **expansion**.
@@ -90,7 +90,7 @@ Own all the data + the RAGAS harness. Curate BOTH sets in D3 so the training set
 - **Build:** prompt-injection defense; source pinning + provenance filtering; deny risky tool calls (extend the `cypher_query` read-only guard). ≥2 implementations per mitigation.
 - **Done when:** ~10-case attack set + before/after table per mitigation (attack success ↓, benign unchanged) + documented limits.
 
-### Task 7 — Integration + Qdrant refactor + `/ask` + **final report & demo**  ·  *spans D3 + D4*  ·  **Owner: Yousef Alsakkaf** (integrator)
+### Task 7 — Integration + Qdrant refactor + `/ask` + **final report & demo**  ·  *spans D3 + D4*  ·  **Owner: Abdurlahman Alali** (integrator)
 The single aggregation point — consumes the finished pieces. The only vertical that needs everything, by design.
 - **Files:** the `graphrag.py` executor *shell* (graph branch delegates to Task 1), `qdrant_dense.py` + `api.py` (1-collection refactor + `/ask` + Neo4j driver), `reports/D4/D4_report.md`, README/`.env.example`/smoke.
 - **D3:** collapse 3 Qdrant collections → 1; wire the real seams (mechanical — contracts match); run Tasks 4/5/6 harnesses on the wired pipeline for D3 numbers.
@@ -112,7 +112,7 @@ PHASE 2 — D4 (after D3; concentrated):
    T3b WAFIQ: QLoRA tune  (needs: zero-shot baseline + T4's qa_train.jsonl + eval harness)
               → merge → GGUF → Ollama  + tuning card
         │
-   T7 Yousef: run base-vs-tuned through the harness → final delta table
+   T7 Abdurlahman: run base-vs-tuned through the harness → final delta table
               → 8–10pp report + 8-min demo + repo hygiene
 ```
 No member edits another's files. No member runs in two D3 waves. The D3→D4 order is the inherent "tune after you have a baseline," not back-and-forth.
