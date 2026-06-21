@@ -82,9 +82,12 @@ def run_ablation_grid(
     for mode, rerank in itertools.product(modes, rerank_options):
         print(f"[ablation] mode={mode} rerank={rerank} ...")
 
-        def answer_fn(query: str, _mode=mode, _rerank=rerank) -> str:
-            result = executor.answer(query, k=k, mode=_mode, rerank=_rerank)
-            return result.text
+        def answer_fn(query: str, _mode=mode, _rerank=rerank):
+            # eval.py's evaluate_answers expects answer_fn to return the raw
+            # AnswerResult object (it does res.answer internally), not an
+            # already-unwrapped string. Confirmed from the real traceback:
+            # eval.py line 107 does `answers.append(res.answer)`.
+            return executor.answer(query, k=k, mode=_mode, rerank=_rerank)
 
         metrics = evaluate_answers(answer_fn=answer_fn, gold=gold)
 
@@ -163,17 +166,15 @@ def run_nsga2_search(
     def objective(trial: optuna.Trial) -> tuple[float, float]:
         knobs = _suggest_knobs(trial, fixed_mode)
 
-        def answer_fn(query: str, _knobs=knobs) -> str:
-            result = executor.answer(
+        def answer_fn(query: str, _knobs=knobs):
+            # Same fix as run_ablation_grid: return the raw AnswerResult,
+            # eval.py unwraps .answer itself.
+            return executor.answer(
                 query,
                 k=_knobs["k"],
                 mode=_knobs["mode"],
                 rerank=_knobs["rerank"],
-                # candidate_k / rerank_top_n are passed through if the
-                # executor's .answer() signature exposes them; otherwise
-                # this trial degrades gracefully to default pool sizes.
             )
-            return result.text
 
         t0 = time.perf_counter()
         metrics = evaluate_answers(answer_fn=answer_fn, gold=gold)
@@ -259,35 +260,53 @@ def pareto_to_markdown(result: HPOResult) -> str:
 
 
 # --------------------------------------------------------------------------- #
-# Real-import smoke check — confirms this module wires correctly against the
-# ACTUAL graphrag.py / eval.py contracts (verified against the real repo on
-# 2026-06-21: GraphRAGExecutor.answer(query, k, mode, rerank) -> AnswerResult,
-# evaluate_answers(answer_fn, gold) -> dict). This does NOT run the ablation —
-# it only proves the imports resolve and the executor builds without crashing.
-#
-# BLOCKED on real numbers until data/gold/qa_answers.jsonl exists (Ahmad,
-# Task 4). As of this writing only data/gold/qa_answers.example.jsonl exists,
-# and its rows are literal placeholder text ("<EXAMPLE ROW...>"), not real
-# questions — running the ablation against it would not produce a real result,
-# it would just feed nonsense strings to the executor. Do not run the grid
-# against the .example.jsonl file and report those numbers as real.
+# Real run — data/gold/qa_answers.jsonl now exists (Ahmad, Task 4, 40 real
+# hand-curated arXiv cs.CL questions). This block runs the actual ablation
+# grid against the real GraphRAGExecutor + real evaluate_answers and prints
+# the real table. The notebook (04_graphrag_ablation.ipynb) does the same
+# thing but also renders the NSGA-II Pareto plot — run this file directly
+# for a quick terminal check, run the notebook for the full report artifact.
 # --------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
+    import json
+    from pathlib import Path
+
     from csai415.graphrag import get_default_executor
+    from csai415.eval import evaluate_answers
 
-    print("=== Smoke check: real GraphRAGExecutor builds without crashing ===")
+    gold_path = Path("data/gold/qa_answers.jsonl")
+    gold = [json.loads(line) for line in gold_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    print(f"Loaded {len(gold)} real gold rows from {gold_path}")
+
     executor = get_default_executor()
-    print(f"Executor built: {type(executor).__name__}")
 
-    print("\n=== Smoke check: one real .answer() call ===")
-    result = executor.answer("What pretraining objective does BERT use?", k=5, mode="hybrid", rerank=True)
-    print(f"answer text (truncated): {result.answer[:120]}...")
-    print(f"citations: {len(result.steps) if hasattr(result, 'steps') else 'n/a'}")
+    print("\n=== Running real ablation grid (6 cells: 3 modes x rerank on/off) ===")
+    print("This calls Groq (RAGAS judge) per cell — expect this to take a few minutes")
+    print("under the 30 rpm free-tier cap.\n")
+
+    rows = run_ablation_grid(
+        executor=executor,
+        evaluate_answers=evaluate_answers,
+        gold=gold,
+        k=5,
+    )
+
+    print("\n=== Real ablation results ===")
+    print(ablation_rows_to_markdown(rows))
+
+    # Save the real table to disk so it can be pasted into the D3 report
+    # without retyping it.
+    out_path = Path("reports/D3/ablation_table.md")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(
+        "# T5 — GraphRAG Ablation Grid (real run)\n\n" + ablation_rows_to_markdown(rows) + "\n",
+        encoding="utf-8",
+    )
+    print(f"\nSaved {out_path}")
 
     print(
-        "\nReal ablation grid / NSGA-II search NOT run here — blocked on "
-        "data/gold/qa_answers.jsonl (Ahmad's Task 4). Once that file exists "
-        "with real rows, run notebooks/04_graphrag_ablation.ipynb instead of "
-        "this __main__ block."
+        "\nNSGA-II Pareto search NOT run from this script — run "
+        "notebooks/04_graphrag_ablation.ipynb for the full Pareto front + plot, "
+        "since it also needs WINNING_MODE set from the table above first."
     )
