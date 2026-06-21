@@ -68,7 +68,7 @@ Own everything "graph": link query→nodes, select subgraph, decide how it resha
 
 ### Task 3 — Answerer (zero-shot **+** QLoRA tune)  ·  *D3 GraphRAG 8% + D4 Tuning 5%*  ·  **Owner: WAFIQ**
 The full model lifecycle — two phases, one owner, so the tuned model honors the same citation format with zero back-and-forth.
-- **Files:** `src/csai415/answer.py`; D4 adds `notebooks/05_qlora_tune.ipynb` (Colab Pro) + `reports/D4/tuning_card.md`.
+- **Files:** `src/csai415/answer.py` + `notebooks/04_answerer.ipynb` (Phase A); D4 adds `notebooks/06_qlora_tune.ipynb` (Colab Pro) + `reports/D4/tuning_card.md`.
 - **Phase A (D3, now):** zero-shot Qwen-3B answerer + `[n]` citations + page ranges. Compare numbered-source vs post-hoc attribution; extractive vs abstractive; context-insufficient→refuse. Side-by-side Qwen-3B vs Groq-70B ceiling.
 - **Phase B (D4, after D3 + Ahmad's `qa_train.jsonl` land):** QLoRA tune on **Colab Pro** → merge LoRA → quantize **GGUF 4-bit** → serve via **Ollama** as `qwen2.5-3b-csai415` (drops into the same `answer.py` via `CSAI415_ANSWERER`). Write the **tuning card** (dataset size, epochs, lr, LoRA rank/alpha/dropout, hardware/time, base-model license). *Prep the Colab notebook + GGUF→Ollama path during D3 so the tune is push-button once the baseline + training set exist.*
 - **Done when (D3):** zero-shot answerer shipped + comparison. **Done when (D4):** tuned GGUF served in Ollama + tuning card committed + base-vs-tuned compared via the eval harness.
@@ -81,7 +81,7 @@ Own all the data + the RAGAS harness. Curate BOTH sets in D3 so the training set
 - **Done when:** real RAGAS faithfulness/relevance via Groq (replaces the H0 proxy); both data sets committed + leakage assertion passes; retry/backoff for the 30-rpm cap.
 
 ### Task 5 — Ablation + multi-objective HPO  ·  *D3 Eval 5%*  ·  **Owner: Yehia Noureldin**
-- **Files:** `src/csai415/graphrag_hpo.py`, `notebooks/04_graphrag_ablation.ipynb`. **Build against:** the frozen executor + `evaluate_answers` contracts (deliverable is the *runner* — the integrator runs it on the final pipeline).
+- **Files:** `src/csai415/graphrag_hpo.py`, `notebooks/05_graphrag_ablation.ipynb`. **Build against:** the frozen executor + `evaluate_answers` contracts (deliverable is the *runner* — the integrator runs it on the final pipeline).
 - **Build:** vector vs graph vs hybrid × {rerank on/off}; NSGA-II Pareto of (faithfulness or NDCG@5, latency); knee-point picks (doctor's §7). Leave a hook so the integrator can add the **base-vs-tuned** row in D4.
 - **Done when:** ablation table + Pareto plot + recommended config, demonstrated on the current pipeline.
 

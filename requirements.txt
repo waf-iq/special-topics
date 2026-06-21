@@ -49,8 +49,9 @@ ipykernel>=6.29
 
 # D3 — GraphRAG answering & eval (not imported by the H0 scaffold; needed by D3-4 ceiling + D3-5)
 openai>=1.30          # single OpenAI-compatible client for the answerer (Ollama local + Groq)
-ragas>=0.2            # faithfulness + answer-relevance
-langchain-groq>=0.2   # free Groq judge / answerer-ceiling (llama-3.3-70b-versatile)
+ragas>=0.2,<0.3       # faithfulness + answer-relevance
+langchain-community>=0.3,<0.4  # transitive RAGAS dep — pin to avoid the langchain-core resolution clash (T5 blocker)
+langchain-groq>=0.2,<0.3   # free Groq judge / answerer-ceiling (llama-3.3-70b-versatile)
 langchain-huggingface>=0.1  # HuggingFace embeddings backend for RAGAS
 groq>=0.11
 # Local graded answerer (D4 QLoRA target): Qwen2.5-3B-Instruct via Ollama (external) or transformers (already a dep)
