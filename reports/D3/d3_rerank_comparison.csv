@@ -1,0 +1,13 @@
+section,reranker,pool,ndcg@5,recall@5,ndcg@5_lift,p95_latency_ms
+main,none,30,0.5611,0.6489,0.0,72.0
+main,minilm,30,0.601,0.6739,0.04,508.3
+main,bge,30,0.6361,0.7017,0.075,1692.0
+main,mmr,30,0.4774,0.5017,-0.0837,926.0
+pool_sweep,minilm,10,0.5629,0.61,,175.9
+pool_sweep,minilm,20,0.6082,0.6906,,331.8
+pool_sweep,minilm,30,0.601,0.6739,,448.5
+pool_sweep,minilm,50,0.601,0.6739,,781.1
+pool_sweep,bge,10,0.6235,0.6933,,614.8
+pool_sweep,bge,20,0.6537,0.7433,,1144.9
+pool_sweep,bge,30,0.6361,0.7017,,1925.3
+pool_sweep,bge,50,0.6253,0.685,,3128.8
