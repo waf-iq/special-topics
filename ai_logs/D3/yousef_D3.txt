@@ -1,0 +1,3072 @@
+╭─── Claude Code v2.1.165 ─────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting        │
+│            Welcome back Yousef Alsakkaf!           │ started                 │
+│                                                    │ Run /init to create a … │
+│                      ▗ ▗   ▖ ▖                     │ ─────────────────────── │
+│                                                    │ What's new              │
+│                        ▘▘ ▝▝                       │ Bug fixes and reliabil… │
+│     Opus 4.8 · Claude Max ·                        │ Bug fixes and reliabil… │
+│     yousef.alsakkaf@devflexi.com's Organization    │ Added `fallbackModel` … │
+│                ~/uni/special-topics                │ /release-notes for more │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+
+ ▎ Opus 4.8 is here! Now defaults to high effort · /effort xhigh for your hardest tasks
+
+❯ /effort                                                                       
+  ⎿  Set effort level to ultracode (this session only): xhigh + dynamic workflow
+     orchestration
+
+❯ hey, my tasks as yousef is graph-guided retrieval as it is planned in this    
+  project. probably most of my work is in src/csai415/graph_select.py so let's  
+  start setting up according to the plan and try to commit each step and let me 
+  know what I have to run                                                       
+
+⏺ I'll start by understanding the project plan and current state. Let me scout
+  the codebase first.
+
+⏺ Bash(ls -la && echo "---GIT LOG---" && git log --oneline -20)
+  ⎿  total 120
+     drwxr-xr-x@ 28 yousefalsakkaf  staff    896 Jun 21 09:31 .
+     drwxr-xr-x   5 yousefalsakkaf  staff    160 Jun 21 09:30 ..
+     … +47 lines (ctrl+o to expand)
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Let me read the planning documents and the current state of my target file.
+
+  Read 3 files (ctrl+o to expand)
+
+⏺ Now I understand my task: Task 1 — Graph-guided retrieval
+  (src/csai415/graph_select.py). Let me study the surrounding contracts and the
+  live graph schema before designing.
+
+  Read 4 files (ctrl+o to expand)
+
+⏺ Let me read the Cypher templates, the Neo4j seed script, dependencies, and env
+  config to understand what I can build against.
+
+⏺ Bash(for f in cypher/*.cypher; do echo "=== $f ==="; cat "$f"; echo; done)
+  ⎿  === cypher/01_papers_by_author.cypher ===
+     // Intent: Find all papers written by a given author.
+     // Usage: Replace "Yann LeCun" with any author name.
+     … +67 lines (ctrl+o to expand)
+
+  Read 3 files (ctrl+o to expand)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ let's first do this: Start Docker, seed Neo4j, confirm select_subgraph can    
+  query the live graph                                                          
+
+⏺ Setup work — let me do this directly. First, let me check the compose config
+  and Docker status.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(docker version 2>&1 | head -20; echo "---PS---"; docker ps 2>&1 | head
+      -20)
+  ⎿  Client:
+      Version:           27.4.0
+      API version:       1.47
+     … +10 lines (ctrl+o to expand)
+
+⏺ Docker daemon isn't running. Let me start Docker Desktop and check the data
+  files while it boots.
+
+⏺ Bash(open -a Docker 2>&1; echo "launch requested"; ls -la data/processed/
+      2>&1; echo "---"; ls -la data/ 2>&1)
+  ⎿  launch requested
+     total 96336
+     drwxr-xr-x@ 4 yousefalsakkaf  staff       128 Jun 21 09:31 .
+     … +12 lines (ctrl+o to expand)
+
+⏺ Parquet is present (49MB — the expanded corpus). Now I'll wait for the Docker
+  daemon to come up by polling.
+
+⏺ Bash(for i in $(seq 1 60); do
+        if docker info >/dev/null 2>&1; then…)
+  ⎿  Docker daemon is UP after ~3s
+     Server: 27.4.0
+
+⏺ Docker is up. Now let me bring up the stores and check current state.
+
+⏺ Bash(docker compose up -d neo4j 2>&1 | tail -30)
+  ⎿  Running in the background (↓ to manage)
+⏺ Bash(for i in $(seq 1 80); do
+        status=$(docker inspect -f '{{.State.Health.Status}}' csai415_neo4j
+      2>/dev/null)…)
+  ⎿  Error: Exit code 1
+     (eval):2: read-only variable: status
+
+⏺ status is reserved in zsh. Let me rename the variable.
+
+⏺ Bash(for i in $(seq 1 80); do
+        hstate=$(docker inspect -f '{{.State.Health.Status}}' csai415_neo4j
+      2>/dev/null)…)
+  ⎿  [3s] container not present yet (image may be pulling)
+     [6s] container not present yet (image may be pulling)
+     [9s] container not present yet (image may be pulling)
+     … +7 lines (ctrl+o to expand)
+  ⎿  (timeout 4m 20s)
+
+⏺ Background command "Start the Neo4j container via docker compose" completed (exit code 0)
+
+⏺ Neo4j is healthy and listening on Bolt (7687). Now let me seed the graph from
+  the parquet and verify it loaded.
+
+⏺ Bash(python scripts/seed_neo4j.py --from-parquet data/processed/chunks.parquet
+      --source arxiv 2>&1 | tail -20)
+  ⎿  (eval):1: command not found: python
+
+⏺ Bash(which python3 pip3 2>&1; echo "---"; ls -la .venv venv 2>&1 | head; echo
+      "---py version---"; python3 --version 2>&1; echo "---neo4j installed?---";
+      python3 -c "…)
+  ⎿  Error: Exit code 1
+     /opt/homebrew/bin/python3
+     /opt/homebrew/bin/pip3
+     ---
+     ls: .venv: No such file or directory
+     ls: venv: No such file or directory
+     ---py version---
+     Python 3.14.2
+     ---neo4j installed?---
+     Traceback (most recent call last):
+     … +4 lines (ctrl+o to expand)
+
+⏺ No venv exists and system Python is 3.14 (very new —
+  torch/sentence-transformers may lack wheels). Let me check available Python
+  versions and the project config.
+
+⏺ Bash(echo "--- available pythons ---"; ls /opt/homebrew/bin/python3.*
+      2>/dev/null; ls /usr/local/bin/python3.* 2>/dev/null; which python3.11
+      python3.12 python3.13 2>…)
+  ⎿  --- available pythons ---
+     /opt/homebrew/bin/python3.12
+     /opt/homebrew/bin/python3.12-config
+     … +33 lines (ctrl+o to expand)
+
+⏺ Python 3.12 is available (safe for the full stack). Let me create a project
+  venv and install what's needed to seed + query Neo4j.
+
+⏺ Bash(python3.12 -m venv .venv && .venv/bin/python -m pip install --upgrade pip
+      -q 2>&1 | tail -3 && echo "venv ready:" && .venv/bin/python --version)
+  ⎿  venv ready:
+     Python 3.12.13
+
+⏺ Bash(.venv/bin/python -m pip install -q "neo4j>=5.0" "pandas>=2.1"
+      "pyarrow>=15.0" 2>&1 | tail -5 && echo "--- installed ---" &&
+      .venv/bin/python -c "import neo4j, p…)
+  ⎿  --- installed ---
+     neo4j 6.2.0
+
+⏺ Now let me confirm .venv is gitignored, then seed Neo4j.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python scripts/seed_neo4j.py --from-parquet
+      data/processed/chunks.parquet --source arxiv 2>&1 | tail -20)
+  ⎿  [seed_neo4j] DEV mode: reading papers from data/processed/chunks.parqu
+     et (--from-parquet)
+     [seed_neo4j] papers loaded : 155
+     … +5 lines (ctrl+o to expand)
+
+⏺ Graph seeded: 155 papers, 764 authors, 13 topics. .venv is safely gitignored.
+  Now let me confirm live connectivity and that select_subgraph can be called
+  against the driver. Let me check the existing convention first.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ I'll write a check_graph.py sanity script (matching the check_retriever.py
+  convention) to confirm live connectivity and that select_subgraph runs against
+  the driver.
+
+⏺ Write(check_graph.py)
+  ⎿  Wrote 49 lines to check_graph.py
+         .""Quick sanity check for the live Neo4j graph + select_subgraph
+       2 
+         and seeding:cial-topics root after `docker compose up -d neo4j` 
+       4     .venv/bin/python check_graph.py
+       6 Confirms (1) the driver connects, (2) the seeded graph has the e
+         xpected
+         ) executesshape, and (3) select_subgraph(query, neo4j_driver=...
+       8 against the live graph without crashing (returns a fallback whil
+       9 is in place).
+      10 """
+     … +48 lines (ctrl+o to expand)
+
+⏺ Bash(PYTHONPATH=src .venv/bin/python check_graph.py 2>&1 | tail -30)
+  ⎿  Connected to Neo4j at bolt://localhost:7687
+       Papers=155  Authors=764  Topics=13
+       Sample topics: ['cond-mat.mtrl-sci', 'cs.AI', 'cs.CL', 'cs.CR', 'cs.
+     … +12 lines (ctrl+o to expand)
+
+⏺ Everything works end-to-end. The graph now has 13 topics (multi-topic corpus —
+  matters for my topic-linking later). select_subgraph is reachable against the
+  live driver and correctly returns fallback (the H0 stub).
+
+  Let me make the csai415 package importable without PYTHONPATH (lightweight
+  editable install, no heavy deps), then verify and commit this step.
+
+⏺ Bash(.venv/bin/python -m pip install -e . --no-deps -q 2>&1 | tail -3 && echo
+      "--- editable install done; re-run without PYTHONPATH ---" &&
+      .venv/bin/python check_gr…)  ⎿  --- editable install done; re-run without PYTHONPATH ---
+       q='papers by Yann LeCun'
+         method=fallback  cypher=None  seeds=[]  n_papers=0
+     … +2 lines (ctrl+o to expand)
+
+⏺ Bash(git config user.name; git config user.email; echo "--- status ---"; git
+      status --short)
+  ⎿  Yousef-Alsakkaf
+     yousefalsakkaf98989@gmail.com
+     --- status ---
+     ?? check_graph.py
+
+⏺ Git identity is Yousef-Alsakkaf ✓. Only check_graph.py is new (editable
+  install left no stray tracked files).
+
+  I'm on main. I'll isolate your Task-1 work on a feature branch (matches the
+  brief's "feature branch per member" convention and keeps main clean), then
+  commit this first step there.
+
+⏺ Bash(git checkout -b yousef/graph-guided-retrieval 2>&1
+      git add check_graph.py…)
+  ⎿  Switched to a new branch 'yousef/graph-guided-retrieval'
+     --- committed ---
+     f39e1cf D3 Task1: add check_graph.py — live Neo4j connectivity + selec
+     t_subgraph smoke
+
+⏺ Step 1 is done and committed. Quick check of what LLM backends are available
+  (relevant to the next step — entity linking compares fuzzy vs spaCy vs
+  LLM-NER):
+
+⏺ Bash(echo "GROQ_API_KEY set: $([ -n "$GROQ_API_KEY" ] && echo yes || echo
+      no)"; echo "ollama: $(which ollama 2>/dev/null || echo 'not installed')";
+      [ -f .env ] && ec…)
+  ⎿  Interrupted · What should Claude do instead?
+
+❯ before continuing,, don't make another branch. just commit directly to main   
+
+⏺ Got it — moving that commit onto main and removing the branch.
+
+⏺ Bash(git checkout main 2>&1 && git merge --ff-only
+      yousef/graph-guided-retrieval 2>&1 && git branch -d
+      yousef/graph-guided-retrieval 2>&1 && echo "--- now on ---" &&…)
+  ⎿  Switched to branch 'main'
+     Your branch is up to date with 'origin/main'.
+     Updating 9dac011..f39e1cf
+     … +9 lines (ctrl+o to expand)
+
+⏺ Done — the check_graph.py commit is now on main, no extra branch. All future
+  steps will commit directly to main.
+
+  Step 1 complete ✅ — live graph reachable
+
+  ┌─────────────────────────────┬───────────────────────────────────────────┐
+  │            What             │                  Result                   │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ Docker daemon               │ started                                   │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ Neo4j container             │ csai415_neo4j healthy on                  │
+  │                             │ bolt://localhost:7687 (NEO4J_AUTH=none)   │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │                             │ 155 papers · 764 authors · 13 topics      │
+  │ Graph seeded                │ (cs.CL, cs.AI, cs.LG, cs.CV, cs.IR,       │
+  │                             │ cs.CR, …)                                 │
+  ├─────────────────────────────┼───────────────────────────────────────────┤
+  │ select_subgraph(query,      │ callable against the live driver; returns │
+  │ neo4j_driver=…)             │  fallback (still the H0 stub) ✓           │
+  └─────────────────────────────┴───────────────────────────────────────────┘
+
+  I also created a .venv (Python 3.12 — 3.14 is too new for the torch stack) and
+  did a pip install -e . --no-deps so csai415 imports without PYTHONPATH.
+
+  What you can run to reproduce
+
+  docker compose up -d neo4j
+  .venv/bin/python scripts/seed_neo4j.py --from-parquet
+  data/processed/chunks.parquet --source arxiv
+  .venv/bin/python check_graph.py
+
+  Next step — real select_subgraph
+
+  The interrupted command was just a read-only check of what entity-linking
+  backends are available, because the brief asks me to compare fuzzy vs spaCy vs
+  LLM-NER for query→node linking. Before I build, two things shape the work:
+
+  1. Entity-linking deps — rapidfuzz (fuzzy, lightweight) is the baseline; spaCy
+  needs a model download (~50MB); LLM-NER needs Groq key or local Ollama.
+  2. Which approaches to actually compare in the table (the grade wants a
+  comparison).
+
+  Let me re-run that harmless check and then propose the build plan.
+
+⏺ User declined to answer questions
+  ⎿  · Which entity-linking approaches should I implement and compare for 
+     query→node linking? (Fuzzy (rapidfuzz) / spaCy NER / LLM-NER)
+     · What's the primary graph-guidance policy to optimize (how the subgraph 
+     reshapes retrieval)? I'll still benchmark the others in the comparison 
+     table. (Filter (Recommended) / Booster / Expansion)
+
+⏺ The user wants to clarify before answering. What would you like to clarify
+  about either question?
+
+  To give you context on what I'm asking and why:
+
+  - Entity-linking methods — the brief (Task 1) explicitly says to "Compare: 
+  entity linking (LLM-NER vs spaCy vs fuzzy)" and ship a table with linking
+  precision/latency. So the grade rewards comparing ≥2 approaches. I'm asking
+  which to actually build, since they have different setup costs (fuzzy =
+  free/offline, spaCy = a model download, LLM-NER = needs Groq key or local
+  Ollama).
+  - Guidance policy — the brief says compare "graph-as-filter vs booster vs 
+  expansion" and produce a "guidance policy vs vector-only" table. The executor
+  (graphrag.py) currently hard-codes graph-as-filter for mode="graph". I asked
+  which one to make the primary/recommended pick, but I'll benchmark all three
+  regardless.
+
+  Is your question about the trade-offs between the options, how they map to the
+  grade, what's involved in each, or something else? Let me know what's unclear
+  and I'll reframe.
+
+✻ Churned for 38s
+
+❯ what even is required under my name (yousef) in the plan, implement it        
+
+⏺ You're right — let me stop deliberating and build the required deliverable.
+  Here's exactly what's required under your name (Task 1, D3 GraphRAG 8%):
+
+  1. Real select_subgraph against the live graph — query→node entity linking,
+  Cypher template routing, subgraph→paper_ids.
+  2. Comparison evidence — (a) entity-linking precision/latency: fuzzy vs spaCy
+  vs LLM-NER; (b) guidance policy vs vector-only: filter vs booster vs
+  expansion.
+  3. Graceful no-hit fallback.
+  4. ≥2 commits under your identity + an ai_logs/ entry.
+
+  I'll implement all of it, defaulting sensibly (filter as primary policy, fuzzy
+  as the always-available linker, spaCy + LLM-NER as compared alternatives that
+  degrade gracefully). Let me first learn the live data shape and the project's
+  LLM-backend pattern.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      from neo4j import GraphDatabase…)
+  ⎿  paper_id + title samples:
+       '2605.15198v1'  y=2026  'ATLAS: Agentic or Latent Visual Reasoning?
+     One Word is Enoug'
+     … +31 lines (ctrl+o to expand)
+
+⏺ The data shape is clear and it drives the design:
+  - paper_id = arXiv ids like 2605.15198v1; all papers are year 2026 (so the
+  year-window template is degenerate on this corpus — I'll note that).
+  - Topics: cs.CL dominates (113/155), but cs.CV/cs.LG/cs.CR/cs.IR etc. are
+  selective → topic-as-filter is meaningful for minority topics.
+  - Authors: 1–2 papers each → author linking gives a very tight, high-precision
+  subgraph.
+
+  This means my Cypher router should prioritize author → template 01 (tight)
+  then topic → template 04. Let me install the linking deps in the background
+  while I write the module.
+
+⏺ Bash(.venv/bin/python -m pip install -q rapidfuzz "spacy>=3.7" "openai>=1.30"
+      2>&1 | tail -3 && echo "--- pkgs installed; fetching spaCy small model
+      ---" && .venv/bi…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ The deps are installing in the background. Now I'll write the real
+  graph_select.py. Key design decisions:
+
+  - Frozen contract preserved (SubgraphResult.{seed_nodes, paper_ids, 
+  cypher_used, method}), with backward-compatible reporting fields added
+  (linked, latency_ms).
+  - All heavy deps lazy-imported so the module import stays cheap and the
+  contract test stays green with no extra deps.
+  - Three linkers (fuzzy / spaCy / LLM-NER) → shared Cypher router → paper_ids.
+  - Three guidance policies (apply_guidance: filter / booster / expansion) live
+  in my file so the integrator can wire them without me touching graphrag.py.
+
+⏺ Write(src/csai415/graph_select.py)
+  ⎿  Added 530 lines, removed 20 lines
+        1 -"""D3-1 — Entity linking → subgraph selection. See briefs/D3_T
+          -ASKS.md (Task D3-1).                                          
+        1 +"""Task 1 (D3 GraphRAG, 8%) — Graph-guided retrieval. See brie
+          +fs/D3_D4_TASKS.md.                                            
+        2  
+        3 -Owner: Task D3-1. Given a query, decide which Neo4j nodes/path
+          -s seed the subgraph                                           
+        4 -the GraphRAG executor expands from.                           
+        3 +Owner: Yousef Alsakkaf. Given a query, decide which Neo4j node
+          +s seed the subgraph and                                       
+        4 +return the ``paper_ids`` the GraphRAG executor filters/boosts/
+          +expands toward.                                               
+        5  
+        6 -**The CONTRACT is frozen at H0** — ``SubgraphResult`` and the 
+          -``select_subgraph``                                           
+        7 -signature. The body is an H0 stub the owner replaces *after* c
+          -omparing the                                                  
+        8 -approaches in the task doc (LLM entity extraction vs spaCy NER
+          - vs fuzzy match;                                              
+        9 -which of the 5 D2 Cypher templates to fire; 1-hop vs 2-hop bre
+          -adth). When no graph                                          
+       10 -node matches, return a ``fallback`` result with empty ``paper_
+          -ids`` — the executor                                          
+       11 -degrades to pure vector/hybrid retrieval.                     
+        6 +Pipeline                                                      
+        7 +--------                                                      
+        8 +    query                                                     
+        9 +      → entity linking   (query spans → Author / Topic graph n
+          +odes)   [fuzzy | spacy | llm]                                 
+       10 +      → Cypher routing   (which D2 template fires, given the l
+          +inked node types)                                             
+       11 +      → subgraph         (SubgraphResult.paper_ids the executo
+          +r consumes)                                                   
+       12 +                                                              
+       13 +The **contract is frozen at H0** — ``SubgraphResult`` (its fou
+          +r core fields) and the                                        
+       14 +``select_subgraph(query, *, neo4j_driver=None) -> SubgraphResu
+          +lt`` signature. Extra                                         
+       15 +reporting fields on ``SubgraphResult`` carry defaults, so the 
+          +executor and the contract                                     
+       16 +test see the same shape. When nothing links (or no driver is g
+          +iven) we return a                                             
+       17 +``method="fallback"`` result with empty ``paper_ids`` and the 
+          +executor degrades to pure                                     
+       18 +vector/hybrid retrieval.                                      
+       19 +                                                              
+       20 +Three things this module compares (the Task-1 deliverable tabl
+          +es live in                                                    
+       21 +``notebooks``/``reports``; the implementations they exercise a
+          +re here):                                                     
+       22 +                                                              
+       23 +1. **Entity linking** — ``link_fuzzy`` (rapidfuzz, offline, th
+          +e shipped default) vs                                         
+       24 +   ``link_spacy`` (PERSON NER → author link) vs ``link_llm`` (
+          +the env-configured SLM/Groq                                   
+       25 +   backend extracts entities, then we link them to real nodes)
+          +. All three feed one router.                                  
+       26 +2. **Cypher routing** — author → template 01; topic → template
+          + 04; author∩topic →                                           
+       27 +   intersection; collaboration intent → template 02; two topic
+          +s → template 05. The corpus                                   
+       28 +   is all year 2026, so template 03 (year window) is degenerat
+          +e and intentionally unused.                                   
+       29 +3. **Guidance policy** — ``apply_guidance`` implements graph-a
+          +s-**filter** / **booster** /                                  
+       30 +   **expansion** so the integrator can wire any policy into th
+          +e executor without editing it.                                
+       31 +                                                              
+       32 +Heavy deps (rapidfuzz / spacy / openai) are imported lazily in
+          +side the functions that need                                  
+       33 +them, so ``import csai415.graph_select`` stays cheap and the n
+          +o-dep contract test stays green.                              
+       34  """
+       35  
+       36  from __future__ import annotations
+       37  
+       38 +import os                                                     
+       39 +import re                                                     
+       40 +import time                                                   
+       41  from dataclasses import dataclass, field
+       42  
+       43 +# --- Topic vocabulary ---------------------------------------
+          +---------------------------                                   
+       44 +# Natural-language phrase → arXiv category code. Only codes ac
+          +tually present in the seeded                                  
+       45 +# graph end up linked (we intersect against the live Topic set
+          +), so listing extra synonyms                                  
+       46 +# is harmless. Keys are matched case-insensitively on word bou
+          +ndaries.                                                      
+       47 +TOPIC_SYNONYMS: dict[str, str] = {                            
+       48 +    "computational linguistics": "cs.CL",                     
+       49 +    "natural language processing": "cs.CL",                   
+       50 +    "nlp": "cs.CL",                                           
+       51 +    "language model": "cs.CL",                                
+       52 +    "language models": "cs.CL",                               
+       53 +    "text": "cs.CL",                                          
+       54 +    "computer vision": "cs.CV",                               
+       55 +    "vision": "cs.CV",                                        
+       56 +    "image": "cs.CV",                                         
+       57 +    "visual": "cs.CV",                                        
+       58 +    "machine learning": "cs.LG",                              
+       59 +    "deep learning": "cs.LG",                                 
+       60 +    "artificial intelligence": "cs.AI",                       
+       61 +    "agent": "cs.AI",                                         
+       62 +    "agents": "cs.AI",                                        
+       63 +    "security": "cs.CR",                                      
+       64 +    "cryptography": "cs.CR",                                  
+       65 +    "adversarial": "cs.CR",                                   
+       66 +    "information retrieval": "cs.IR",                         
+       67 +    "retrieval": "cs.IR",                                     
+       68 +    "search": "cs.IR",                                        
+       69 +    "recommendation": "cs.IR",                                
+       70 +    "software engineering": "cs.SE",                          
+       71 +    "code": "cs.SE",                                          
+       72 +    "human-computer interaction": "cs.HC",                    
+       73 +    "hci": "cs.HC",                                           
+       74 +    "game theory": "cs.GT",                                   
+       75 +    "multimedia": "cs.MM",                                    
+       76 +    "speech": "eess.AS",                                      
+       77 +    "audio": "eess.AS",                                       
+       78 +    "computers and society": "cs.CY",                         
+       79 +    "society": "cs.CY",                                       
+       80 +    "materials science": "cond-mat.mtrl-sci",                 
+       81 +}                                                             
+       82  
+       83 +# Question words / common capitalized openers that must never 
+          +be taken for an author span.                                  
+       84 +_STOP_SPANS = {                                               
+       85 +    "What", "Who", "Which", "When", "Where", "Why", "How", "Is
+          +", "Are", "Do", "Does",                                       
+       86 +    "Can", "Could", "Should", "The", "A", "An", "This", "That"
+          +, "These", "Those",                                           
+       87 +}                                                             
+       88 +                                                              
+       89 +_LINK_METHODS = ("fuzzy", "spacy", "llm")                     
+       90 +                                                              
+       91 +                                                              
+       92 +# --- Data model ---------------------------------------------
+          +---------------------------                                   
+       93  @dataclass
+       94 +class LinkedEntity:                                           
+       95 +    """One query span resolved to a graph node."""            
+       96 +                                                              
+       97 +    name: str          # canonical graph value: an Author.name
+          + or a Topic.name (category code)                              
+       98 +    label: str         # "Author" | "Topic"                   
+       99 +    score: float       # link confidence in [0, 1]            
+      100 +    span: str = ""     # the query substring that produced the
+          + match                                                        
+      101 +                                                              
+      102 +                                                              
+      103 +@dataclass                                                    
+      104  class SubgraphResult:
+      105      """The subgraph chosen for a query.
+      106  
+       23 -    paper_ids is the contract the executor consumes: the set o
+          -f papers whose chunks                                         
+       24 -    the graph-guided stage will filter/boost/expand toward. Em
+          -pty ⇒ no graph hit.                                           
+      107 +    ``paper_ids`` is the contract the executor consumes: paper
+          +s whose chunks the graph                                      
+      108 +    stage filters/boosts/expands toward. Empty ⇒ no graph hit 
+          +(fallback). The four core                                     
+      109 +    fields are the frozen H0 contract; the rest are reporting 
+          +extras with defaults.                                         
+      110      """
+      111  
+       27 -    seed_nodes: list[str] = field(default_factory=list)  # mat
+          -ched Author/Topic/Paper names                                 
+       28 -    paper_ids: list[str] = field(default_factory=list)   # pap
+          -ers in the selected subgraph                                  
+       29 -    cypher_used: str | None = None                       # whi
+          -ch template fired (None if fallback)                          
+       30 -    method: str = "fallback"                             # "fu
+          -zzy" | "ner" | "llm" | "fallback"                             
+      112 +    seed_nodes: list[str] = field(default_factory=list)   # ma
+          +tched Author/Topic names                                      
+      113 +    paper_ids: list[str] = field(default_factory=list)    # pa
+          +pers in the selected subgraph                                 
+      114 +    cypher_used: str | None = None                        # te
+          +mplate id that fired (None ⇒ fallback)                        
+      115 +    method: str = "fallback"                              # "f
+          +uzzy" | "spacy" | "llm" | "fallback"                          
+      116 +    # --- reporting extras (do not affect the executor contrac
+          +t) ---                                                        
+      117 +    linked: list[LinkedEntity] = field(default_factory=list)  
+      118 +    latency_ms: float = 0.0                                   
+      119  
+      120  
+       33 -def select_subgraph(query: str, *, neo4j_driver=None, **kwargs
+          -) -> SubgraphResult:                                          
+      121 +class GraphUnavailable(RuntimeError):                         
+      122 +    """Raised internally when the graph cannot be queried; cal
+          +lers degrade to fallback."""                                  
+      123 +                                                              
+      124 +                                                              
+      125 +class BackendUnavailable(RuntimeError):                       
+      126 +    """Raised by ``link_llm`` when no CSAI415_ANSWERER backend
+          + is configured."""                                            
+      127 +                                                              
+      128 +                                                              
+      129 +# --- Graph index (cached author/topic vocabulary) -----------
+          +---------------------------                                   
+      130 +class GraphIndex:                                             
+      131 +    """In-memory vocabulary pulled once from the graph: author
+          + names + topic codes.                                         
+      132 +                                                              
+      133 +    Entity linking matches query spans against these lists rat
+          +her than hitting Neo4j per                                    
+      134 +    span, so a query costs one fuzzy sweep (~hundreds of names
+          +) + one Cypher round-trip.                                    
+      135 +    """                                                       
+      136 +                                                              
+      137 +    def __init__(self, authors: list[str], topics: list[str]):
+      138 +        self.authors = list(authors)                          
+      139 +        self.topics = list(topics)                            
+      140 +        self._topics_lower = {t.lower(): t for t in self.topic
+          +s}                                                            
+      141 +                                                              
+      142 +    @classmethod                                              
+      143 +    def from_driver(cls, driver) -> "GraphIndex":             
+      144 +        with driver.session() as s:                           
+      145 +            authors = [r["name"] for r in s.run("MATCH (a:Auth
+          +or) RETURN a.name AS name")]                                  
+      146 +            topics = [r["name"] for r in s.run("MATCH (t:Topic
+          +) RETURN t.name AS name")]                                    
+      147 +        return cls(authors, topics)                           
+      148 +                                                              
+      149 +                                                              
+      150 +# Cache GraphIndex per driver object so repeated calls (eval l
+          +oops, the executor) reuse it.                                 
+      151 +_INDEX_CACHE: dict[int, GraphIndex] = {}                      
+      152 +                                                              
+      153 +                                                              
+      154 +def get_index(driver) -> GraphIndex:                          
+      155 +    key = id(driver)                                          
+      156 +    idx = _INDEX_CACHE.get(key)                               
+      157 +    if idx is None:                                           
+      158 +        idx = GraphIndex.from_driver(driver)                  
+      159 +        _INDEX_CACHE[key] = idx                               
+      160 +    return idx                                                
+      161 +                                                              
+      162 +                                                              
+      163 +def clear_index_cache() -> None:                              
+      164 +    """Drop the cached vocabularies (call after reseeding the 
+          +graph in a long session)."""                                  
+      165 +    _INDEX_CACHE.clear()                                      
+      166 +                                                              
+      167 +                                                              
+      168 +# --- Span extraction ----------------------------------------
+          +---------------------------                                   
+      169 +def _name_spans(query: str) -> list[str]:                     
+      170 +    """Candidate author-name spans: runs of Capitalized tokens
+          +, sentence openers dropped.                                   
+      171 +                                                              
+      172 +    Author names are multi-token Capitalized runs ("Yann LeCun
+          +", "Jianing Hao"). We also                                    
+      173 +    keep single Capitalized tokens as weak candidates — the fu
+          +zzy threshold rejects the                                     
+      174 +    ones that are not real names, while a lone surname can sti
+          +ll link.                                                      
+      175 +    """                                                       
+      176 +    runs = re.findall(r"\b([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z
+          +.'-]+)*)\b", query)                                           
+      177 +    spans: list[str] = []                                     
+      178 +    for run in runs:                                          
+      179 +        toks = run.split()                                    
+      180 +        # Drop a leading question/stop word ("What has Yann ..
+          +." → "Yann ...").                                             
+      181 +        if toks and toks[0] in _STOP_SPANS:                   
+      182 +            toks = toks[1:]                                   
+      183 +        if not toks:                                          
+      184 +            continue                                          
+      185 +        cleaned = " ".join(toks)                              
+      186 +        spans.append(cleaned)                                 
+      187 +    return spans                                              
+      188 +                                                              
+      189 +                                                              
+      190 +# --- Topic linking (shared by every method) -----------------
+          +---------------------------                                   
+      191 +def _link_topics(text: str, index: GraphIndex) -> list[LinkedE
+          +ntity]:                                                       
+      192 +    """Link a query to Topic nodes via explicit category codes
+          + + the synonym table."""                                      
+      193 +    text_l = text.lower()                                     
+      194 +    best: dict[str, LinkedEntity] = {}                        
+      195 +                                                              
+      196 +    def consider(code: str, score: float, span: str) -> None: 
+      197 +        if code not in index._topics_lower.values() and code n
+          +ot in index.topics:                                           
+      198 +            return                                            
+      199 +        prev = best.get(code)                                 
+      200 +        if prev is None or score > prev.score:                
+      201 +            best[code] = LinkedEntity(code, "Topic", score, sp
+          +an)                                                           
+      202 +                                                              
+      203 +    # Explicit category code, e.g. "cs.CL" written verbatim in
+          + the query.                                                   
+      204 +    for code in index.topics:                                 
+      205 +        if code.lower() in text_l:                            
+      206 +            consider(code, 1.0, code)                         
+      207 +    # Synonym phrases on word boundaries.                     
+      208 +    for phrase, code in TOPIC_SYNONYMS.items():               
+      209 +        if re.search(rf"\b{re.escape(phrase)}\b", text_l):    
+      210 +            consider(code, 0.9, phrase)                       
+      211 +    return list(best.values())                                
+      212 +                                                              
+      213 +                                                              
+      214 +# --- Author linking, per method -----------------------------
+          +---------------------------                                   
+      215 +def _fuzzy_link_authors(spans: list[str], index: GraphIndex, t
+          +hreshold: int) -> list[LinkedEntity]:                         
+      216 +    """Fuzzy-match candidate spans against the author vocabula
+          +ry (rapidfuzz WRatio)."""                                     
+      217 +    if not spans or not index.authors:                        
+      218 +        return []                                             
+      219 +    from rapidfuzz import fuzz, process                       
+      220 +                                                              
+      221 +    out: dict[str, LinkedEntity] = {}                         
+      222 +    for span in spans:                                        
+      223 +        match = process.extractOne(span, index.authors, scorer
+          +=fuzz.WRatio)                                                 
+      224 +        if match and match[1] >= threshold:                   
+      225 +            name, score = match[0], match[1]                  
+      226 +            prev = out.get(name)                              
+      227 +            if prev is None or score > prev.score * 100:      
+      228 +                out[name] = LinkedEntity(name, "Author", score
+          + / 100.0, span)                                               
+      229 +    return list(out.values())                                 
+      230 +                                                              
+      231 +                                                              
+      232 +def link_fuzzy(query: str, index: GraphIndex, *, author_thresh
+          +old: int = 88) -> list[LinkedEntity]:                         
+      233 +    """Offline baseline + shipped default: rapidfuzz on Capita
+          +lized spans + topic synonyms."""                              
+      234 +    authors = _fuzzy_link_authors(_name_spans(query), index, a
+          +uthor_threshold)                                              
+      235 +    return authors + _link_topics(query, index)               
+      236 +                                                              
+      237 +                                                              
+      238 +_SPACY_NLP = None                                             
+      239 +                                                              
+      240 +                                                              
+      241 +def _get_spacy():                                             
+      242 +    global _SPACY_NLP                                         
+      243 +    if _SPACY_NLP is None:                                    
+      244 +        import spacy                                          
+      245 +                                                              
+      246 +        _SPACY_NLP = spacy.load("en_core_web_sm", disable=["le
+          +mmatizer"])                                                   
+      247 +    return _SPACY_NLP                                         
+      248 +                                                              
+      249 +                                                              
+      250 +def link_spacy(query: str, index: GraphIndex, *, author_thresh
+          +old: int = 85) -> list[LinkedEntity]:                         
+      251 +    """spaCy PERSON entities → fuzzy author link; topics via t
+          +he shared synonym table."""                                   
+      252 +    doc = _get_spacy()(query)                                 
+      253 +    person_spans = [ent.text for ent in doc.ents if ent.label_
+          + == "PERSON"]                                                 
+      254 +    authors = _fuzzy_link_authors(person_spans, index, author_
+          +threshold)                                                    
+      255 +    return authors + _link_topics(query, index)               
+      256 +                                                              
+      257 +                                                              
+      258 +_LLM_PROMPT = (                                               
+      259 +    "Extract named entities from the user's question about a c
+          +orpus of arXiv CS papers. "                                   
+      260 +    "Return ONLY a compact JSON object with two keys: "       
+      261 +    '"authors" (list of person names mentioned) and '         
+      262 +    '"topics" (list of research areas mentioned, e.g. "natural
+          + language processing"). '                                     
+      263 +    "Use [] when none are present. No prose, JSON only."      
+      264 +)                                                             
+      265 +                                                              
+      266 +                                                              
+      267 +def link_llm(query: str, index: GraphIndex, *, author_threshol
+          +d: int = 85) -> list[LinkedEntity]:                           
+      268 +    """LLM-NER: the configured backend extracts entity strings
+          +; we link them to real nodes.                                 
+      269 +                                                              
+      270 +    Reuses ``answer.resolve_backend`` (the OpenAI-compatible O
+          +llama/Groq client) so the                                     
+      271 +    same ``CSAI415_ANSWERER`` env drives linking and answering
+          +. The model only proposes raw                                 
+      272 +    strings — they are still fuzzy-linked to the actual graph 
+          +vocabulary, so an LLM that                                    
+      273 +    hallucinates a name simply fails to link rather than inven
+          +ting a node.                                                  
+      274 +    """                                                       
+      275 +    from csai415.answer import resolve_backend                
+      276 +                                                              
+      277 +    backend = resolve_backend()                               
+      278 +    if backend is None:                                       
+      279 +        raise BackendUnavailable("CSAI415_ANSWERER is not set 
+          +— no LLM backend for link_llm")                               
+      280 +    client, model, _kind = backend                            
+      281 +                                                              
+      282 +    resp = client.chat.completions.create(                    
+      283 +        model=model,                                          
+      284 +        messages=[{"role": "system", "content": _LLM_PROMPT}, 
+      285 +                  {"role": "user", "content": query}],        
+      286 +        temperature=0.0,                                      
+      287 +        max_tokens=200,                                       
+      288 +    )                                                         
+      289 +    raw = (resp.choices[0].message.content or "").strip()     
+      290 +    authors_raw, topics_raw = _parse_llm_entities(raw)        
+      291 +                                                              
+      292 +    authors = _fuzzy_link_authors(authors_raw, index, author_t
+          +hreshold)                                                     
+      293 +    # Topic strings: run each back through the synonym/code ma
+          +tcher.                                                        
+      294 +    topics: dict[str, LinkedEntity] = {}                      
+      295 +    for t in topics_raw + [query]:  # include the query so exp
+          +licit codes still catch                                       
+      296 +        for e in _link_topics(t, index):                      
+      297 +            prev = topics.get(e.name)                         
+      298 +            if prev is None or e.score > prev.score:          
+      299 +                topics[e.name] = e                            
+      300 +    return authors + list(topics.values())                    
+      301 +                                                              
+      302 +                                                              
+      303 +def _parse_llm_entities(raw: str) -> tuple[list[str], list[str
+          +]]:                                                           
+      304 +    """Tolerant JSON-ish parse of the LLM's entity reply → (au
+          +thors, topics)."""                                            
+      305 +    import json                                               
+      306 +                                                              
+      307 +    m = re.search(r"\{.*\}", raw, re.DOTALL)                  
+      308 +    if not m:                                                 
+      309 +        return [], []                                         
+      310 +    try:                                                      
+      311 +        obj = json.loads(m.group(0))                          
+      312 +    except (ValueError, TypeError):                           
+      313 +        return [], []                                         
+      314 +    authors = [str(x).strip() for x in (obj.get("authors") or 
+          +[]) if str(x).strip()]                                        
+      315 +    topics = [str(x).strip() for x in (obj.get("topics") or []
+          +) if str(x).strip()]                                          
+      316 +    return authors, topics                                    
+      317 +                                                              
+      318 +                                                              
+      319 +_LINKERS = {"fuzzy": link_fuzzy, "spacy": link_spacy, "llm": l
+          +ink_llm}                                                      
+      320 +                                                              
+      321 +                                                              
+      322 +def link_entities(query: str, index: GraphIndex, method: str =
+          + "fuzzy") -> list[LinkedEntity]:                              
+      323 +    """Dispatch to a linker by name. ``method`` ∈ {"fuzzy", "s
+          +pacy", "llm"}."""                                             
+      324 +    try:                                                      
+      325 +        linker = _LINKERS[method]                             
+      326 +    except KeyError:                                          
+      327 +        raise ValueError(f"unknown link method {method!r}; exp
+          +ected one of {_LINK_METHODS}")                                
+      328 +    return linker(query, index)                               
+      329 +                                                              
+      330 +                                                              
+      331 +# --- Cypher routing -----------------------------------------
+          +---------------------------                                   
+      332 +# Parameterized versions of the D2 templates in cypher/. Each 
+          +returns paper_ids for the                                     
+      333 +# selected subgraph. ``cypher_used`` records which template fi
+          +red (the routing comparison).                                 
+      334 +_COLLAB_RE = re.compile(r"\b(co-?author|collaborat|work(?:s|ed
+          +|ing)?\s+with|team\s+up)\b", re.I)                            
+      335 +                                                              
+      336 +                                                              
+      337 +def _run_paper_query(driver, cypher: str, **params) -> list[st
+          +r]:                                                           
+      338 +    with driver.session() as s:                               
+      339 +        return [r["pid"] for r in s.run(cypher, **params)]    
+      340 +                                                              
+      341 +                                                              
+      342 +def route_subgraph(                                           
+      343 +    linked: list[LinkedEntity], driver, query: str, *, max_pap
+          +ers: int = 60                                                 
+      344 +) -> tuple[list[str], str | None, list[str]]:                 
+      345 +    """Pick the Cypher template from the linked node types; re
+          +turn (paper_ids, template, seeds).                            
+      346 +                                                              
+      347 +    Priority: author∩topic (most precise) → collaboration → tw
+          +o-topic intersection →                                        
+      348 +    author → topic. Returns ([], None, []) when nothing routes
+          + (caller → fallback).                                         
+      349 +    """                                                       
+      350 +    authors = [e.name for e in linked if e.label == "Author"] 
+      351 +    topics = [e.name for e in linked if e.label == "Topic"]   
+      352 +                                                              
+      353 +    # author ∩ topic — the author's papers within that topic (
+          +tightest non-empty subgraph).                                 
+      354 +    if authors and topics:                                    
+      355 +        pids = _run_paper_query(                              
+      356 +            driver,                                           
+      357 +            "MATCH (a:Author)-[:WROTE]->(p:Paper)-[:ABOUT]->(t
+          +:Topic) "                                                     
+      358 +            "WHERE a.name IN $names AND t.name IN $codes "    
+      359 +            "RETURN DISTINCT p.paper_id AS pid LIMIT $lim",   
+      360 +            names=authors, codes=topics, lim=max_papers,      
+      361 +        )                                                     
+      362 +        if pids:                                              
+      363 +            return pids, "01+04_author_topic_intersect", autho
+          +rs + topics                                                   
+      364 +        # fall through: intersection empty → try the broader a
+          +uthor route below.                                            
+      365 +                                                              
+      366 +    # collaboration intent + an author → template 02 (author's
+          + papers + co-authors' papers).                                
+      367 +    if authors and _COLLAB_RE.search(query):                  
+      368 +        pids = _run_paper_query(                              
+      369 +            driver,                                           
+      370 +            "MATCH (a:Author)-[:WROTE]->(p:Paper) WHERE a.name
+          + IN $names "                                                  
+      371 +            "WITH collect(DISTINCT p) AS own, a "             
+      372 +            "OPTIONAL MATCH (a)-[:WROTE]->(:Paper)<-[:WROTE]-(
+          +co:Author)-[:WROTE]->(cp:Paper) "                             
+      373 +            "WITH own + collect(DISTINCT cp) AS papers "      
+      374 +            "UNWIND papers AS p RETURN DISTINCT p.paper_id AS 
+          +pid LIMIT $lim",                                              
+      375 +            names=authors, lim=max_papers,                    
+      376 +        )                                                     
+      377 +        if pids:                                              
+      378 +            return pids, "02_top_coauthors", authors          
+      379 +                                                              
+      380 +    # two distinct topics → template 05 (papers about either; 
+          +the cross-topic neighborhood).                                
+      381 +    if len(topics) >= 2:                                      
+      382 +        pids = _run_paper_query(                              
+      383 +            driver,                                           
+      384 +            "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name 
+          +IN $codes "                                                   
+      385 +            "RETURN DISTINCT p.paper_id AS pid LIMIT $lim",   
+      386 +            codes=topics, lim=max_papers,                     
+      387 +        )                                                     
+      388 +        if pids:                                              
+      389 +            return pids, "05_authors_on_both_topics", topics  
+      390 +                                                              
+      391 +    # single author → template 01 (papers by author).         
+      392 +    if authors:                                               
+      393 +        pids = _run_paper_query(                              
+      394 +            driver,                                           
+      395 +            "MATCH (a:Author)-[:WROTE]->(p:Paper) WHERE a.name
+          + IN $names "                                                  
+      396 +            "RETURN DISTINCT p.paper_id AS pid LIMIT $lim",   
+      397 +            names=authors, lim=max_papers,                    
+      398 +        )                                                     
+      399 +        if pids:                                              
+      400 +            return pids, "01_papers_by_author", authors       
+      401 +                                                              
+      402 +    # single topic → template 04 (papers about topic).        
+      403 +    if topics:                                                
+      404 +        pids = _run_paper_query(                              
+      405 +            driver,                                           
+      406 +            "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name 
+          +IN $codes "                                                   
+      407 +            "RETURN DISTINCT p.paper_id AS pid LIMIT $lim",   
+      408 +            codes=topics, lim=max_papers,                     
+      409 +        )                                                     
+      410 +        if pids:                                              
+      411 +            return pids, "04_papers_and_authors_by_topic", top
+          +ics                                                           
+      412 +                                                              
+      413 +    return [], None, []                                       
+      414 +                                                              
+      415 +                                                              
+      416 +# --- Public contract ----------------------------------------
+          +---------------------------                                   
+      417 +def select_subgraph(                                          
+      418 +    query: str,                                               
+      419 +    *,                                                        
+      420 +    neo4j_driver=None,                                        
+      421 +    method: str = "auto",                                     
+      422 +    max_papers: int = 60,                                     
+      423 +    **kwargs,                                                 
+      424 +) -> SubgraphResult:                                          
+      425      """Map ``query`` → graph nodes → a subgraph of relevant ``
+           paper_ids``.
+      426  
+       36 -    H0 STUB: always returns an empty ``fallback`` so the execu
+          -tor runs without Neo4j.                                       
+       37 -    D3-1 owner implements real entity linking + Cypher routing
+          - and returns populated                                        
+       38 -    ``paper_ids`` / ``cypher_used`` / ``method``.             
+      427 +    ``method`` selects the linker: "fuzzy" | "spacy" | "llm", 
+          +or "auto" (the shipped                                        
+      428 +    default → fuzzy: offline, fast, deterministic; overridable
+          + via ``CSAI415_GRAPH_LINK``).                                 
+      429 +    Returns a ``method="fallback"`` result with empty ``paper_
+          +ids`` whenever there is no                                    
+      430 +    driver, no link, or the graph errors — so the executor alw
+          +ays degrades gracefully.                                      
+      431      """
+       40 -    return SubgraphResult(method="fallback")                  
+      432 +    t0 = time.perf_counter()                                  
+      433 +                                                              
+      434 +    def fallback(reason_method: str = "fallback") -> SubgraphR
+          +esult:                                                        
+      435 +        return SubgraphResult(method=reason_method, latency_ms
+          +=(time.perf_counter() - t0) * 1000.0)                         
+      436 +                                                              
+      437 +    if neo4j_driver is None:                                  
+      438 +        return fallback()                                     
+      439 +                                                              
+      440 +    chosen = method                                           
+      441 +    if chosen == "auto":                                      
+      442 +        chosen = (os.getenv("CSAI415_GRAPH_LINK") or "fuzzy").
+          +strip().lower()                                               
+      443 +                                                              
+      444 +    try:                                                      
+      445 +        index = get_index(neo4j_driver)                       
+      446 +        linked = link_entities(query, index, chosen)          
+      447 +    except BackendUnavailable:                                
+      448 +        # LLM linker requested but no backend → degrade to the
+          + offline fuzzy linker.                                        
+      449 +        chosen = "fuzzy"                                      
+      450 +        try:                                                  
+      451 +            index = get_index(neo4j_driver)                   
+      452 +            linked = link_entities(query, index, "fuzzy")     
+      453 +        except Exception:                                     
+      454 +            return fallback()                                 
+      455 +    except Exception:                                         
+      456 +        return fallback()                                     
+      457 +                                                              
+      458 +    if not linked:                                            
+      459 +        return fallback()                                     
+      460 +                                                              
+      461 +    try:                                                      
+      462 +        paper_ids, cypher_used, seeds = route_subgraph(       
+      463 +            linked, neo4j_driver, query, max_papers=max_papers
+      464 +        )                                                     
+      465 +    except Exception:                                         
+      466 +        return fallback()                                     
+      467 +                                                              
+      468 +    if not paper_ids:                                         
+      469 +        # Linked something but the graph returned no papers — 
+          +still a graceful no-hit.                                      
+      470 +        return SubgraphResult(                                
+      471 +            seed_nodes=[e.name for e in linked],              
+      472 +            method=chosen,                                    
+      473 +            linked=linked,                                    
+      474 +            latency_ms=(time.perf_counter() - t0) * 1000.0,   
+      475 +        )                                                     
+      476 +                                                              
+      477 +    return SubgraphResult(                                    
+      478 +        seed_nodes=seeds,                                     
+      479 +        paper_ids=paper_ids,                                  
+      480 +        cypher_used=cypher_used,                              
+      481 +        method=chosen,                                        
+      482 +        linked=linked,                                        
+      483 +        latency_ms=(time.perf_counter() - t0) * 1000.0,       
+      484 +    )                                                         
+      485 +                                                              
+      486 +                                                              
+      487 +# --- Guidance policy: how the subgraph reshapes retrieval ---
+          +----------------------------                                  
+      488 +def apply_guidance(                                           
+      489 +    ranked_ids: list[str],                                    
+      490 +    subgraph: SubgraphResult,                                 
+      491 +    *,                                                        
+      492 +    paper_of,                                                 
+      493 +    policy: str = "filter",                                   
+      494 +    scores: dict[str, float] | None = None,                   
+      495 +    chunks_by_paper: dict[str, list[str]] | None = None,      
+      496 +    boost: float = 0.25,                                      
+      497 +    max_expand: int = 10,                                     
+      498 +) -> list[str]:                                               
+      499 +    """Reshape a candidate ranking using the subgraph. Returns
+          + a reordered ``chunk_id`` list.                               
+      500 +                                                              
+      501 +    Policies (the Task-1 comparison — graph-as-…):            
+      502 +      * ``"filter"``   keep only candidates whose paper is in 
+          +the subgraph; if that empties                                 
+      503 +                       the pool, return the original ranking (
+          +graceful no-hit, never worse                                  
+      504 +                       than vector-only).                     
+      505 +      * ``"booster"``  additively boost in-subgraph candidates
+          +' scores and re-sort — softer                                 
+      506 +                       than filtering, protects recall (needs 
+          +``scores``; falls back to a                                   
+      507 +                       rank-based proxy when not given).      
+      508 +      * ``"expansion"`` keep the ranking, then append chunks f
+          +rom subgraph papers that                                      
+      509 +                        vector search missed (needs ``chunks_b
+          +y_paper``), capped at                                         
+      510 +                        ``max_expand`` — graph-first recall.  
+      511 +                                                              
+      512 +    ``paper_of(chunk_id) -> paper_id`` maps a candidate to its
+          + paper. With an empty/fallback                                
+      513 +    subgraph every policy is a no-op (returns ``ranked_ids`` u
+          +nchanged).                                                    
+      514 +    """                                                       
+      515 +    wanted = set(subgraph.paper_ids)                          
+      516 +    if not wanted:                                            
+      517 +        return list(ranked_ids)                               
+      518 +                                                              
+      519 +    if policy == "filter":                                    
+      520 +        kept = [cid for cid in ranked_ids if paper_of(cid) in 
+          +wanted]                                                       
+      521 +        return kept if kept else list(ranked_ids)             
+      522 +                                                              
+      523 +    if policy == "booster":                                   
+      524 +        n = len(ranked_ids)                                   
+      525 +        # Rank-based proxy score when explicit scores aren't s
+          +upplied: 1.0 .. ~0 over the pool.                             
+      526 +        base = scores or {cid: (n - i) / n for i, cid in enume
+          +rate(ranked_ids)}                                             
+      527 +        adjusted = {                                          
+      528 +            cid: base.get(cid, 0.0) + (boost if paper_of(cid) 
+          +in wanted else 0.0)                                           
+      529 +            for cid in ranked_ids                             
+      530 +        }                                                     
+      531 +        return sorted(ranked_ids, key=lambda cid: adjusted[cid
+          +], reverse=True)                                              
+      532 +                                                              
+      533 +    if policy == "expansion":                                 
+      534 +        out = list(ranked_ids)                                
+      535 +        present = set(out)                                    
+      536 +        if chunks_by_paper:                                   
+      537 +            added = 0                                         
+      538 +            for pid in subgraph.paper_ids:                    
+      539 +                for cid in chunks_by_paper.get(pid, []):      
+      540 +                    if added >= max_expand:                   
+      541 +                        break                                 
+      542 +                    if cid not in present:                    
+      543 +                        out.append(cid)                       
+      544 +                        present.add(cid)                      
+      545 +                        added += 1                            
+      546 +                if added >= max_expand:                       
+      547 +                    break                                     
+      548 +        return out                                            
+      549 +                                                              
+      550 +    raise ValueError(f"unknown guidance policy {policy!r}; exp
+          +ected filter|booster|expansion")                              
+
+⏺ Background command "Install rapidfuzz, spacy, openai + en_core_web_sm model" completed (exit code 0)
+
+⏺ Deps install finished. Let me verify it and then run the contract test + a
+  live functional test of all three linkers and the router.
+
+⏺ Bash(tail -4 /private/tmp/claude-501/-Users-yousefalsakkaf-uni-special-topics/
+      44911ee6-ab46-411f-99ca-ffa097d6966c/tasks/bhlnqs0ty.output 2>&1; echo
+      "=== contract te…)
+  ⎿    File "/Users/yousefalsakkaf/uni/special-topics/.venv/lib/python3.12/
+     site-packages/spacy/cli/_util.py", line 18, in <module>
+         from click import NoSuchOption
+     … +5 lines (ctrl+o to expand)
+⏺ Two gaps: click missing (spaCy CLI couldn't download the model) and pytest not
+  in the venv. Let me fix both.
+
+⏺ Bash(.venv/bin/python -m pip install -q "pytest>=8.0" click 2>&1 | tail -2 &&
+      echo "--- re-download spaCy model ---" && .venv/bin/python -m spacy
+      download en_core_we…)
+  ⎿  csai415 0.1.0 requires torch>=2.1, which is not installed.
+     csai415 0.1.0 requires uvicorn[standard]>=0.29, which is not installed
+     .
+     … +6 lines (ctrl+o to expand)
+
+⏺ spaCy works (Yann LeCun → PERSON). The torch/uvicorn warning is harmless (not
+  needed for graph work). Now the contract test + a full live functional test of
+  all three linkers, the router, and the guidance policies:
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graphrag_contract.py -q 2>&1 | tail
+      -8)
+  ⎿      import pandas as pd
+     >   import yaml
+     E   ModuleNotFoundError: No module named 'yaml'
+     … +7 lines (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      from neo4j import GraphDatabase…)
+  ⎿  GraphIndex: 764 authors, 13 topics
+
+     Using real author: 'Zhongxiang Dai'
+     … +30 lines (ctrl+o to expand)
+
+⏺ The module works against the live graph: author→template 01, topic→04,
+  two-topics→05, no-hit→fallback, and all three guidance policies behave
+  correctly. Two things to address:
+
+  1. Contract test: test_ask_route_registered fails only because pyyaml/fastapi
+  aren't in my fresh venv (it imports api.py) — not my code. I'll install the
+  missing deps to keep the suite green.
+  2. Collab routing: "Who does X collaborate with?" routed to 01 instead of 02.
+  Let me investigate.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      from neo4j import GraphDatabase…)
+  ⎿  Error: Exit code 1
+     regex match: False
+     linked: [('Zhongxiang Dai', 'Author', 1.0)]
+     Traceback (most recent call last):
+       File "<stdin>", line 11, in <module>
+       File "/Users/yousefalsakkaf/uni/special-topics/.venv/lib/python3.12/site-
+     packages/neo4j/_sync/work/session.py", line 338, in run
+         auto_result._run(
+       File "/Users/yousefalsakkaf/uni/special-topics/.venv/lib/python3.12/site-
+     packages/neo4j/_sync/work/result.py", line 240, in _run
+         self._attach()
+       File "/Users/yousefalsakkaf/uni/special-topics/.venv/lib/python3.12/site-
+     packages/neo4j/_sync/work/result.py", line 441, in _attach
+     … +13 lines (ctrl+o to expand)
+
+⏺ Two real bugs found (good — the live test caught them):
+
+  1. Collab regex: the trailing \b after collaborat fails on "collaborate" (next
+  char is a word char).
+  2. Collab Cypher: Neo4j 5 rejects own + collect(...) (implicit grouping).
+  Needs restructuring.
+
+  Also the contract test just needs pyyaml/fastapi in my fresh venv. Let me fix
+  both bugs and install the deps.
+
+⏺ Bash(.venv/bin/python -m pip install -q pyyaml "fastapi>=0.110" 2>&1 | tail
+      -2; echo "installed")
+  ⎿  csai415 0.1.0 requires torch>=2.1, which is not installed.
+     csai415 0.1.0 requires uvicorn[standard]>=0.29, which is not installed
+     .
+     installed
+
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 3 lines, removed 1 line
+      331  # --- Cypher routing -----------------------------------------
+           ---------------------------
+      332  # Parameterized versions of the D2 templates in cypher/. Each 
+           returns paper_ids for the
+      333  # selected subgraph. ``cypher_used`` records which template fi
+           red (the routing comparison).
+      334 -_COLLAB_RE = re.compile(r"\b(co-?author|collaborat|work(?:s|ed
+          -|ing)?\s+with|team\s+up)\b", re.I)                            
+      334 +# No trailing \b: "collaborat" must still match "collaborate"/
+          +"collaboration" (a \b right                                   
+      335 +# after the stem fails, since the next char is a word char).  
+      336 +_COLLAB_RE = re.compile(r"co-?authors?|collaborat\w*|works?\s+
+          +with|work(?:ed|ing)\s+with|team(?:s|ed)?\s+up", re.I)         
+      337  
+      338  
+      339  def _run_paper_query(driver, cypher: str, **params) -> list[st
+           r]:
+
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 3 lines, removed 4 lines
+      370          pids = _run_paper_query(
+      371              driver,
+      372              "MATCH (a:Author)-[:WROTE]->(p:Paper) WHERE a.name
+            IN $names "
+      373 -            "WITH collect(DISTINCT p) AS own, a "             
+      374 -            "OPTIONAL MATCH (a)-[:WROTE]->(:Paper)<-[:WROTE]-(
+          -co:Author)-[:WROTE]->(cp:Paper) "                             
+      375 -            "WITH own + collect(DISTINCT cp) AS papers "      
+      376 -            "UNWIND papers AS p RETURN DISTINCT p.paper_id AS 
+          -pid LIMIT $lim",                                              
+      373 +            "OPTIONAL MATCH (p)<-[:WROTE]-(co:Author)-[:WROTE]
+          +->(cp:Paper) "                                                
+      374 +            "WITH collect(DISTINCT p) + collect(DISTINCT cp) A
+          +S papers "  # two aggregations, no grouping key               
+      375 +            "UNWIND papers AS x RETURN DISTINCT x.paper_id AS 
+          +pid LIMIT $lim",                                              
+      376              names=authors, lim=max_papers,
+      377          )
+      378          if pids:
+
+⏺ Now re-verify both fixes and the full contract test:
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graphrag_contract.py -q 2>&1 | tail
+      -5
+      echo "=== collab routing after fix ==="…)
+  ⎿  src/csai415/retrieve.py:35: ModuleNotFoundError
+     =========================== short test summary info ==================
+     ==========
+     … +10 lines (ctrl+o to expand)
+
+⏺ Collab routing fixed (02_top_coauthors fires correctly). The remaining
+  contract-test failure is purely environmental — test_ask_route_registered
+  imports the full retrieval stack (rank_bm25, sentence_transformers/torch,
+  sklearn) which isn't in my fresh venv. Let me install that subset in the
+  background while I write proper unit tests for graph_select (these use a fake
+  driver, so they need no heavy deps).
+
+⏺ Bash(.venv/bin/python -m pip install -q "rank-bm25>=0.2.2" "scikit-learn>=1.4"
+      "sentence-transformers>=2.5" "torch>=2.1" "pydantic>=2" 2>&1 | tail -3;
+      echo "RETRIEVA…)
+  ⎿  Running in the background (↓ to manage)
+
+⏺ Collab routing is fixed. Now let me write proper regression tests for
+  graph_select that run without Docker/Neo4j (fake driver + synthetic vocab), so
+  the logic is CI-checkable.
+
+⏺ Write(tests/test_graph_select.py)
+  ⎿  Wrote 296 lines to tests/test_graph_select.py
+        raph_select.py).r D3 Task-1 graph-guided retrieval (src/csai415/g
+      2 
+        ic ``GraphIndex`` andodels: entity linking runs against a synthet
+      4 Cypher routing runs against a fake driver that answers by paramet
+        er shape. This pins the
+        gress it. The live-graphance logic so refactors can't silently re
+      6 behaviour is exercised separately by ``check_graph.py`` and the T
+      7 """-1 eval notebook.
+      8 
+      9 from __future__ import annotations
+     … +346 lines (ctrl+o to expand)
+
+⏺ Background command "Install retrieval stack (torch, sentence-transformers, sklearn, bm25)" completed (exit code 0)
+
+⏺ The retrieval stack finished installing. Let me run the full graph_select test
+  suite + the contract test (which should now pass with the heavy deps
+  present):
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graph_select.py
+      tests/test_graphrag_contract.py -q 2>&1 | tail -25)
+  ⎿  .......................................
+        [100%]
+     39 passed in 44.69s
+
+⏺ All 39 tests pass (36 new graph_select unit tests + 3 frozen contract tests
+  green). Let me commit the implementation and tests.
+⏺ Bash(git status --short && echo "---" && git add src/csai415/graph_select.py
+      tests/test_graph_select.py && git commit -q -m "$(cat <<'EOF'
+      D3 Task1: real graph-guide…)
+  ⎿   M src/csai415/graph_select.py
+     ?? tests/test_graph_select.py
+     ---
+     … +6 lines (ctrl+o to expand)
+
+⏺ Core implementation is committed. Now the comparison evidence (two required
+  tables). Let me check what gold data and report structure exist to ground the
+  evaluation.
+
+⏺ Bash(echo "=== data/gold ==="; ls -la data/gold/ 2>&1; echo "=== data/train
+      ==="; ls -la data/train/ 2>&1; echo "=== gold sample (first 2 lines of any
+      jsonl) ==="; f…)
+  ⎿  === data/gold ===
+     total 120
+     drwxr-xr-x@ 5 yousefalsakkaf  staff    160 Jun 21 09:31 .
+     … +90 lines (ctrl+o to expand)
+
+⏺ Key finding: the real arXiv gold set (qa_answers.jsonl) doesn't exist yet —
+  it's Task 4's deliverable (only .example is present), and qa.jsonl is SciFact
+  (no arXiv graph overlap). So my Task-1 evaluation must be self-contained: I'll
+  derive probe sets programmatically from the live graph + parquet (real
+  authors/topics/paper-chunks → reliable, reproducible gold).
+
+  Let me check the blessed retriever config and parquet schema so the harness
+  mirrors the real pipeline.
+
+  Searched for 1 pattern (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      import pandas as pd…)
+  ⎿  columns: ['paper_id', 'chunk_id', 'text', 'page_start', 'page_end', 't
+     itle', 'authors', 'year', 'topic', 'source', 'embedding']
+     rows: 15760
+     … +13 lines (ctrl+o to expand)
+
+⏺ I now have the full picture: chunk_id = arxiv:<paper_id>:<seq>, 155 arXiv
+  papers / 10k chunks, median 62 chunks/paper, blessed config in the runcard.
+
+  A key design insight for the guidance table: graph guidance only reshapes
+  retrieval when the query names a graph entity — so my probe set must be
+  entity-bearing, and the natural use case is author/topic-scoped content 
+  questions ("what does X propose about Y"), exactly where filtering a 15k-chunk
+  corpus to a subgraph helps. That's both realistic and non-circular (the
+  ranker still has to surface the right chunk within the subgraph).
+
+  Let me write the evaluation harness. Given its scope, I'll build it as a
+  reproducible, seeded script that derives probes from live data.
+
+⏺ Write(scripts/eval_graph_select.py)
+  ⎿  Wrote 365 lines to scripts/eval_graph_select.py
+         son tables.1 evaluation harness — graph-guided retrieval compari
+       3 Produces the two deliverable tables (briefs/D3_D4_TASKS.md, Task
+       4  1):
+       5   1. Entity-linking comparison  — fuzzy vs spaCy vs LLM-NER: pre
+       6      over a labelled probe set, false-positive rate on no-entity
+       7   2. Guidance-policy comparison — vector-only vs hybrid vs graph
+         -{filter,booster,expansion}:
+         anchored content questions.aph-precision@5 / latency, on entity-
+      10 Both probe sets are derived **programmatically from the live gra
+         ph + chunks.parquet** (seeded,
+     … +439 lines (ctrl+o to expand)
+
+⏺ I left a broken placeholder in the imports. Let me fix the import block
+  cleanly.
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 1 line, removed 6 lines
+      41  from csai415.api import load_blessed_config
+      42  from csai415.graph_select import (
+      43      GraphIndex,
+      44 -    RetrieverUnavailable := type("X", (), {}),  # placeholder r
+         -emoved below                                                   
+      45 -)                                                              
+      46 -                                                               
+      47 -# (clean imports — the placeholder above is replaced; see the r
+         -eal imports next)                                              
+      48 -from csai415.graph_select import (  # noqa: E402               
+      44      apply_guidance,
+      45      get_index,
+      46      link_entities,
+      47      select_subgraph,
+      48  )
+      54 -from csai415.retrieve import HybridRetriever, load_chunks  # no
+         -qa: E402                                                       
+      49 +from csai415.retrieve import HybridRetriever, load_chunks      
+      50  
+      51  SEED = 42
+      52  NEO4J_URL = os.environ.get("NEO4J_URL", "bolt://localhost:7687"
+          )
+
+⏺ Now let me run the evaluation harness against the live stack:
+
+⏺ Bash(.venv/bin/python scripts/eval_graph_select.py 2>&1 | tail -45)
+  ⎿  Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weight
+     s: 100%|██████████| 199/199 [00:00<00:00, 9908.31it/s]
+     [eval] no LLM backend → llm row marked n/a
+     … +42 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+
+⏺ The harness ran and produced real numbers — only the markdown write failed
+  (missing tabulate). The numbers reveal two things I want to strengthen before
+  finalizing:
+
+  1. Linking: fuzzy P/R/F1=1.0 @0.6ms, spaCy 0.96/0.89 @3ms — clean (fuzzy
+  wins), good.
+  2. Guidance: hit@5 is saturated at 1.0 for vector/hybrid — my probes are too
+  easy (title-keyphrase queries trivially retrieve their own paper), so there's
+  no headroom to show graph's recall value; only precision separates the
+  policies. Also expansion appends to the tail so it can't show at top-k.
+
+  Let me install tabulate and strengthen the guidance probes: add an
+  under-specified regime (entity-only, no keyphrase → vector struggles →
+  headroom) and a candidate-recall column (reveals expansion's injection value).
+
+⏺ Bash(.venv/bin/python -m pip install -q "tabulate>=0.9" 2>&1 | tail -1; echo
+      "tabulate installed")
+  ⎿  csai415 0.1.0 requires uvicorn[standard]>=0.29, which is not installed
+     .
+     tabulate installed
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 39 lines, removed 16 lines
+      121  def build_guidance_probes(driver, df: pd.DataFrame, rng: rando
+           m.Random):
+      122      """Entity-anchored content questions → (target_paper_id, r
+           elevant_chunk_ids).
+      123  
+      124 -    Author-anchored: "What does {first_author} propose about {
+          -title keyphrase}?" — subgraph                                 
+      125 -    is the author's papers (template 01). Topic-anchored: a mi
+          -nority-topic paper's title                                    
+      126 -    question — subgraph is the whole topic (template 04); this
+          - is the canonical "filter                                     
+      127 -    rescues a minority-topic paper buried under cs.CL" case.  
+      124 +    Two regimes, on purpose, so the table shows BOTH faces of 
+          +graph guidance:                                               
+      125 +                                                              
+      126 +    * ``specified`` — the query carries the paper's title keyp
+          +hrase, so dense retrieval                                     
+      127 +      already surfaces the paper (hit@5 near-ceiling). Here gr
+          +aph's value is *precision*:                                   
+      128 +      filter/booster concentrate the top-k on the relevant sub
+          +graph.                                                        
+      129 +    * ``underspecified`` — the query names only the entity ("W
+          +hat does {author} propose?"),                                 
+      130 +      so dense retrieval has little to lock onto and often mis
+          +ses the paper. Here graph's                                   
+      131 +      value is *recall*: expansion injects the subgraph's chun
+          +ks the vector pool missed.                                    
+      132 +                                                              
+      133 +    Underspecified author probes use single-paper authors so t
+          +he target is unambiguous.                                     
+      134      """
+      135      ar = df[df["source"].isin(["arxiv", "arxiv-demo"])].copy()
+      136      chunks_by_paper = ar.groupby("paper_id")["chunk_id"].apply
+           (list).to_dict()
+      137      probes: list[dict] = []
+      138  
+      133 -    # Author-anchored: pick papers whose first author is unamb
+          -iguous in the graph.                                          
+      139      with driver.session() as s:
+      140          rows = s.run(
+      141              "MATCH (a:Author)-[:WROTE]->(p:Paper) "
+      137 -            "WITH p, collect(a.name) AS names WHERE size(names
+          -) >= 1 "                                                      
+      138 -            "RETURN p.paper_id AS pid, names[0] AS author, p.t
+          -itle AS title LIMIT 200").data()                              
+      142 +            "WITH p, collect(a.name) AS names RETURN p.paper_i
+          +d AS pid, names[0] AS author, "                               
+      143 +            "p.title AS title LIMIT 200").data()              
+      144 +        # authors with exactly one paper → unambiguous target 
+          +for underspecified queries                                    
+      145 +        solo = {r["n"]: r["pid"] for r in s.run(              
+      146 +            "MATCH (a:Author)-[:WROTE]->(p) WITH a.name AS n, 
+          +count(p) AS c, collect(p.paper_id)[0] AS pid "                
+      147 +            "WHERE c = 1 AND size(split(n,' ')) >= 2 RETURN n,
+          + pid")}                                                       
+      148      rng.shuffle(rows)
+      149 +                                                              
+      150 +    # Author-anchored, SPECIFIED (title keyphrase present).   
+      151 +    n_spec = 0                                                
+      152      for r in rows:
+      153          if r["pid"] not in chunks_by_paper or not r["title"]:
+      154              continue
+     ...
+      158          probes.append({
+      159              "query": f"What does {r['author']} propose about {
+           kp}?",
+      160              "target_paper": r["pid"], "relevant": chunks_by_pa
+           per[r["pid"]],
+      149 -            "kind": "author-anchored",                        
+      161 +            "kind": "author", "regime": "specified",          
+      162          })
+      151 -        if len([p for p in probes if p["kind"] == "author-anch
+          -ored"]) >= 15:                                                
+      163 +        n_spec += 1                                           
+      164 +        if n_spec >= 10:                                      
+      165              break
+      166  
+      154 -    # Topic-anchored on MINORITY topics (where filtering away 
+          -cs.CL helps most).                                            
+      167 +    # Author-anchored, UNDERSPECIFIED (entity only, no keyphra
+          +se).                                                          
+      168 +    solo_authors = list(solo.items())                         
+      169 +    rng.shuffle(solo_authors)                                 
+      170 +    for author, pid in solo_authors[:8]:                      
+      171 +        if pid in chunks_by_paper:                            
+      172 +            probes.append({                                   
+      173 +                "query": f"What does {author} propose in their
+          + recent work?",                                               
+      174 +                "target_paper": pid, "relevant": chunks_by_pap
+          +er[pid],                                                      
+      175 +                "kind": "author", "regime": "underspecified", 
+      176 +            })                                                
+      177 +                                                              
+      178 +    # Topic-anchored on MINORITY topics (specified; filtering 
+          +away cs.CL helps here).                                       
+      179      minority = ["cs.CV", "cs.LG", "cs.CR", "cs.IR", "cs.SE", "
+           cs.AI"]
+      180      with driver.session() as s:
+      181          trows = s.run(
+      182              "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name 
+           IN $codes "
+      183              "RETURN p.paper_id AS pid, p.title AS title, t.nam
+           e AS code", codes=minority).data()
+      184      rng.shuffle(trows)
+      161 -    seen_topic = 0                                            
+      185 +    n_topic = 0                                               
+      186      for r in trows:
+      187          if r["pid"] not in chunks_by_paper or not r["title"]:
+      188              continue
+      189          kp = _title_keyphrase(r["title"])
+      190          if len(kp.split()) < 3:
+      191              continue
+      168 -        phrase = TOPIC_PHRASE.get(r["code"], r["code"])       
+      192          probes.append({
+      170 -            "query": f"In {phrase} research, {kp}?",          
+      193 +            "query": f"In {TOPIC_PHRASE.get(r['code'], r['code
+          +'])} research, {kp}?",                                        
+      194              "target_paper": r["pid"], "relevant": chunks_by_pa
+           per[r["pid"]],
+      172 -            "kind": "topic-anchored",                         
+      195 +            "kind": "topic", "regime": "specified",           
+      196          })
+      174 -        seen_topic += 1                                       
+      175 -        if seen_topic >= 15:                                  
+      197 +        n_topic += 1                                          
+      198 +        if n_topic >= 12:                                     
+      199              break
+      200  
+      201      return probes, chunks_by_paper
+
+⏺ Now update eval_guidance to add the candidate-recall column (reveals
+  expansion) and a per-regime breakdown:
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 56 lines, removed 39 lines
+      263      return [cid for cid, _ in pool][:k]
+      264  
+      265  
+      266 -def eval_guidance(driver, retriever, df, probes, chunks_by_pap
+          -er):                                                          
+      267 -    paper_of = df.set_index("chunk_id")["paper_id"].to_dict().
+          -get                                                           
+      268 -    cfg = retriever.config                                    
+      269 -    modes = ["vector", "hybrid", "filter", "booster", "expansi
+          -on"]                                                          
+      270 -    agg = {m: {"hit5": [], "hit10": [], "subprec5": [], "lat":
+          - []} for m in modes}                                          
+      266 +MODES = ["vector", "hybrid", "filter", "booster", "expansion"]
+      267  
+      272 -    for p in probes:                                          
+      273 -        relevant = set(p["relevant"])                         
+      274 -        sub = select_subgraph(p["query"], neo4j_driver=driver,
+          - method="fuzzy")                                              
+      275 -        wanted = set(sub.paper_ids)                           
+      268  
+      277 -        # base pools                                          
+      278 -        pool_vec = retriever.search_with_scores(p["query"], CA
+          -NDIDATE_K, hybrid_weight=1.0)                                 
+      279 -        pool_hyb = retriever.search_with_scores(p["query"], CA
+          -NDIDATE_K, hybrid_weight=cfg.hybrid_weight)                   
+      280 -        ids_hyb = [cid for cid, _ in pool_hyb]                
+      281 -        scores_hyb = {cid: s for cid, s in pool_hyb}          
+      269 +def _score_probe(p, driver, retriever, paper_of, chunks_by_pap
+          +er):                                                          
+      270 +    """Per-probe per-mode raw metrics. Returns {mode: {hit5,hi
+          +t10,cand_recall,subprec5,lat}}."""                            
+      271 +    relevant = set(p["relevant"])                             
+      272 +    cfg = retriever.config                                    
+      273 +    sub = select_subgraph(p["query"], neo4j_driver=driver, met
+          +hod="fuzzy")                                                  
+      274 +    wanted = set(sub.paper_ids)                               
+      275  
+      283 -        for mode in modes:                                    
+      284 -            t0 = time.perf_counter()                          
+      285 -            if mode == "vector":                              
+      286 -                ranked = _topk_ids(pool_vec, max(CANDIDATE_K, 
+          -10))                                                          
+      287 -            elif mode == "hybrid":                            
+      288 -                ranked = ids_hyb                              
+      289 -            else:                                             
+      290 -                ranked = apply_guidance(                      
+      291 -                    ids_hyb, sub, paper_of=paper_of, policy=mo
+          -de, scores=scores_hyb,                                        
+      292 -                    chunks_by_paper=chunks_by_paper, max_expan
+          -d=10)                                                         
+      293 -            lat = (time.perf_counter() - t0) * 1000.0         
+      276 +    pool_vec = retriever.search_with_scores(p["query"], CANDID
+          +ATE_K, hybrid_weight=1.0)                                     
+      277 +    pool_hyb = retriever.search_with_scores(p["query"], CANDID
+          +ATE_K, hybrid_weight=cfg.hybrid_weight)                       
+      278 +    ids_hyb = [cid for cid, _ in pool_hyb]                    
+      279 +    scores_hyb = {cid: s for cid, s in pool_hyb}              
+      280  
+      295 -            top5, top10 = ranked[:5], ranked[:10]             
+      296 -            agg[mode]["hit5"].append(1.0 if relevant & set(top
+          -5) else 0.0)                                                  
+      297 -            agg[mode]["hit10"].append(1.0 if relevant & set(to
+          -p10) else 0.0)                                                
+      298 -            in_sub = sum(1 for c in top5 if paper_of(c) in wan
+          -ted) if wanted else 0                                         
+      299 -            agg[mode]["subprec5"].append(in_sub / max(1, len(t
+          -op5)))                                                        
+      300 -            agg[mode]["lat"].append(lat)                      
+      281 +    out = {}                                                  
+      282 +    for mode in MODES:                                        
+      283 +        t0 = time.perf_counter()                              
+      284 +        if mode == "vector":                                  
+      285 +            ranked = [cid for cid, _ in pool_vec]             
+      286 +        elif mode == "hybrid":                                
+      287 +            ranked = ids_hyb                                  
+      288 +        else:                                                 
+      289 +            ranked = apply_guidance(ids_hyb, sub, paper_of=pap
+          +er_of, policy=mode,                                           
+      290 +                                    scores=scores_hyb, chunks_
+          +by_paper=chunks_by_paper, max_expand=20)                      
+      291 +        lat = (time.perf_counter() - t0) * 1000.0             
+      292 +        top5 = ranked[:5]                                     
+      293 +        in_sub = sum(1 for c in top5 if paper_of(c) in wanted)
+          + if wanted else 0                                             
+      294 +        out[mode] = {                                         
+      295 +            "hit5": 1.0 if relevant & set(top5) else 0.0,     
+      296 +            "hit10": 1.0 if relevant & set(ranked[:10]) else 0
+          +.0,                                                           
+      297 +            "cand_recall": 1.0 if relevant & set(ranked) else 
+          +0.0,  # target chunk anywhere in the reshaped list            
+      298 +            "subprec5": in_sub / max(1, len(top5)),           
+      299 +            "lat": lat,                                       
+      300 +        }                                                     
+      301 +    return out                                                
+      302  
+      302 -    base = None                                               
+      303 -    rows = []                                                 
+      303 +                                                              
+      304 +def _summarize(per_probe, modes=MODES):                       
+      305 +    """Mean each metric per mode over a list of per-probe dict
+          +s → a DataFrame."""                                           
+      306 +    rows, base = [], None                                     
+      307      for mode in modes:
+      305 -        d = agg[mode]                                         
+      306 -        hit5 = round(st.mean(d["hit5"]), 3)                   
+      308 +        vals = [pp[mode] for pp in per_probe]                 
+      309 +        hit5 = round(st.mean(v["hit5"] for v in vals), 3)     
+      310          if mode == "vector":
+      311              base = hit5
+      312          rows.append({
+      313              "policy": mode, "hit@5": hit5,
+      311 -            "hit@10": round(st.mean(d["hit10"]), 3),          
+      312 -            "subgraph_prec@5": round(st.mean(d["subprec5"]), 3
+          -),                                                            
+      313 -            "delta_hit5_vs_vector": round(hit5 - (base if base
+          - is not None else hit5), 3),                                  
+      314 -            "guidance_ms_median": round(st.median(d["lat"]), 3
+          -),                                                            
+      314 +            "hit@10": round(st.mean(v["hit10"] for v in vals),
+          + 3),                                                          
+      315 +            "cand_recall": round(st.mean(v["cand_recall"] for 
+          +v in vals), 3),                                               
+      316 +            "subgraph_prec@5": round(st.mean(v["subprec5"] for
+          + v in vals), 3),                                              
+      317 +            "Δhit@5_vs_vector": round(hit5 - base, 3),        
+      318 +            "guidance_ms_med": round(st.median(v["lat"] for v 
+          +in vals), 3),                                                 
+      319          })
+      320      return pd.DataFrame(rows)
+      321  
+      322  
+      323 +def eval_guidance(driver, retriever, df, probes, chunks_by_pap
+          +er):                                                          
+      324 +    """Returns (overall_df, by_regime: {regime: df})."""      
+      325 +    paper_of = df.set_index("chunk_id")["paper_id"].to_dict().
+          +get                                                           
+      326 +    per_probe, regimes = [], {}                               
+      327 +    for p in probes:                                          
+      328 +        scored = _score_probe(p, driver, retriever, paper_of, 
+          +chunks_by_paper)                                              
+      329 +        per_probe.append(scored)                              
+      330 +        regimes.setdefault(p["regime"], []).append(scored)    
+      331 +    overall = _summarize(per_probe)                           
+      332 +    by_regime = {reg: _summarize(pp) for reg, pp in regimes.it
+          +ems()}                                                        
+      333 +    return overall, by_regime                                 
+      334 +                                                              
+      335 +                                                              
+      336  # --- main ---------------------------------------------------
+           ---------------------------
+      337  def main():
+      338      OUT.mkdir(parents=True, exist_ok=True)
+
+⏺ Now update main() to consume the new (overall, by_regime) return and write the
+  regime breakdown:
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 23 lines, removed 9 lines
+      369  
+      370      # --- Table 2: guidance ---
+      371      gprobes, chunks_by_paper = build_guidance_probes(driver, d
+           f, rng)
+      372 -    print(f"\n[eval] guidance probes: {len(gprobes)} "        
+      373 -          f"({sum(p['kind']=='author-anchored' for p in gprobe
+          -s)} author / "                                                
+      374 -          f"{sum(p['kind']=='topic-anchored' for p in gprobes)
+          -} topic)")                                                    
+      375 -    gdf = eval_guidance(driver, retriever, df, gprobes, chunks
+          -_by_paper)                                                    
+      376 -    print("\n=== Guidance-policy comparison (vs vector-only) =
+          -==")                                                          
+      372 +    n_spec = sum(p["regime"] == "specified" for p in gprobes) 
+      373 +    n_under = sum(p["regime"] == "underspecified" for p in gpr
+          +obes)                                                         
+      374 +    print(f"\n[eval] guidance probes: {len(gprobes)} ({n_spec}
+          + specified / {n_under} underspecified)")                      
+      375 +    gdf, by_regime = eval_guidance(driver, retriever, df, gpro
+          +bes, chunks_by_paper)                                         
+      376 +    print("\n=== Guidance-policy comparison — OVERALL (vs vect
+          +or-only) ===")                                                
+      377      print(gdf.to_string(index=False))
+      378 +    for reg, rdf in by_regime.items():                        
+      379 +        print(f"\n--- regime: {reg} ---")                     
+      380 +        print(rdf.to_string(index=False))                     
+      381  
+      382      # --- write artifacts ---
+      383      ldf.to_csv(OUT / "graph_linking_comparison.csv", index=Fal
+           se)
+     ...
+      388          f"(seed={SEED}); precision/recall over (label, node) p
+           airs; "
+      389          "`fp_rate_neg` = fraction of no-entity queries that wr
+           ongly linked something.\n\n"
+      390          + ldf.to_markdown(index=False) + "\n")
+      391 +                                                              
+      392 +    regime_md = "\n\n".join(                                  
+      393 +        f"### Regime: {reg}\n\n" + rdf.to_markdown(index=False
+          +) for reg, rdf in by_regime.items())                          
+      394      (OUT / "graph_guidance_comparison.md").write_text(
+      395          "# D3 Task-1 — Guidance-policy comparison\n\n"
+      390 -        f"Probe set: {len(gprobes)} entity-anchored content qu
+          -estions (seed={SEED}); "                                      
+      391 -        f"candidate pool k={CANDIDATE_K}. Hit@k = a chunk of t
+          -he target paper reached the "                                 
+      392 -        "top-k; subgraph_prec@5 = fraction of the top-5 inside
+          - the selected subgraph. "                                     
+      396 +        f"Probe set: {len(gprobes)} entity-anchored content qu
+          +estions "                                                     
+      397 +        f"({n_spec} specified, {n_under} underspecified; seed=
+          +{SEED}); candidate pool "                                     
+      398 +        f"k={CANDIDATE_K}. **Hit@k** = a chunk of the target p
+          +aper reached the top-k; "                                     
+      399 +        "**cand_recall** = a target chunk is anywhere in the r
+          +eshaped candidate list "                                      
+      400 +        "(the signal a downstream reranker sees — this is wher
+          +e expansion pays off); "                                      
+      401 +        "**subgraph_prec@5** = fraction of the top-5 inside th
+          +e selected subgraph. "                                        
+      402          "Policies apply to the hybrid pool; vector/hybrid carr
+           y no graph guidance.\n\n"
+      394 -        + gdf.to_markdown(index=False) + "\n")                
+      403 +        "## Overall\n\n" + gdf.to_markdown(index=False) + "\n\
+          +n"                                                            
+      404 +        "## By regime\n\n"                                    
+      405 +        "*Specified* queries already retrieve well (hit@5 near
+          + ceiling) → graph adds "                                      
+      406 +        "**precision**. *Underspecified* queries miss the pape
+          +r under vector search → graph "                               
+      407 +        "adds **recall** (expansion injects the missed subgrap
+          +h chunks; cand_recall rises).\n\n"                            
+      408 +        + regime_md + "\n")                                   
+      409      print(f"\n[eval] wrote 4 artifacts to {OUT}/")
+      410      driver.close()
+      411  
+
+⏺ Let me re-run the strengthened harness:
+
+⏺ Bash(.venv/bin/python scripts/eval_graph_select.py 2>&1 | grep -v "Loading
+      weights" | tail -45)
+  ⎿  Warning: You are sending unauthenticated requests to the HF Hub. Pleas
+     e set a HF_TOKEN to enable higher rate limits and faster downloads.
+     [eval] graph: 764 authors, 13 topics
+     … +36 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+⏺ Now the two-regime breakdown tells a complete, defensible story:
+
+  - Specified queries (dense already nails the paper, hit@5=1.0): graph adds
+  precision for free — filter lifts subgraph-precision@5 to 1.0 with zero recall
+  loss.
+  - Underspecified queries (entity-only; vector fails, hit@5=0.0): graph adds
+  recall — expansion lifts candidate-recall from 0.125 → 1.000 by injecting
+  subgraph chunks the vector pool missed (which the reranker then promotes).
+  filter/booster can't help here (pool-bound).
+
+  This is a genuinely strong result. Let me verify the artifacts and commit this
+  checkpoint.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Artifacts are well-formed. Let me commit this evaluation checkpoint, then run
+  an adversarial review.
+
+⏺ Bash(git add scripts/eval_graph_select.py
+      reports/D3/graph_linking_comparison.md
+      reports/D3/graph_linking_comparison.csv
+      reports/D3/graph_guidance_comparison.md repo…)
+  ⎿  committed
+     0f03d4f D3 Task1: evaluation harness + comparison tables (linking + gu
+     idance policy)
+     … +5 lines (ctrl+o to expand)
+
+⏺ Now I'll run an adversarial multi-agent review of the implementation, the eval
+  methodology, and the reported numbers — ultracode is on, and this is exactly
+  where parallel independent verification adds value. Each finding gets
+  independently verified before I act on it.
+
+⏺ Workflow(Adversarial review of D3 Task-1 graph-guided retrieval (impl + eval
+          methodology + numbers))
+  ⎿  /workflows to view dynamic workflow runs
+
+⏺ The adversarial review is running in the background (4 reviewers × distinct
+  lenses → independent verification of each finding). I'll act on the confirmed
+  findings when it completes.
+
+  Here's where things stand:
+
+  Progress so far
+
+  ┌────────────────────────────────────────────────────┬──────────┬─────────┐
+  │                        Step                        │  Status  │ Commit  │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 1. Docker + Neo4j seeded + connectivity            │ ✅       │ f39e1cf │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 2. Real select_subgraph (3 linkers, Cypher router, │ ✅       │ f739b40 │
+  │  3 guidance policies, fallback)                    │          │         │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 3. 36 unit tests + frozen contract green (39       │ ✅       │ f739b40 │
+  │ total)                                             │          │         │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 4. Eval harness + both comparison tables           │ ✅       │ 0f03d4f │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 5. Adversarial review of impl + methodology +      │ ⏳       │ —       │
+  │ numbers                                            │ running  │         │
+  ├────────────────────────────────────────────────────┼──────────┼─────────┤
+  │ 6. Final Task-1 report + ai_logs/ entry            │ ⏳ next  │ —       │
+  └────────────────────────────────────────────────────┴──────────┴─────────┘
+
+  Headline results (live graph):
+  - Linking: fuzzy wins on all axes (P/R/F1 = 1.0, 0.6 ms, 0 false-positives) vs
+  spaCy (0.96/0.89, 3.4 ms); LLM-NER n/a until a backend is configured → fuzzy 
+  is the shipped default.
+  - Guidance: filter gives precision for free on well-specified queries
+  (subgraph-precision@5 → 1.0, no recall loss); expansion gives recall on
+  under-specified queries (candidate-recall 0.125 → 1.0). Both are real,
+  distinct wins.
+
+  What you can run right now
+
+  docker compose up -d neo4j                                                   #
+  graph store
+  .venv/bin/python scripts/seed_neo4j.py --from-parquet
+  data/processed/chunks.parquet --source arxiv
+  .venv/bin/python check_graph.py                                              #
+  connectivity smoke
+  .venv/bin/python -m pytest tests/test_graph_select.py
+  tests/test_graphrag_contract.py -q   # 39 tests
+  .venv/bin/python scripts/eval_graph_select.py                               # 
+  regenerate both tables
+
+  I'll continue automatically once the review lands. You can watch it live with
+  /workflows.
+
+✻ Worked for 23m 8s
+
+※ recap: Building your Task-1 graph-guided retrieval: `select_subgraph` with three linkers, Cypher routing, and guidance policies is implemented, tested, and committed, with comparison tables generated. An adversarial review of the code and evaluation is running, and I'll apply its confirmed findings next. (disable recaps in /config)
+
+⏺ Dynamic workflow "Adversarial review of D3 Task-1 graph-guided retrieval (impl
++ eval methodology + numbers)" completed · 4m 58s
+
+⏺ The review completed (29 agents, ~900k tokens). Let me read the full set of
+  confirmed findings.
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      import json, re…)
+  ⎿  Error: Exit code 1
+     Traceback (most recent call last):
+       File "<stdin>", line 5, in <module>
+     AttributeError: 'NoneType' object has no attribute 'group'
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      import json…)
+  ⎿  len: 53442
+     first 200: '{\n  "summary": "Adversarial review of D3 Task-1 graph-gui
+     ded retrieval (impl + eval methodology + numbers)",\n  "agentCount": 2
+     … +3 lines (ctrl+o to expand)
+
+⏺ Bash(.venv/bin/python - <<'PY'
+      import json…)
+  ⎿  CONFIRMED: 21
+     by severity: {'high': 8, 'medium': 11, 'low': 2}
+     ======================================================================
+     … +279 lines (ctrl+o to expand)
+
+⏺ Excellent review — 21 confirmed findings (8 high, 11 medium, 2 low), 4
+  correctly rejected. The methodology critiques are the most valuable (they
+  directly affect grade defensibility). Let me triage and fix systematically.
+
+  Let me create a task list and start with the correctness fixes in
+  graph_select.py. First, re-reading the exact current text of the spots to
+  edit:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now the correctness fixes. Let me read the current select_subgraph:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now applying the three correctness fixes. First, the cache hazard (#10 — use
+  WeakKeyDictionary so a GC'd-then-reused driver address can't return stale
+  vocab) and the topic-check cleanup (#9):
+
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 5 lines, removed 4 lines
+      148  
+      149  
+      150  # Cache GraphIndex per driver object so repeated calls (eval l
+           oops, the executor) reuse it.
+      151 -_INDEX_CACHE: dict[int, GraphIndex] = {}                      
+      151 +# WeakKeyDictionary (not id(driver)→idx): entries auto-evict w
+          +hen a driver is garbage                                       
+      152 +# collected, so a reused memory address can never return anoth
+          +er driver's stale vocabulary.                                 
+      153 +_INDEX_CACHE: "weakref.WeakKeyDictionary" = weakref.WeakKeyDic
+          +tionary()                                                     
+      154  
+      155  
+      156  def get_index(driver) -> GraphIndex:
+      155 -    key = id(driver)                                          
+      156 -    idx = _INDEX_CACHE.get(key)                               
+      157 +    idx = _INDEX_CACHE.get(driver)                            
+      158      if idx is None:
+      159          idx = GraphIndex.from_driver(driver)
+      159 -        _INDEX_CACHE[key] = idx                               
+      160 +        _INDEX_CACHE[driver] = idx                            
+      161      return idx
+      162  
+      163  
+
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 1 line
+      38  import os
+      39  import re
+      40  import time
+      41 +import weakref                                                 
+      42  from dataclasses import dataclass, field
+      43  
+      44  # --- Topic vocabulary ----------------------------------------
+          --------------------------
+
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 1 line, removed 1 line
+      196      best: dict[str, LinkedEntity] = {}
+      197  
+      198      def consider(code: str, score: float, span: str) -> None:
+      199 -        if code not in index._topics_lower.values() and code n
+          -ot in index.topics:                                           
+      199 +        if code not in index.topics:  # only link to topics th
+          +at exist in the live graph                                    
+      200              return
+      201          prev = best.get(code)
+      202          if prev is None or score > prev.score:
+
+⏺ Now the method-attribution fix (#1) — report the linker that ran when linking
+  succeeded but the graph yields no usable subgraph (route error or no papers),
+  reserving "fallback" for when linking itself never happened:
+⏺ Update(src/csai415/graph_select.py)
+  ⎿  Added 15 lines, removed 10 lines
+      434      """
+      435      t0 = time.perf_counter()
+      436  
+      437 -    def fallback(reason_method: str = "fallback") -> SubgraphR
+          -esult:                                                        
+      438 -        return SubgraphResult(method=reason_method, latency_ms
+          -=(time.perf_counter() - t0) * 1000.0)                         
+      437 +    def _ms() -> float:                                       
+      438 +        return (time.perf_counter() - t0) * 1000.0            
+      439  
+      440 +    # No linker ever produced output (no driver / linking erro
+          +r) → a true fallback.                                         
+      441 +    def fallback() -> SubgraphResult:                         
+      442 +        return SubgraphResult(method="fallback", latency_ms=_m
+          +s())                                                          
+      443 +                                                              
+      444 +    # Linking succeeded but the graph yielded no usable subgra
+          +ph (no papers, or a query                                     
+      445 +    # error). Report the linker that actually ran — empty pape
+          +r_ids still degrades the                                      
+      446 +    # executor to vector/hybrid, but the method field stays ho
+          +nest about what was attempted.                                
+      447 +    def linked_no_hit(linked) -> SubgraphResult:              
+      448 +        return SubgraphResult(                                
+      449 +            seed_nodes=[e.name for e in linked], method=chosen
+          +, linked=linked, latency_ms=_ms())                            
+      450 +                                                              
+      451      if neo4j_driver is None:
+      452          return fallback()
+      453  
+     ...
+      477              linked, neo4j_driver, query, max_papers=max_papers
+      478          )
+      479      except Exception:
+      469 -        return fallback()                                     
+      480 +        return linked_no_hit(linked)  # linked OK, graph error
+          +ed during routing                                             
+      481  
+      482      if not paper_ids:
+      472 -        # Linked something but the graph returned no papers — 
+          -still a graceful no-hit.                                      
+      473 -        return SubgraphResult(                                
+      474 -            seed_nodes=[e.name for e in linked],              
+      475 -            method=chosen,                                    
+      476 -            linked=linked,                                    
+      477 -            latency_ms=(time.perf_counter() - t0) * 1000.0,   
+      478 -        )                                                     
+      483 +        return linked_no_hit(linked)  # linked OK, but the sub
+          +graph is empty                                                
+      484  
+      485      return SubgraphResult(
+      486          seed_nodes=seeds,
+
+⏺ Correctness fixes done. Now the methodology fixes in the eval harness. Let me
+  re-read the relevant sections:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now rewriting build_linking_probes to remove the circularity (#2) and add
+  harder cases (#11): held-out topic paraphrases not in the synonym table (tests
+  generalization, exposes the table-bound limitation), plus plausible
+  out-of-graph author names and bigger typos (tests precision/robustness):
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 49 lines, removed 12 lines
+       74      return " ".join(head.split()[:8])
+       75  
+       76  
+       77 +# Held-out topic paraphrases — deliberately NOT in graph_selec
+          +t.TOPIC_SYNONYMS, so they                                     
+       78 +# test whether topic linking GENERALIZES beyond its hard-coded
+          + table (it does not; this                                     
+       79 +# exposes the synonym-table-bound limitation rather than infla
+          +ting recall with phrases the                                  
+       80 +# linker is wired to recognize — see the methodology note in t
+          +he report).                                                   
+       81 +HELDOUT_TOPIC_PARAPHRASE = {                                  
+       82 +    "cs.CL": "computational semantics",                       
+       83 +    "cs.CV": "scene understanding",                           
+       84 +    "cs.LG": "statistical learning theory",                   
+       85 +    "cs.IR": "document ranking",                              
+       86 +    "cs.CR": "threat modeling",                               
+       87 +}                                                             
+       88 +                                                              
+       89 +# Plausible but ABSENT author names (famous, not in this 2026 
+          +arXiv graph). Gold = no link;                                 
+       90 +# a linker that maps these to a similarly-spelled real node is
+          + making a precision error.                                    
+       91 +ABSENT_AUTHORS = ["Geoffrey Hinton", "Yoshua Bengio", "Fei-Fei
+          + Li", "Christopher Manning"]                                  
+       92 +                                                              
+       93 +                                                              
+       94  def build_linking_probes(driver, index: GraphIndex, df: pd.Dat
+           aFrame, rng: random.Random):
+       78 -    """Labelled query → expected (authors, topics). Mixes plai
+          -n / prose / typo / negatives."""                              
+       95 +    """Labelled query → expected (authors, topics).           
+       96 +                                                              
+       97 +    Linkable probes (count toward precision/recall/F1): author
+          + plain/prose/typo-1/typo-3,                                   
+       98 +    in-vocabulary topics, held-out topic paraphrases, and auth
+          +or+topic. Non-linkable probes                                 
+       99 +    (count toward fp_rate only, gold empty): generic questions
+          + + plausible absent authors.                                  
+      100 +    Held-out paraphrases and absent authors are the honest str
+          +ess cases the first probe set                                 
+      101 +    lacked — they keep fuzzy's score from being a self-fulfill
+          +ing 1.0.                                                      
+      102 +    """                                                       
+      103      probes: list[dict] = []
+      104  
+       81 -    # Authors with a distinctive 2-token name (avoid single-to
+          -ken collisions).                                              
+      105      with driver.session() as s:
+      106          authors = [r["n"] for r in s.run(
+      107              "MATCH (a:Author)-[:WROTE]->(p) WITH a.name AS n, 
+           count(p) AS c "
+       85 -            "WHERE size(split(n,' ')) >= 2 RETURN n ORDER BY c
+          - DESC, n LIMIT 40")]                                          
+      108 +            "WHERE size(split(n,' ')) >= 2 RETURN n ORDER BY c
+          + DESC, n LIMIT 60")]                                          
+      109      rng.shuffle(authors)
+      110      sample_authors = authors[:12]
+      111  
+      112 +    def _drop_chars(name: str, k: int) -> str:                
+      113 +        sur = name.split()[-1]                                
+      114 +        return name.replace(sur, sur[:-k]) if len(sur) > k + 2
+          + else name                                                    
+      115 +                                                              
+      116      for i, a in enumerate(sample_authors):
+       90 -        if i % 3 == 0:                                        
+      117 +        if i % 4 == 0:                                        
+      118              q = f"What has {a} published?"
+       92 -        elif i % 3 == 1:                                      
+      119 +        elif i % 4 == 1:                                      
+      120              q = f"Tell me about the research contributions of 
+           {a}."
+       94 -        else:  # typo: drop a char from the surname           
+       95 -            sur = a.split()[-1]                               
+       96 -            typo = a.replace(sur, sur[:-1]) if len(sur) > 3 el
+          -se a                                                          
+       97 -            q = f"papers written by {typo}"                   
+      121 +        elif i % 4 == 2:  # mild typo (drop 1 char) — should s
+          +till link                                                     
+      122 +            q = f"papers written by {_drop_chars(a, 1)}"      
+      123 +        else:  # harder typo (drop 3 chars) — stresses the fuz
+          +zy threshold                                                  
+      124 +            q = f"papers written by {_drop_chars(a, 3)}"      
+      125          probes.append({"query": q, "authors": [a], "topics": [
+           ], "kind": "author"})
+      126  
+      100 -    # Topic-anchored.                                         
+      127 +    # In-vocabulary topics (legitimate: users do type these). 
+      128      for code, phrase in TOPIC_PHRASE.items():
+      129          if code in index.topics:
+      103 -            probes.append({"query": f"recent advances in {phra
+          -se}", "authors": [], "topics": [code], "kind": "topic"})      
+      130 +            probes.append({"query": f"recent advances in {phra
+          +se}", "authors": [], "topics": [code],                        
+      131 +                           "kind": "topic"})                  
+      132  
+      133 +    # Held-out topic paraphrases (generalization test; expecte
+          +d to mostly miss).                                            
+      134 +    for code, phrase in HELDOUT_TOPIC_PARAPHRASE.items():     
+      135 +        if code in index.topics:                              
+      136 +            probes.append({"query": f"recent advances in {phra
+          +se}", "authors": [], "topics": [code],                        
+      137 +                           "kind": "topic-heldout"})          
+      138 +                                                              
+      139      # Author + topic.
+      140      for a in sample_authors[:4]:
+      141          code = rng.choice([c for c in TOPIC_PHRASE if c in ind
+           ex.topics])
+      142          probes.append({"query": f"{a}'s work on {TOPIC_PHRASE[
+           code]}",
+      143                         "authors": [a], "topics": [code], "kind
+           ": "author+topic"})
+      144  
+      111 -    # Negatives — no graph entity; gold = no link (tests false
+          --positive rate).                                              
+      145 +    # Negatives — plausible absent authors (precision) + gener
+          +ic no-entity questions.                                       
+      146 +    for a in ABSENT_AUTHORS:                                  
+      147 +        probes.append({"query": f"What has {a} published?", "a
+          +uthors": [], "topics": [],                                    
+      148 +                       "kind": "negative"})                   
+      149      for q in ["How does attention scale with sequence length?"
+           ,
+      150                "What is the capital of France?",
+      151                "Explain gradient descent in simple terms.",
+
+⏺ Now update eval_linking to surface a held-out-paraphrase recall diagnostic (so
+  the headline numbers are explainable). Let me re-read it:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Now add the held-out-paraphrase recall diagnostic to eval_linking so the
+  headline numbers are explainable:
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 7 lines, removed 2 lines
+      266  # --- table 1: linking ---------------------------------------
+           ---------------------------
+      267  def eval_linking(driver, index, probes, methods):
+      268      rows = []
+      269 +    n_neg = sum(1 for p in probes if p["kind"] == "negative") 
+      270 +    n_heldout = sum(1 for p in probes if p["kind"] == "topic-h
+          +eldout")                                                      
+      271      for method in methods:
+      272          tp = fp = fn = 0
+      271 -        fp_neg = 0  # any link emitted on a negative query    
+      272 -        n_neg = sum(1 for p in probes if p["kind"] == "negativ
+          -e")                                                           
+      273 +        fp_neg = 0       # any link emitted on a negative quer
+          +y (precision on absent/no entity)                             
+      274 +        heldout_hit = 0  # held-out topic paraphrases correctl
+          +y linked (generalization)                                     
+      275          lats = []
+      276          for p in probes:
+      277              gold = {("Author", a) for a in p["authors"]} | {("
+           Topic", t) for t in p["topics"]}
+     ...
+      287              fn += len(gold - got)
+      288              if p["kind"] == "negative" and got:
+      289                  fp_neg += 1
+      290 +            if p["kind"] == "topic-heldout" and (gold & got): 
+      291 +                heldout_hit += 1                              
+      292          prec, rec, f1 = _prf(tp, fp, fn)
+      293          rows.append({
+      294              "method": method, "precision": round(prec, 3), "re
+           call": round(rec, 3),
+      295              "f1": round(f1, 3), "fp_rate_neg": round(fp_neg / 
+           n_neg, 3) if n_neg else 0.0,
+      296 +            "heldout_topic_recall": round(heldout_hit / n_held
+          +out, 3) if n_heldout else 0.0,                                
+      297              "median_ms": round(st.median(lats), 1),
+      298              "p95_ms": round(sorted(lats)[max(0, int(0.95 * len
+           (lats)) - 1)], 1),
+      299          })
+
+⏺ Now build_guidance_probes: raise the under-specified N (#4), add cs.CL
+  specified probes (#13), and reframe expansion honestly (#3):
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 10 lines
+      167        so dense retrieval has little to lock onto and often mis
+           ses the paper. Here graph's
+      168        value is *recall*: expansion injects the subgraph's chun
+           ks the vector pool missed.
+      169  
+      170 +    Honesty note (re: expansion's cand_recall): for solo-autho
+          +r underspecified probes the                                   
+      171 +    target paper IS the linked subgraph, so a correct link + e
+          +xpansion injects it *by                                       
+      172 +    construction* — cand_recall→1.0 demonstrates the MECHANISM
+          + and its ceiling (it is bounded                               
+      173 +    by link precision, not a free recovery of arbitrary missed
+          + chunks). The non-tautological                                
+      174 +    counterpart is subgraph_concentration@5: expansion's stays
+          + at the vector baseline (the                                  
+      175 +    injected chunks land at the tail, not the top-5), i.e. exp
+          +ansion adds candidate recall                                  
+      176 +    *without* polluting top-k precision. That trade-off is the
+          + real, reportable result.                                     
+      177 +                                                              
+      178      Underspecified author probes use single-paper authors so t
+           he target is unambiguous.
+      179 +    Topic-anchored probes span minority topics AND a few cs.CL
+          + probes (the dominant topic,                                  
+      180 +    where filtering barely narrows the field — included so the
+          + table shows filter's limit).                                 
+      181      """
+      182      ar = df[df["source"].isin(["arxiv", "arxiv-demo"])].copy()
+      183      chunks_by_paper = ar.groupby("paper_id")["chunk_id"].apply
+           (list).to_dict()
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 28 lines, removed 24 lines
+      211          if n_spec >= 10:
+      212              break
+      213  
+      214 -    # Author-anchored, UNDERSPECIFIED (entity only, no keyphra
+          -se).                                                          
+      214 +    # Author-anchored, UNDERSPECIFIED (entity only, no keyphra
+          +se). Up to 20 for less noise.                                 
+      215      solo_authors = list(solo.items())
+      216      rng.shuffle(solo_authors)
+      217 -    for author, pid in solo_authors[:8]:                      
+      217 +    for author, pid in solo_authors[:20]:                     
+      218          if pid in chunks_by_paper:
+      219              probes.append({
+      220                  "query": f"What does {author} propose in their
+            recent work?",
+     ...
+      222                  "kind": "author", "regime": "underspecified",
+      223              })
+      224  
+      225 -    # Topic-anchored on MINORITY topics (specified; filtering 
+          -away cs.CL helps here).                                       
+      226 -    minority = ["cs.CV", "cs.LG", "cs.CR", "cs.IR", "cs.SE", "
+          -cs.AI"]                                                       
+      227 -    with driver.session() as s:                               
+      228 -        trows = s.run(                                        
+      229 -            "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name 
+          -IN $codes "                                                   
+      230 -            "RETURN p.paper_id AS pid, p.title AS title, t.nam
+          -e AS code", codes=minority).data()                            
+      231 -    rng.shuffle(trows)                                        
+      232 -    n_topic = 0                                               
+      233 -    for r in trows:                                           
+      234 -        if r["pid"] not in chunks_by_paper or not r["title"]: 
+      235 -            continue                                          
+      236 -        kp = _title_keyphrase(r["title"])                     
+      237 -        if len(kp.split()) < 3:                               
+      238 -            continue                                          
+      239 -        probes.append({                                       
+      240 -            "query": f"In {TOPIC_PHRASE.get(r['code'], r['code
+          -'])} research, {kp}?",                                        
+      241 -            "target_paper": r["pid"], "relevant": chunks_by_pa
+          -per[r["pid"]],                                                
+      242 -            "kind": "topic", "regime": "specified",           
+      243 -        })                                                    
+      244 -        n_topic += 1                                          
+      245 -        if n_topic >= 12:                                     
+      246 -            break                                             
+      225 +    # Topic-anchored, SPECIFIED — minority topics (filtering a
+          +way cs.CL helps) + a few cs.CL                                
+      226 +    # probes (the dominant topic, where the filter barely narr
+          +ows: 113/155 papers).                                         
+      227 +    def _add_topic_probes(codes, cap):                        
+      228 +        with driver.session() as s:                           
+      229 +            trows = s.run(                                    
+      230 +                "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.n
+          +ame IN $codes "                                               
+      231 +                "RETURN p.paper_id AS pid, p.title AS title, t
+          +.name AS code", codes=codes).data()                           
+      232 +        rng.shuffle(trows)                                    
+      233 +        n = 0                                                 
+      234 +        for r in trows:                                       
+      235 +            if r["pid"] not in chunks_by_paper or not r["title
+          +"]:                                                           
+      236 +                continue                                      
+      237 +            kp = _title_keyphrase(r["title"])                 
+      238 +            if len(kp.split()) < 3:                           
+      239 +                continue                                      
+      240 +            probes.append({                                   
+      241 +                "query": f"In {TOPIC_PHRASE.get(r['code'], r['
+          +code'])} research, {kp}?",                                    
+      242 +                "target_paper": r["pid"], "relevant": chunks_b
+          +y_paper[r["pid"]],                                            
+      243 +                "kind": "topic", "regime": "specified", "topic
+          +": r["code"],                                                 
+      244 +            })                                                
+      245 +            n += 1                                            
+      246 +            if n >= cap:                                      
+      247 +                break                                         
+      248  
+      249 +    _add_topic_probes(["cs.CV", "cs.LG", "cs.CR", "cs.IR", "cs
+          +.SE", "cs.AI"], 12)                                           
+      250 +    _add_topic_probes(["cs.CL"], 4)  # dominant-topic control:
+          + filter can't narrow much here                                
+      251 +                                                              
+      252      return probes, chunks_by_paper
+      253  
+      254  
+
+⏺ Now rename the metric (#12: subgraph_prec@5 → subgraph_conc@5, since it
+  measures concentration, not relevance). Let me view _summarize:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 3 lines, removed 1 line
+      369              "policy": mode, "hit@5": hit5,
+      370              "hit@10": round(st.mean(v["hit10"] for v in vals),
+            3),
+      371              "cand_recall": round(st.mean(v["cand_recall"] for 
+           v in vals), 3),
+      372 -            "subgraph_prec@5": round(st.mean(v["subprec5"] for
+          - v in vals), 3),                                              
+      372 +            # concentration, NOT relevance: fraction of the to
+          +p-5 whose paper is in the                                     
+      373 +            # selected subgraph (how aggressively a policy foc
+          +uses on the subgraph).                                        
+      374 +            "subgraph_conc@5": round(st.mean(v["subprec5"] for
+          + v in vals), 3),                                              
+      375              "Δhit@5_vs_vector": round(hit5 - base, 3),
+      376              "guidance_ms_med": round(st.median(v["lat"] for v 
+           in vals), 3),
+      377          })
+
+⏺ Now update main(): the LLM n/a row needs the new column, and the markdown
+  prose needs the reframing/rename/cs.CL documentation. Let me read it:
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 4 lines, removed 3 lines
+      415          print("[eval] no LLM backend → llm row marked n/a")
+      416      lprobes = build_linking_probes(driver, index, df, rng)
+      417      print(f"[eval] linking probes: {len(lprobes)} "
+      418 -          f"({sum(p['kind']=='negative' for p in lprobes)} neg
+          -atives)")                                                     
+      418 +          f"({sum(p['kind']=='negative' for p in lprobes)} neg
+          +atives, "                                                     
+      419 +          f"{sum(p['kind']=='topic-heldout' for p in lprobes)}
+          + held-out topic paraphrases)")                                
+      420      ldf = eval_linking(driver, index, lprobes, methods)
+      421      if "llm" not in methods:
+      422          ldf = pd.concat([ldf, pd.DataFrame([{
+      423              "method": "llm", "precision": "n/a", "recall": "n/
+           a", "f1": "n/a",
+      423 -            "fp_rate_neg": "n/a", "median_ms": "n/a", "p95_ms"
+          -: "n/a (no backend)"}])],                                     
+      424 -            ignore_index=True)                                
+      424 +            "fp_rate_neg": "n/a", "heldout_topic_recall": "n/a
+          +", "median_ms": "n/a",                                        
+      425 +            "p95_ms": "n/a (no backend)"}])], ignore_index=Tru
+          +e)                                                            
+      426      print("\n=== Entity-linking comparison ===")
+      427      print(ldf.to_string(index=False))
+      428  
+
+⏺ Update(scripts/eval_graph_select.py)
+  ⎿  Added 28 lines, removed 9 lines
+      443      gdf.to_csv(OUT / "graph_guidance_comparison.csv", index=Fa
+           lse)
+      444      (OUT / "graph_linking_comparison.md").write_text(
+      445          "# D3 Task-1 — Entity-linking comparison\n\n"
+      446 -        f"Probe set: {len(lprobes)} labelled queries derived f
+          -rom the live graph "                                          
+      447 -        f"(seed={SEED}); precision/recall over (label, node) p
+          -airs; "                                                       
+      448 -        "`fp_rate_neg` = fraction of no-entity queries that wr
+          -ongly linked something.\n\n"                                  
+      449 -        + ldf.to_markdown(index=False) + "\n")                
+      446 +        f"Probe set: {len(lprobes)} labelled queries derived f
+          +rom the live graph (seed={SEED}); "                           
+      447 +        "precision/recall/F1 over (label, node) pairs on the *
+          +linkable* probes (author "                                    
+      448 +        "plain/prose/typo-1/typo-3, in-vocabulary topics, held
+          +-out topic paraphrases, "                                     
+      449 +        "author+topic). Diagnostics: **fp_rate_neg** = fractio
+          +n of non-linkable queries "                                   
+      450 +        "(generic questions + plausible *absent* author names)
+          + that wrongly linked something; "                             
+      451 +        "**heldout_topic_recall** = recall on topic paraphrase
+          +s deliberately NOT in the "                                   
+      452 +        "synonym table.\n\n"                                  
+      453 +        + ldf.to_markdown(index=False) + "\n\n"               
+      454 +        "**Reading it.** Fuzzy leads on precision, recall and 
+          +latency; spaCy trails because "                               
+      455 +        "PERSON NER misfires on typo'd/unusual author spans. T
+          +he low `heldout_topic_recall` "                               
+      456 +        "for *both* offline linkers is the honest limitation: 
+          +topic linking is bounded by the "                             
+      457 +        "hand-built synonym table, so a paraphrase it has neve
+          +r seen does not link. "                                       
+      458 +        "Embedding- or LLM-based topic linking is the future-w
+          +ork fix.\n")                                                  
+      459  
+      460      regime_md = "\n\n".join(
+      461          f"### Regime: {reg}\n\n" + rdf.to_markdown(index=False
+           ) for reg, rdf in by_regime.items())
+     ...
+      464          f"Probe set: {len(gprobes)} entity-anchored content qu
+           estions "
+      465          f"({n_spec} specified, {n_under} underspecified; seed=
+           {SEED}); candidate pool "
+      466          f"k={CANDIDATE_K}. **Hit@k** = a chunk of the target p
+           aper reached the top-k; "
+      458 -        "**cand_recall** = a target chunk is anywhere in the r
+          -eshaped candidate list "                                      
+      459 -        "(the signal a downstream reranker sees — this is wher
+          -e expansion pays off); "                                      
+      460 -        "**subgraph_prec@5** = fraction of the top-5 inside th
+          -e selected subgraph. "                                        
+      467 +        "**cand_recall** = a target chunk is anywhere in the r
+          +eshaped candidate list (the "                                 
+      468 +        "signal a downstream cross-encoder reranker sees); **s
+          +ubgraph_conc@5** = fraction of "                              
+      469 +        "the top-5 whose paper is in the selected subgraph (co
+          +ncentration, *not* relevance). "                              
+      470          "Policies apply to the hybrid pool; vector/hybrid carr
+           y no graph guidance.\n\n"
+      471          "## Overall\n\n" + gdf.to_markdown(index=False) + "\n\
+           n"
+      472          "## By regime\n\n"
+      473          "*Specified* queries already retrieve well (hit@5 near
+            ceiling) → graph adds "
+      465 -        "**precision**. *Underspecified* queries miss the pape
+          -r under vector search → graph "                               
+      466 -        "adds **recall** (expansion injects the missed subgrap
+          -h chunks; cand_recall rises).\n\n"                            
+      474 +        "**precision**: filter pushes subgraph_conc@5 to ~1.0 
+          +with no recall loss; booster is "                             
+      475 +        "the recall-safe middle ground. *Underspecified* queri
+          +es miss the paper under vector "                              
+      476 +        "search → graph adds **recall**: expansion raises cand
+          +_recall by injecting subgraph "                               
+      477 +        "chunks the vector pool missed.\n\n"                  
+      478 +        "**Honesty note on expansion.** For solo-author unders
+          +pecified probes the target "                                  
+      479 +        "paper *is* the linked subgraph, so a correct link + e
+          +xpansion injects it by "                                      
+      480 +        "construction — `cand_recall→1.0` shows the mechanism 
+          +and its ceiling (bounded by link "                            
+      481 +        "precision), not a free recovery of arbitrary chunks. 
+          +The non-tautological half is "                                
+      482 +        "`subgraph_conc@5`: expansion's injected chunks land a
+          +t the tail, so top-5 precision is "                           
+      483 +        "unchanged — expansion buys candidate recall *without*
+          + polluting the top-k the reranker "                           
+      484 +        "orders. cs.CL (dominant-topic) probes are included to
+          + show filter's limit: when the "                              
+      485 +        "subgraph is 113/155 papers, filtering barely narrows 
+          +the field.\n\n"                                               
+      486          + regime_md + "\n")
+      487      print(f"\n[eval] wrote 4 artifacts to {OUT}/")
+      488      driver.close()
+
+⏺ Let me verify the correctness edits didn't break the unit tests, then re-run
+  the eval with the honest probes:
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graph_select.py -q 2>&1 | tail -6)
+  ⎿  ....................................
+        [100%]
+     36 passed in 0.04s
+
+⏺ Bash(.venv/bin/python scripts/eval_graph_select.py 2>&1 | grep -vE "Loading
+      weights|HF_TOKEN" | tail -50)
+  ⎿  [eval] graph: 764 authors, 13 topics
+     [eval] corpus: 15760 chunks; building retriever (BGE + BM25)…
+     [eval] no LLM backend → llm row marked n/a
+     … +35 lines (ctrl+o to expand)
+  ⎿  (timeout 5m)
+⏺ Now the numbers are honest and the story is stronger:
+  - Linking: fuzzy P=1.0/R=0.844/F1=0.915 @0.5ms (no longer a suspicious 1.0 —
+  held-out paraphrases + hard typos pull recall down honestly); spaCy
+  0.913/0.656 with a 0.125 false-positive rate; heldout_topic_recall=0.0 for
+  both honestly exposes the synonym-table limit.
+  - Guidance now has headroom: filter/booster lift hit@5 +15.3pp (0.543→0.696)
+  overall; under-specified regime shows filter 0.0→0.3 and expansion cand_recall
+  0.2→1.0.
+
+  This actually supports the executor's existing filter default with real
+  evidence. Now let me add the high-value coverage tests the review flagged
+  (spaCy linker, booster-with-scores, exception paths, route fall-through, cache
+  identity, LLM topic re-match, env override, max_expand cap, parse edge
+  cases):
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(tests/test_graph_select.py)
+  ⎿  Added 2 lines
+      21      _parse_llm_entities,
+      22      apply_guidance,
+      23      clear_index_cache,
+      24 +    get_index,                                                 
+      25      link_entities,
+      26      link_fuzzy,
+      27      link_llm,
+      28 +    link_spacy,                                                
+      29      route_subgraph,
+      30      select_subgraph,
+      31  )
+
+⏺ Now let me append the coverage tests (with the fakes they need):
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Update(tests/test_graph_select.py)
+  ⎿  Added 161 lines
+      296  def test_guidance_unknown_policy(sub):
+      297      with pytest.raises(ValueError):
+      298          apply_guidance(["c1"], sub, paper_of=PAPER_OF, policy=
+           "bogus")
+      299 +                                                              
+      300 +                                                              
+      301 +# ============================================================
+          +==========================                                    
+      302 +# Coverage gaps surfaced by the adversarial review (link_spacy
+          +, exception paths, route                                      
+      303 +# fall-through, cache identity, LLM topic re-match, env overri
+          +de, max_expand, parse edges).                                 
+      304 +# ============================================================
+          +==========================                                    
+      305 +                                                              
+      306 +# --- GraphIndex cache (identity + eviction) -----------------
+          +---------------------------                                   
+      307 +def test_get_index_caches_per_driver(driver):                 
+      308 +    a = get_index(driver)                                     
+      309 +    b = get_index(driver)                                     
+      310 +    assert a is b                                   # same dri
+          +ver → same cached object                                      
+      311 +    clear_index_cache()                                       
+      312 +    assert get_index(driver) is not a               # cleared 
+          +→ rebuilt                                                     
+      313 +                                                              
+      314 +                                                              
+      315 +# --- select_subgraph exception paths → graceful degradation -
+          +---------------------------                                   
+      316 +class _VocabRaisingDriver:                                    
+      317 +    """driver.session() works syntactically but every query ra
+          +ises → get_index fails."""                                    
+      318 +                                                              
+      319 +    class _S:                                                 
+      320 +        def __enter__(self):                                  
+      321 +            return self                                       
+      322 +                                                              
+      323 +        def __exit__(self, *e):                               
+      324 +            return False                                      
+      325 +                                                              
+      326 +        def run(self, *a, **k):                               
+      327 +            raise RuntimeError("graph down")                  
+      328 +                                                              
+      329 +    def session(self):                                        
+      330 +        return self._S()                                      
+      331 +                                                              
+      332 +                                                              
+      333 +class _RouteRaisingDriver(_FakeDriver):                       
+      334 +    """Answers vocabulary queries (so get_index works) but rai
+          +ses on pid/routing queries."""                                
+      335 +                                                              
+      336 +    class _S(_FakeSession):                                   
+      337 +        def run(self, cypher, **params):                      
+      338 +            if params.get("names") or params.get("codes"):    
+      339 +                raise RuntimeError("routing query failed")    
+      340 +            return super().run(cypher, **params)              
+      341 +                                                              
+      342 +    def session(self):                                        
+      343 +        return self._S(self.graph)                            
+      344 +                                                              
+      345 +                                                              
+      346 +def test_select_subgraph_get_index_failure_is_fallback():     
+      347 +    clear_index_cache()                                       
+      348 +    res = select_subgraph("papers by Ada Lovelace", neo4j_driv
+          +er=_VocabRaisingDriver(), method="fuzzy")                     
+      349 +    assert res.method == "fallback" and res.paper_ids == []   
+      350 +                                                              
+      351 +                                                              
+      352 +def test_select_subgraph_route_exception_keeps_linker_method()
+          +:                                                             
+      353 +    clear_index_cache()                                       
+      354 +    res = select_subgraph("papers by Ada Lovelace", neo4j_driv
+          +er=_RouteRaisingDriver(), method="fuzzy")                     
+      355 +    # linking succeeded → method stays "fuzzy" (not "fallback"
+          +); no usable subgraph → empty.                                
+      356 +    assert res.method == "fuzzy" and res.paper_ids == []      
+      357 +    assert "Ada Lovelace" in res.seed_nodes                   
+      358 +                                                              
+      359 +                                                              
+      360 +def test_select_subgraph_auto_respects_env(driver, monkeypatch
+          +):                                                            
+      361 +    monkeypatch.setenv("CSAI415_GRAPH_LINK", "spacy")         
+      362 +    # spaCy may be unavailable in CI; if so it must still not 
+          +crash (degrades to fallback).                                 
+      363 +    res = select_subgraph("What did Ada Lovelace write?", neo4
+          +j_driver=driver, method="auto")                               
+      364 +    assert res.method in {"spacy", "fallback"}                
+      365 +                                                              
+      366 +                                                              
+      367 +# --- route_subgraph fall-through when a template fires but re
+          +turns no papers ------------                                  
+      368 +class _CollabEmptyDriver(_FakeDriver):                        
+      369 +    """Collaboration template returns empty → router must fall
+          + through to author-only (01)."""                              
+      370 +                                                              
+      371 +    class _S(_FakeSession):                                   
+      372 +        def _route(self, cypher, params):                     
+      373 +            if "co:Author" in cypher:                         
+      374 +                return []  # collab yields nothing            
+      375 +            return super()._route(cypher, params)             
+      376 +                                                              
+      377 +    def session(self):                                        
+      378 +        return self._S(self.graph)                            
+      379 +                                                              
+      380 +                                                              
+      381 +def test_route_collab_empty_falls_through_to_author(index):   
+      382 +    clear_index_cache()                                       
+      383 +    drv = _CollabEmptyDriver()                                
+      384 +    q = "Who does Ada Lovelace collaborate with?"             
+      385 +    pids, cypher, _ = route_subgraph(link_fuzzy(q, index), drv
+          +, q)                                                          
+      386 +    assert cypher == "01_papers_by_author"          # fell thr
+          +ough from empty collab                                        
+      387 +    assert set(pids) == {"pA1", "pA2"}                        
+      388 +                                                              
+      389 +                                                              
+      390 +# --- spaCy linker (real model if installed, else skip) ------
+          +---------------------------                                   
+      391 +def test_link_spacy_links_person_to_author(index):            
+      392 +    spacy = pytest.importorskip("spacy")                      
+      393 +    try:                                                      
+      394 +        spacy.load("en_core_web_sm")                          
+      395 +    except OSError:                                           
+      396 +        pytest.skip("en_core_web_sm not installed")           
+      397 +    hits = link_spacy("What has Ada Lovelace contributed?", in
+          +dex)                                                          
+      398 +    assert any(h.label == "Author" and h.name == "Ada Lovelace
+          +" for h in hits)                                              
+      399 +                                                              
+      400 +                                                              
+      401 +# --- LLM linker topic re-matching (mocked backend) ----------
+          +---------------------------                                   
+      402 +def _fake_client(content):                                    
+      403 +    msg = type("M", (), {"content": content})                 
+      404 +    choice = type("C", (), {"message": msg})                  
+      405 +    resp = type("R", (), {"choices": [choice]})               
+      406 +    completions = type("Cmp", (), {"create": lambda self, **kw
+          +: resp})()                                                    
+      407 +    chat = type("Chat", (), {"completions": completions})()   
+      408 +    return type("Client", (), {"chat": chat})()               
+      409 +                                                              
+      410 +                                                              
+      411 +def test_link_llm_rematches_topic_through_synonym_table(index,
+          + monkeypatch):                                                
+      412 +    monkeypatch.setattr(                                      
+      413 +        "csai415.answer.resolve_backend",                     
+      414 +        lambda: (_fake_client('{"authors": ["Ada Lovelace"], "
+          +topics": ["natural language processing"]}'),                  
+      415 +                 "fake-model", "ollama"))                     
+      416 +    hits = link_llm("anything", index)                        
+      417 +    names = {(h.label, h.name) for h in hits}                 
+      418 +    assert ("Author", "Ada Lovelace") in names                
+      419 +    assert ("Topic", "cs.CL") in names               # "natura
+          +l language processing" → cs.CL                                
+      420 +                                                              
+      421 +                                                              
+      422 +# --- fuzzy threshold boundary -------------------------------
+          +---------------------------                                   
+      423 +def test_fuzzy_threshold_gates_match(index):                  
+      424 +    typo = ["Ada Lovlace"]                            # ~one-e
+          +dit from "Ada Lovelace"                                       
+      425 +    assert _fuzzy_link_authors(typo, index, threshold=80)     
+          +   # lenient → links                                          
+      426 +    assert _fuzzy_link_authors(typo, index, threshold=100) == 
+          +[] # exact-only → rejects                                     
+      427 +                                                              
+      428 +                                                              
+      429 +# --- apply_guidance: booster with explicit scores, expansion 
+          +cap & empty inputs --------                                   
+      430 +def test_guidance_booster_with_explicit_scores(sub):          
+      431 +    # c1(P1, in-sub) vs c2(X, out). Out-of-sub has higher base
+          + score, but boost flips it.                                   
+      432 +    scores = {"c1": 0.1, "c2": 0.9}                           
+      433 +    out = apply_guidance(["c2", "c1"], sub, paper_of=PAPER_OF,
+          + policy="booster",                                            
+      434 +                         scores=scores, boost=1.0)            
+      435 +    assert out[0] == "c1"                                     
+      436 +                                                              
+      437 +                                                              
+      438 +def test_guidance_expansion_respects_max_expand(sub):         
+      439 +    chunks_by_paper = {"P1": ["c1", "x1", "x2", "x3"], "P2": [
+          +"x4", "x5"]}                                                  
+      440 +    out = apply_guidance(["c1"], sub, paper_of=PAPER_OF, polic
+          +y="expansion",                                                
+      441 +                         chunks_by_paper=chunks_by_paper, max_
+          +expand=2)                                                     
+      442 +    assert len(out) == 1 + 2                          # origin
+          +al + exactly max_expand injected                              
+      443 +                                                              
+      444 +                                                              
+      445 +def test_guidance_expansion_empty_chunks_by_paper_is_noop(sub)
+          +:                                                             
+      446 +    assert apply_guidance(["c1", "c2"], sub, paper_of=PAPER_OF
+          +, policy="expansion",                                         
+      447 +                          chunks_by_paper={}) == ["c1", "c2"] 
+      448 +    assert apply_guidance(["c1", "c2"], sub, paper_of=PAPER_OF
+          +, policy="expansion",                                         
+      449 +                          chunks_by_paper=None) == ["c1", "c2"
+          +]                                                             
+      450 +                                                              
+      451 +                                                              
+      452 +# --- _parse_llm_entities edge cases -------------------------
+          +---------------------------                                   
+      453 +def test_parse_llm_entities_missing_topics_key():             
+      454 +    assert _parse_llm_entities('{"authors": ["Ada"]}') == (["A
+          +da"], [])                                                     
+      455 +                                                              
+      456 +                                                              
+      457 +def test_parse_llm_entities_coerces_and_filters():            
+      458 +    a, t = _parse_llm_entities('{"authors": [" Ada ", "", 123]
+          +, "topics": null}')                                           
+      459 +    assert a == ["Ada", "123"] and t == []           # strippe
+          +d, empties dropped, ints coerced                              
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graph_select.py -q 2>&1 | tail -15)
+  ⎿  .................................................
+        [100%]
+     49 passed in 1.90s
+
+⏺ 49 tests pass (13 new coverage tests added). Let me confirm the full suite
+  including the frozen contract:
+
+⏺ Bash(.venv/bin/python -m pytest tests/test_graph_select.py
+      tests/test_graphrag_contract.py -q 2>&1 | tail -6)
+  ⎿  ....................................................
+        [100%]
+     52 passed in 5.60s
+
+⏺ All 52 green. Let me commit the review fixes, then write the consolidated
+  report + ai_logs entry.
+
+⏺ Bash(git add -A && git status --short && echo "---" && git commit -q -m "$(cat
+      <<'EOF'
+      D3 Task1: address adversarial review — correctness, honest eval, +13
+      tests…)
+  ⎿  M  reports/D3/graph_guidance_comparison.csv
+     M  reports/D3/graph_guidance_comparison.md
+     M  reports/D3/graph_linking_comparison.csv
+     … +14 lines (ctrl+o to expand)
+
+⏺ Now the final deliverables: a consolidated Task-1 report and the ai_logs/
+  entry. Let me check the existing ai_logs/D3 format and current D3 report
+  layout:
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ The ai_logs/D3/ files are full session transcripts. I'll write a Task-1 AI-log
+  entry (approaches compared + the adversarial-review iteration) and a
+  consolidated Task-1 report that defends the chosen configuration. Let me write
+  both.
+
+⏺ Write(reports/D3/d3_task1_graph_select.md)
+  ⎿  Wrote 102 lines to reports/D3/d3_task1_graph_select.md
+       2 # D3 Task 1 — Graph-guided retrieval (report)
+       3 **Owner:** Yousef Alsakkaf · **Rubric:** D3 GraphRAG (8%) · **Co
+       4 · **Harness:** `scripts/eval_graph_select.py` · **Tables:** `gra
+         ph_linking_comparison.md`,
+       5 `graph_guidance_comparison.md` (regenerate with `.venv/bin/pytho
+       6 n scripts/eval_graph_select.py`).
+       7 ## 1. What it does
+       9 ```
+      10 query → entity linking → Cypher routing → subgraph (paper_ids) →
+          guidance reshapes retrieval
+     … +149 lines (ctrl+o to expand)
+
+⏺ Write(ai_logs/D3/yousef_D3.md)
+  ⎿  Wrote 55 lines to ai_logs/D3/yousef_D3.md
+       2 # Yousef Alsakkaf — D3 Task 1 (Graph-guided retrieval) — AI log
+       3 **Share-link:** _<paste your Claude Code session share-link here
+       4 **Deliverable:** D3 Task 1 — `src/csai415/graph_select.py` (D3 G
+         raphRAG, 8%).
+       6 This session built the real `select_subgraph` against the live N
+         eo4j graph, plus the
+         isions, and where I pushedles. Below is what I compared, the dec
+       8 back on the AI / iterated (the full reasoning is in the linked t
+       9 ranscript).
+      10 ## Setup
+     … +81 lines (ctrl+o to expand)
+
+⏺ Let me commit these final deliverables and run a final full-suite check:
+
+⏺ Bash(git add reports/D3/d3_task1_graph_select.md ai_logs/D3/yousef_D3.md &&
+      git commit -q -m "$(cat <<'EOF'
+      D3 Task1: consolidated report (defend the winner) + Youse…)
+  ⎿  === full suite ===
+     ....................................................
+        [100%]
+     … +15 lines (ctrl+o to expand)
+
+⏺ Task 1 is complete — all "Done when" criteria met, 52 tests green, everything
+  committed to main. Let me save the non-obvious environment setup to memory so
+  future sessions don't re-discover it.
+
+  Listed 1 directory, wrote 3 memories (ctrl+o to expand)
+
+⏺ Task 1 (Graph-guided retrieval) is complete. Here's the full picture.
+
+  What got built — your Task 1 deliverable
+
+  Everything required under your name in the plan, mapped to the brief's "Done 
+  when":
+
+  ┌──────────────────────────────────────┬──────────────────────────────────┐
+  │     Requirement (brief, Task 1)      │              Status              │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ Real select_subgraph against the     │ ✅ 3 linkers → Cypher router →   │
+  │ live graph                           │ paper_ids                        │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ Compare entity linking (LLM-NER vs   │ ✅ table — fuzzy wins            │
+  │ spaCy vs fuzzy)                      │                                  │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ Which Cypher template fires          │ ✅ routed by node type,          │
+  │                                      │ cypher_used recorded             │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ Guidance policy: filter vs booster   │ ✅ two-regime table              │
+  │ vs expansion vs vector-only          │                                  │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ Graceful no-hit fallback             │ ✅ no driver / no link / no hit  │
+  │                                      │ / graph error                    │
+  ├──────────────────────────────────────┼──────────────────────────────────┤
+  │ ≥2 commits under your identity +     │ ✅ 5 commits +                   │
+  │ ai_logs/                             │ ai_logs/D3/yousef_D3.md          │
+  └──────────────────────────────────────┴──────────────────────────────────┘
+
+  Headline results (live graph, reproducible at seed=42)
+
+  - Linking: fuzzy P/R/F1 = 1.0 / 0.844 / 0.915 @ 0.5 ms, 0 false-positives →
+  shipped default; spaCy 0.913/0.656 (NER misfires); LLM-NER implemented, n/a
+  without a backend.
+  - Guidance: filter/booster lift hit@5 +15.3pp (0.543→0.696); expansion lifts
+  candidate-recall 0.2→1.0 on under-specified queries → filter is the 
+  recommended default (and it matches the executor's existing graph mode, now
+  backed by evidence).
+
+  Quality bar
+
+  Findings were hardened by an adversarial multi-agent review (21 confirmed
+  issues fixed): de-circularized the topic probes, added absent-author/held-out
+  stress cases, reframed expansion's metric honestly, fixed fallback
+  method-attribution, hardened the cache. 52 tests green (49 unit + 3 frozen
+  contract), no Docker needed.
+
+  Commits (all on main, as you asked)
+
+  f39e1cf smoke · f739b40 implementation · 0f03d4f eval+tables · c50af42 review
+  fixes+tests · 6398300 report+ai-log
+
+  Two things for you to do
+
+  1. Paste your session share-link into ai_logs/D3/yousef_D3.md (the brief
+  requires it — empty = missing evidence). This Claude Code session is the
+  transcript.
+  2. Nothing else is blocking — the rest (executor wiring, /ask, final report)
+  is Abdulrahman's Task 7.
+
+  Re-run / verify anytime
+
+  docker compose up -d neo4j
+  .venv/bin/python scripts/seed_neo4j.py --from-parquet
+  data/processed/chunks.parquet --source arxiv
+  .venv/bin/python check_graph.py                                     # live 
+  connectivity
+  .venv/bin/python -m pytest tests/test_graph_select.py
+  tests/test_graphrag_contract.py -q
+  .venv/bin/python scripts/eval_graph_select.py                       # 
+  regenerate both tables
+
+  I also saved the env setup (Python 3.12, not system 3.14) and Task-1 design to
+  project memory so future sessions skip the rediscovery.
+
+✻ Worked for 41m 7s
+
+❯ what is done and what is left                                                 
+⏺ Let me ground this in the actual repo state rather than guess — quick scan of
+  the other tasks' files.
+
+⏺ Bash(cd /Users/yousefalsakkaf/uni/special-topics
+      echo "=== T2 rerank.py ==="; grep -cE "def |TODO|stub|NotImplemented"
+      src/csai415/rerank.py 2>/dev/null; grep -nE "r…)
+  ⎿  Error: Exit code 1
+     === T2 rerank.py ===
+     1
+     24:    DB round-trip). H0 STUB: identity — first ``top_n`` in the order 
+     given.
+     === T4 data + eval ===
+     ls: gold/qa_answers.jsonl: No such file or directory
+     ls: train/qa_train.jsonl: No such file or directory
+     ragas_groq.py:
+     ls: src/csai415/ragas_groq.py: No such file or directory
+     eval.evaluate_answers proxy/real:
+     … +24 lines (ctrl+o to expand)
+
+⏺ Here's the accurate status, grounded in the current main.
+
+  Your Task 1 (graph-guided retrieval) — ✅ DONE
+
+  Everything required under your name is built, tested, evidenced, and
+  committed:
+  - Real select_subgraph (3 linkers + Cypher router + 3 guidance policies +
+  fallback)
+  - Both comparison tables + consolidated report
+  - 49 unit tests + 3 contract tests green
+  - 5 commits on main + AI log
+
+  The only thing left on your side: paste your session share-link into
+  ai_logs/D3/yousef_D3.md (brief requires it).
+
+  ---
+  Rest of the project — other owners (status on main)
+
+  D3
+
+  ┌──────────────┬─────────────┬───────────────────────────────────────────┐
+  │     Task     │    Owner    │               State on main               │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T1           │ Yousef      │ ✅ done                                   │
+  │ graph-guided │ (you)       │                                           │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T3 answerer  │ Wafiq       │ ✅ done — answer.py +                     │
+  │ (zero-shot)  │             │ answerer_comparison.md                    │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T2 reranking │ Ahmed       │ ❌ still H0 stub (rerank.py = identity    │
+  │              │ Soliman     │ passthrough)                              │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │              │             │ ❌ not done — qa_answers.jsonl,           │
+  │ T4 data +    │ Ahmad Fraij │ qa_train.jsonl, ragas_groq.py missing;    │
+  │ eval harness │             │ eval.evaluate_answers still a PROXY, not  │
+  │              │             │ real RAGAS                                │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T5 ablation  │             │ ❌ not started — graphrag_hpo.py,         │
+  │ + HPO        │ Yehia       │ notebooks/04_graphrag_ablation.ipynb      │
+  │              │             │ absent                                    │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T6 safety (3 │             │ ❌ not started — safety.py,               │
+  │              │ Musab       │ safety_eval.py, d3_safety.md absent       │
+  │ mitigations) │             │                                           │
+  ├──────────────┼─────────────┼───────────────────────────────────────────┤
+  │ T7           │             │ 🔶 partial — /ask route + Qdrant          │
+  │ integration  │ Abdulrahman │ collection param exist; final wiring/D3   │
+  │ + /ask       │             │ numbers blocked on T2 + T4                │
+  └──────────────┴─────────────┴───────────────────────────────────────────┘
+
+  D4 (all future, after D3 lands)
+  - T3b QLoRA tune → GGUF → Ollama + tuning card (Wafiq) —
+  notebooks/05_qlora_tune.ipynb absent
+  - T7 base-vs-tuned delta table + 8–10pp report + demo (Abdulrahman) —
+  reports/D4/ absent
+
+  ---
+  Bottom line: Your slice is fully complete. The D3 critical path now runs
+  through T2 (rerank) and T4 (eval + data) — until those land, T7 can't assemble
+  the real D3 numbers. None of that is your responsibility per the plan ("you
+  own your files outright; one integrator does the final pass").
+
+  Want me to do anything further — e.g., help sanity-check a teammate's task, or
+  just stop here?
+
+✻ Crunched for 1m 12s
+
+❯ push all the commits                                                          
+
+⏺ Bash(cd /Users/yousefalsakkaf/uni/special-topics
+      git remote -v 2>&1…)
+  ⎿  origin     https://github.com/waf-iq/special-topics.git (fetch)
+     origin     https://github.com/waf-iq/special-topics.git (push)
+     --- branch + ahead/behind ---
+     … +12 lines (ctrl+o to expand)
+
+⏺ 5 commits ahead of origin/main, all your Task-1 work. Pushing to main:
+
+⏺ Bash(git push origin main 2>&1 | tail -15)
+  ⎿  To https://github.com/waf-iq/special-topics.git
+        9dac011..6398300  main -> main
+
+⏺ Pushed successfully — 9dac011..6398300 main -> main.
+
+⏺ Bash(git status -sb 2>&1 | head -1)
+  ⎿  ## main...origin/main
+
+⏺ All 5 Task-1 commits are now on origin/main
+  (https://github.com/waf-iq/special-topics) — local and remote are in sync (no
+  "ahead/behind").
+
+  Pushed:
+  - f39e1cf connectivity smoke
+  - f739b40 real select_subgraph (linkers + router + guidance + fallback)
+  - 0f03d4f eval harness + comparison tables
+  - c50af42 adversarial-review fixes + 13 tests
+  - 6398300 consolidated report + AI log
+
+  Reminder: add your session share-link to ai_logs/D3/yousef_D3.md and
+  commit/push that too when ready (it's the one outstanding item on your side).
+  Want me to do anything else?
+
+✻ Worked for 49s

@@ -1,6 +1,6 @@
 # Yousef Alsakkaf — D3 Task 1 (Graph-guided retrieval) — AI log
 
-**Share-link:** _<paste your Claude Code session share-link here>_
+**Full transcript:** [`yousef_D3.txt`](yousef_D3.txt) (exported Claude Code session, this deliverable).
 **Deliverable:** D3 Task 1 — `src/csai415/graph_select.py` (D3 GraphRAG, 8%).
 
 This session built the real `select_subgraph` against the live Neo4j graph, plus the
