@@ -72,38 +72,51 @@ def evaluate(
 # and p95 latency are already real.
 
 
-def _overlap(a: str, b: str) -> float:
-    import re
-
-    aw = set(re.findall(r"[a-z]{3,}", (a or "").lower()))
-    bw = set(re.findall(r"[a-z]{3,}", (b or "").lower()))
-    return len(aw & bw) / len(aw) if aw else 0.0
+def _assert_no_leakage(gold: list[dict], train_path: str = "data/train/qa_train.jsonl") -> None:
+    """Assert no question/chunk overlap between gold eval set and QLoRA train set."""
+    import os
+    if not os.path.exists(train_path):
+        return
+    import json as _json
+    with open(train_path) as f:
+        train_rows = [_json.loads(l) for l in f]
+    gold_q = {r["question"].lower().strip() for r in gold}
+    train_q = {r["question"].lower().strip() for r in train_rows}
+    overlap = gold_q & train_q
+    assert not overlap, f"Train/eval leakage detected — {len(overlap)} shared question(s): {list(overlap)[:3]}"
 
 
 def evaluate_answers(answer_fn: Callable, gold: list[dict]) -> dict:
     """Returns {faithfulness, answer_relevance, recall5, p95_latency_ms, n}.
 
-    faithfulness/answer_relevance are H0 lexical PROXIES (answer↔contexts, answer↔question)
-    — D3-5 swaps in RAGAS+Groq. recall5 = fraction of gold relevant_chunk_ids that appear
-    in the answer's citations. Latency is measured per call (p95).
+    faithfulness and answer_relevance are scored by RAGAS via Groq llama-3.3-70b.
+    recall5 = fraction of gold relevant_chunk_ids cited by the answer.
     """
-    faith, relev, recalls, latencies_ms = [], [], [], []
+    from csai415.ragas_groq import ragas_score
+
+    _assert_no_leakage(gold)
+
+    questions, answers, contexts_list, ground_truths, recalls, latencies_ms = [], [], [], [], [], []
+
     for q in gold:
         t0 = time.perf_counter()
         res = answer_fn(q["question"])
         latencies_ms.append(getattr(res, "latency_ms", None) or (time.perf_counter() - t0) * 1000)
 
-        contexts = " ".join(getattr(res, "contexts", []) or [])
-        faith.append(_overlap(res.answer, contexts))          # PROXY — replace with RAGAS faithfulness
-        relev.append(_overlap(res.answer, q["question"]))     # PROXY — replace with RAGAS answer_relevance
+        questions.append(q["question"])
+        answers.append(res.answer)
+        contexts_list.append(list(getattr(res, "contexts", []) or []))
+        ground_truths.append(q.get("reference_answer", ""))
 
         cited = {c.chunk_id for c in getattr(res, "citations", [])}
         relevant = set(q.get("relevant_chunk_ids", []))
         recalls.append(len(cited & relevant) / len(relevant) if relevant else 0.0)
 
+    ragas = ragas_score(questions, answers, contexts_list, ground_truths)
+
     return {
-        "faithfulness": float(np.mean(faith)) if faith else 0.0,
-        "answer_relevance": float(np.mean(relev)) if relev else 0.0,
+        "faithfulness": ragas["faithfulness"],
+        "answer_relevance": ragas["answer_relevancy"],
         "recall5": float(np.mean(recalls)) if recalls else 0.0,
         "p95_latency_ms": float(np.percentile(latencies_ms, 95)) if latencies_ms else 0.0,
         "n": len(gold),
