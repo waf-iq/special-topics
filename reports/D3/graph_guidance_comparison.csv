@@ -1,0 +1,6 @@
+policy,hit@5,hit@10,cand_recall,subgraph_prec@5,Δhit@5_vs_vector,guidance_ms_med
+vector,0.733,0.733,0.767,0.587,0.0,0.002
+hybrid,0.767,0.767,0.767,0.627,0.034,0.0
+filter,0.767,0.767,0.767,0.767,0.034,0.013
+booster,0.767,0.767,0.767,0.74,0.034,0.01
+expansion,0.767,0.767,1.0,0.627,0.034,0.006
