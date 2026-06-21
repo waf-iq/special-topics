@@ -38,6 +38,7 @@ from __future__ import annotations
 import os
 import re
 import time
+import weakref
 from dataclasses import dataclass, field
 
 # --- Topic vocabulary ------------------------------------------------------------------
@@ -148,15 +149,16 @@ class GraphIndex:
 
 
 # Cache GraphIndex per driver object so repeated calls (eval loops, the executor) reuse it.
-_INDEX_CACHE: dict[int, GraphIndex] = {}
+# WeakKeyDictionary (not id(driver)→idx): entries auto-evict when a driver is garbage
+# collected, so a reused memory address can never return another driver's stale vocabulary.
+_INDEX_CACHE: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
 
 
 def get_index(driver) -> GraphIndex:
-    key = id(driver)
-    idx = _INDEX_CACHE.get(key)
+    idx = _INDEX_CACHE.get(driver)
     if idx is None:
         idx = GraphIndex.from_driver(driver)
-        _INDEX_CACHE[key] = idx
+        _INDEX_CACHE[driver] = idx
     return idx
 
 
@@ -194,7 +196,7 @@ def _link_topics(text: str, index: GraphIndex) -> list[LinkedEntity]:
     best: dict[str, LinkedEntity] = {}
 
     def consider(code: str, score: float, span: str) -> None:
-        if code not in index._topics_lower.values() and code not in index.topics:
+        if code not in index.topics:  # only link to topics that exist in the live graph
             return
         prev = best.get(code)
         if prev is None or score > prev.score:
@@ -432,8 +434,19 @@ def select_subgraph(
     """
     t0 = time.perf_counter()
 
-    def fallback(reason_method: str = "fallback") -> SubgraphResult:
-        return SubgraphResult(method=reason_method, latency_ms=(time.perf_counter() - t0) * 1000.0)
+    def _ms() -> float:
+        return (time.perf_counter() - t0) * 1000.0
+
+    # No linker ever produced output (no driver / linking error) → a true fallback.
+    def fallback() -> SubgraphResult:
+        return SubgraphResult(method="fallback", latency_ms=_ms())
+
+    # Linking succeeded but the graph yielded no usable subgraph (no papers, or a query
+    # error). Report the linker that actually ran — empty paper_ids still degrades the
+    # executor to vector/hybrid, but the method field stays honest about what was attempted.
+    def linked_no_hit(linked) -> SubgraphResult:
+        return SubgraphResult(
+            seed_nodes=[e.name for e in linked], method=chosen, linked=linked, latency_ms=_ms())
 
     if neo4j_driver is None:
         return fallback()
@@ -464,16 +477,10 @@ def select_subgraph(
             linked, neo4j_driver, query, max_papers=max_papers
         )
     except Exception:
-        return fallback()
+        return linked_no_hit(linked)  # linked OK, graph errored during routing
 
     if not paper_ids:
-        # Linked something but the graph returned no papers — still a graceful no-hit.
-        return SubgraphResult(
-            seed_nodes=[e.name for e in linked],
-            method=chosen,
-            linked=linked,
-            latency_ms=(time.perf_counter() - t0) * 1000.0,
-        )
+        return linked_no_hit(linked)  # linked OK, but the subgraph is empty
 
     return SubgraphResult(
         seed_nodes=seeds,
