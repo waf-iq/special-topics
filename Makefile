@@ -5,10 +5,14 @@
 #   make seed PYTHON=.venv/bin/python
 PYTHON ?= .venv/bin/python
 
-.PHONY: up down logs seed seed-dev diagram clean
+.PHONY: up down logs seed seed-dev serve diagram clean
 
 up:                ## Bring up the 3 data stores (mongo + qdrant + neo4j)
 	docker compose up -d
+
+serve:             ## Run the GraphRAG demo (FastAPI + 1-page UI) at http://localhost:$(API_PORT) — loads .env
+	set -a; [ -f .env ] && . ./.env; set +a; \
+	$(PYTHON) -m uvicorn csai415.api:app --host 0.0.0.0 --port $${API_PORT:-8000}
 
 api:               ## Bring up the stores + FastAPI app (needs D2-B1's api.py)
 	docker compose --profile api up -d --build

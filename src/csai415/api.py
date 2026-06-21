@@ -35,6 +35,7 @@ from typing import Optional
 import pandas as pd
 import yaml
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from csai415.graphrag import GraphRAGExecutor
@@ -42,6 +43,7 @@ from csai415.qdrant_dense import QDRANT_COLLECTION
 from csai415.retrieve import CHUNKS_PARQUET, HybridRetriever, RetrieverConfig, load_chunks
 
 DEFAULT_RUNCARD = Path("configs/winning_runcard.yaml")
+STATIC_DIR = Path(__file__).parent / "static"  # 1-page demo UI served at GET /
 
 # A request's ``source`` value -> the parquet ``source`` labels it covers.
 # arxiv-demo is folded into "arxiv" (same provenance, just the original 5 PDFs).
@@ -214,6 +216,14 @@ def create_app(
 
     app = FastAPI(title="CSAI415 PDF-Papers /search", lifespan=lifespan)
 
+    @app.get("/", response_class=HTMLResponse)
+    def index():
+        """The 1-page GraphRAG demo UI (vanilla HTML/JS calling /ask)."""
+        page = STATIC_DIR / "index.html"
+        if not page.exists():
+            raise HTTPException(status_code=404, detail="UI not found")
+        return page.read_text(encoding="utf-8")
+
     @app.get("/healthz")
     def healthz():
         """200 once the retriever is loaded and (when wired) Qdrant is reachable.
@@ -232,7 +242,9 @@ def create_app(
                     status_code=503,
                     detail=f"qdrant collection {QDRANT_COLLECTION!r} unreachable: {exc!s}",
                 ) from exc
-        return {"status": "ok"}
+        from csai415.answer import current_backend
+
+        return {"status": "ok", "answerer": current_backend()}
 
     @app.post("/search", response_model=list[SearchHit])
     def search(req: SearchRequest):
