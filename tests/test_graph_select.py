@@ -21,9 +21,11 @@ from csai415.graph_select import (
     _parse_llm_entities,
     apply_guidance,
     clear_index_cache,
+    get_index,
     link_entities,
     link_fuzzy,
     link_llm,
+    link_spacy,
     route_subgraph,
     select_subgraph,
 )
@@ -294,3 +296,164 @@ def test_guidance_noop_on_empty_subgraph():
 def test_guidance_unknown_policy(sub):
     with pytest.raises(ValueError):
         apply_guidance(["c1"], sub, paper_of=PAPER_OF, policy="bogus")
+
+
+# ======================================================================================
+# Coverage gaps surfaced by the adversarial review (link_spacy, exception paths, route
+# fall-through, cache identity, LLM topic re-match, env override, max_expand, parse edges).
+# ======================================================================================
+
+# --- GraphIndex cache (identity + eviction) --------------------------------------------
+def test_get_index_caches_per_driver(driver):
+    a = get_index(driver)
+    b = get_index(driver)
+    assert a is b                                   # same driver → same cached object
+    clear_index_cache()
+    assert get_index(driver) is not a               # cleared → rebuilt
+
+
+# --- select_subgraph exception paths → graceful degradation ----------------------------
+class _VocabRaisingDriver:
+    """driver.session() works syntactically but every query raises → get_index fails."""
+
+    class _S:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *e):
+            return False
+
+        def run(self, *a, **k):
+            raise RuntimeError("graph down")
+
+    def session(self):
+        return self._S()
+
+
+class _RouteRaisingDriver(_FakeDriver):
+    """Answers vocabulary queries (so get_index works) but raises on pid/routing queries."""
+
+    class _S(_FakeSession):
+        def run(self, cypher, **params):
+            if params.get("names") or params.get("codes"):
+                raise RuntimeError("routing query failed")
+            return super().run(cypher, **params)
+
+    def session(self):
+        return self._S(self.graph)
+
+
+def test_select_subgraph_get_index_failure_is_fallback():
+    clear_index_cache()
+    res = select_subgraph("papers by Ada Lovelace", neo4j_driver=_VocabRaisingDriver(), method="fuzzy")
+    assert res.method == "fallback" and res.paper_ids == []
+
+
+def test_select_subgraph_route_exception_keeps_linker_method():
+    clear_index_cache()
+    res = select_subgraph("papers by Ada Lovelace", neo4j_driver=_RouteRaisingDriver(), method="fuzzy")
+    # linking succeeded → method stays "fuzzy" (not "fallback"); no usable subgraph → empty.
+    assert res.method == "fuzzy" and res.paper_ids == []
+    assert "Ada Lovelace" in res.seed_nodes
+
+
+def test_select_subgraph_auto_respects_env(driver, monkeypatch):
+    monkeypatch.setenv("CSAI415_GRAPH_LINK", "spacy")
+    # spaCy may be unavailable in CI; if so it must still not crash (degrades to fallback).
+    res = select_subgraph("What did Ada Lovelace write?", neo4j_driver=driver, method="auto")
+    assert res.method in {"spacy", "fallback"}
+
+
+# --- route_subgraph fall-through when a template fires but returns no papers ------------
+class _CollabEmptyDriver(_FakeDriver):
+    """Collaboration template returns empty → router must fall through to author-only (01)."""
+
+    class _S(_FakeSession):
+        def _route(self, cypher, params):
+            if "co:Author" in cypher:
+                return []  # collab yields nothing
+            return super()._route(cypher, params)
+
+    def session(self):
+        return self._S(self.graph)
+
+
+def test_route_collab_empty_falls_through_to_author(index):
+    clear_index_cache()
+    drv = _CollabEmptyDriver()
+    q = "Who does Ada Lovelace collaborate with?"
+    pids, cypher, _ = route_subgraph(link_fuzzy(q, index), drv, q)
+    assert cypher == "01_papers_by_author"          # fell through from empty collab
+    assert set(pids) == {"pA1", "pA2"}
+
+
+# --- spaCy linker (real model if installed, else skip) ---------------------------------
+def test_link_spacy_links_person_to_author(index):
+    spacy = pytest.importorskip("spacy")
+    try:
+        spacy.load("en_core_web_sm")
+    except OSError:
+        pytest.skip("en_core_web_sm not installed")
+    hits = link_spacy("What has Ada Lovelace contributed?", index)
+    assert any(h.label == "Author" and h.name == "Ada Lovelace" for h in hits)
+
+
+# --- LLM linker topic re-matching (mocked backend) -------------------------------------
+def _fake_client(content):
+    msg = type("M", (), {"content": content})
+    choice = type("C", (), {"message": msg})
+    resp = type("R", (), {"choices": [choice]})
+    completions = type("Cmp", (), {"create": lambda self, **kw: resp})()
+    chat = type("Chat", (), {"completions": completions})()
+    return type("Client", (), {"chat": chat})()
+
+
+def test_link_llm_rematches_topic_through_synonym_table(index, monkeypatch):
+    monkeypatch.setattr(
+        "csai415.answer.resolve_backend",
+        lambda: (_fake_client('{"authors": ["Ada Lovelace"], "topics": ["natural language processing"]}'),
+                 "fake-model", "ollama"))
+    hits = link_llm("anything", index)
+    names = {(h.label, h.name) for h in hits}
+    assert ("Author", "Ada Lovelace") in names
+    assert ("Topic", "cs.CL") in names               # "natural language processing" → cs.CL
+
+
+# --- fuzzy threshold boundary ----------------------------------------------------------
+def test_fuzzy_threshold_gates_match(index):
+    typo = ["Ada Lovlace"]                            # ~one-edit from "Ada Lovelace"
+    assert _fuzzy_link_authors(typo, index, threshold=80)        # lenient → links
+    assert _fuzzy_link_authors(typo, index, threshold=100) == [] # exact-only → rejects
+
+
+# --- apply_guidance: booster with explicit scores, expansion cap & empty inputs --------
+def test_guidance_booster_with_explicit_scores(sub):
+    # c1(P1, in-sub) vs c2(X, out). Out-of-sub has higher base score, but boost flips it.
+    scores = {"c1": 0.1, "c2": 0.9}
+    out = apply_guidance(["c2", "c1"], sub, paper_of=PAPER_OF, policy="booster",
+                         scores=scores, boost=1.0)
+    assert out[0] == "c1"
+
+
+def test_guidance_expansion_respects_max_expand(sub):
+    chunks_by_paper = {"P1": ["c1", "x1", "x2", "x3"], "P2": ["x4", "x5"]}
+    out = apply_guidance(["c1"], sub, paper_of=PAPER_OF, policy="expansion",
+                         chunks_by_paper=chunks_by_paper, max_expand=2)
+    assert len(out) == 1 + 2                          # original + exactly max_expand injected
+
+
+def test_guidance_expansion_empty_chunks_by_paper_is_noop(sub):
+    assert apply_guidance(["c1", "c2"], sub, paper_of=PAPER_OF, policy="expansion",
+                          chunks_by_paper={}) == ["c1", "c2"]
+    assert apply_guidance(["c1", "c2"], sub, paper_of=PAPER_OF, policy="expansion",
+                          chunks_by_paper=None) == ["c1", "c2"]
+
+
+# --- _parse_llm_entities edge cases ----------------------------------------------------
+def test_parse_llm_entities_missing_topics_key():
+    assert _parse_llm_entities('{"authors": ["Ada"]}') == (["Ada"], [])
+
+
+def test_parse_llm_entities_coerces_and_filters():
+    a, t = _parse_llm_entities('{"authors": [" Ada ", "", 123], "topics": null}')
+    assert a == ["Ada", "123"] and t == []           # stripped, empties dropped, ints coerced

@@ -74,33 +74,67 @@ def _title_keyphrase(title: str) -> str:
     return " ".join(head.split()[:8])
 
 
+# Held-out topic paraphrases — deliberately NOT in graph_select.TOPIC_SYNONYMS, so they
+# test whether topic linking GENERALIZES beyond its hard-coded table (it does not; this
+# exposes the synonym-table-bound limitation rather than inflating recall with phrases the
+# linker is wired to recognize — see the methodology note in the report).
+HELDOUT_TOPIC_PARAPHRASE = {
+    "cs.CL": "computational semantics",
+    "cs.CV": "scene understanding",
+    "cs.LG": "statistical learning theory",
+    "cs.IR": "document ranking",
+    "cs.CR": "threat modeling",
+}
+
+# Plausible but ABSENT author names (famous, not in this 2026 arXiv graph). Gold = no link;
+# a linker that maps these to a similarly-spelled real node is making a precision error.
+ABSENT_AUTHORS = ["Geoffrey Hinton", "Yoshua Bengio", "Fei-Fei Li", "Christopher Manning"]
+
+
 def build_linking_probes(driver, index: GraphIndex, df: pd.DataFrame, rng: random.Random):
-    """Labelled query → expected (authors, topics). Mixes plain / prose / typo / negatives."""
+    """Labelled query → expected (authors, topics).
+
+    Linkable probes (count toward precision/recall/F1): author plain/prose/typo-1/typo-3,
+    in-vocabulary topics, held-out topic paraphrases, and author+topic. Non-linkable probes
+    (count toward fp_rate only, gold empty): generic questions + plausible absent authors.
+    Held-out paraphrases and absent authors are the honest stress cases the first probe set
+    lacked — they keep fuzzy's score from being a self-fulfilling 1.0.
+    """
     probes: list[dict] = []
 
-    # Authors with a distinctive 2-token name (avoid single-token collisions).
     with driver.session() as s:
         authors = [r["n"] for r in s.run(
             "MATCH (a:Author)-[:WROTE]->(p) WITH a.name AS n, count(p) AS c "
-            "WHERE size(split(n,' ')) >= 2 RETURN n ORDER BY c DESC, n LIMIT 40")]
+            "WHERE size(split(n,' ')) >= 2 RETURN n ORDER BY c DESC, n LIMIT 60")]
     rng.shuffle(authors)
     sample_authors = authors[:12]
 
+    def _drop_chars(name: str, k: int) -> str:
+        sur = name.split()[-1]
+        return name.replace(sur, sur[:-k]) if len(sur) > k + 2 else name
+
     for i, a in enumerate(sample_authors):
-        if i % 3 == 0:
+        if i % 4 == 0:
             q = f"What has {a} published?"
-        elif i % 3 == 1:
+        elif i % 4 == 1:
             q = f"Tell me about the research contributions of {a}."
-        else:  # typo: drop a char from the surname
-            sur = a.split()[-1]
-            typo = a.replace(sur, sur[:-1]) if len(sur) > 3 else a
-            q = f"papers written by {typo}"
+        elif i % 4 == 2:  # mild typo (drop 1 char) — should still link
+            q = f"papers written by {_drop_chars(a, 1)}"
+        else:  # harder typo (drop 3 chars) — stresses the fuzzy threshold
+            q = f"papers written by {_drop_chars(a, 3)}"
         probes.append({"query": q, "authors": [a], "topics": [], "kind": "author"})
 
-    # Topic-anchored.
+    # In-vocabulary topics (legitimate: users do type these).
     for code, phrase in TOPIC_PHRASE.items():
         if code in index.topics:
-            probes.append({"query": f"recent advances in {phrase}", "authors": [], "topics": [code], "kind": "topic"})
+            probes.append({"query": f"recent advances in {phrase}", "authors": [], "topics": [code],
+                           "kind": "topic"})
+
+    # Held-out topic paraphrases (generalization test; expected to mostly miss).
+    for code, phrase in HELDOUT_TOPIC_PARAPHRASE.items():
+        if code in index.topics:
+            probes.append({"query": f"recent advances in {phrase}", "authors": [], "topics": [code],
+                           "kind": "topic-heldout"})
 
     # Author + topic.
     for a in sample_authors[:4]:
@@ -108,7 +142,10 @@ def build_linking_probes(driver, index: GraphIndex, df: pd.DataFrame, rng: rando
         probes.append({"query": f"{a}'s work on {TOPIC_PHRASE[code]}",
                        "authors": [a], "topics": [code], "kind": "author+topic"})
 
-    # Negatives — no graph entity; gold = no link (tests false-positive rate).
+    # Negatives — plausible absent authors (precision) + generic no-entity questions.
+    for a in ABSENT_AUTHORS:
+        probes.append({"query": f"What has {a} published?", "authors": [], "topics": [],
+                       "kind": "negative"})
     for q in ["How does attention scale with sequence length?",
               "What is the capital of France?",
               "Explain gradient descent in simple terms.",
@@ -130,7 +167,17 @@ def build_guidance_probes(driver, df: pd.DataFrame, rng: random.Random):
       so dense retrieval has little to lock onto and often misses the paper. Here graph's
       value is *recall*: expansion injects the subgraph's chunks the vector pool missed.
 
+    Honesty note (re: expansion's cand_recall): for solo-author underspecified probes the
+    target paper IS the linked subgraph, so a correct link + expansion injects it *by
+    construction* — cand_recall→1.0 demonstrates the MECHANISM and its ceiling (it is bounded
+    by link precision, not a free recovery of arbitrary missed chunks). The non-tautological
+    counterpart is subgraph_concentration@5: expansion's stays at the vector baseline (the
+    injected chunks land at the tail, not the top-5), i.e. expansion adds candidate recall
+    *without* polluting top-k precision. That trade-off is the real, reportable result.
+
     Underspecified author probes use single-paper authors so the target is unambiguous.
+    Topic-anchored probes span minority topics AND a few cs.CL probes (the dominant topic,
+    where filtering barely narrows the field — included so the table shows filter's limit).
     """
     ar = df[df["source"].isin(["arxiv", "arxiv-demo"])].copy()
     chunks_by_paper = ar.groupby("paper_id")["chunk_id"].apply(list).to_dict()
@@ -164,10 +211,10 @@ def build_guidance_probes(driver, df: pd.DataFrame, rng: random.Random):
         if n_spec >= 10:
             break
 
-    # Author-anchored, UNDERSPECIFIED (entity only, no keyphrase).
+    # Author-anchored, UNDERSPECIFIED (entity only, no keyphrase). Up to 20 for less noise.
     solo_authors = list(solo.items())
     rng.shuffle(solo_authors)
-    for author, pid in solo_authors[:8]:
+    for author, pid in solo_authors[:20]:
         if pid in chunks_by_paper:
             probes.append({
                 "query": f"What does {author} propose in their recent work?",
@@ -175,28 +222,32 @@ def build_guidance_probes(driver, df: pd.DataFrame, rng: random.Random):
                 "kind": "author", "regime": "underspecified",
             })
 
-    # Topic-anchored on MINORITY topics (specified; filtering away cs.CL helps here).
-    minority = ["cs.CV", "cs.LG", "cs.CR", "cs.IR", "cs.SE", "cs.AI"]
-    with driver.session() as s:
-        trows = s.run(
-            "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name IN $codes "
-            "RETURN p.paper_id AS pid, p.title AS title, t.name AS code", codes=minority).data()
-    rng.shuffle(trows)
-    n_topic = 0
-    for r in trows:
-        if r["pid"] not in chunks_by_paper or not r["title"]:
-            continue
-        kp = _title_keyphrase(r["title"])
-        if len(kp.split()) < 3:
-            continue
-        probes.append({
-            "query": f"In {TOPIC_PHRASE.get(r['code'], r['code'])} research, {kp}?",
-            "target_paper": r["pid"], "relevant": chunks_by_paper[r["pid"]],
-            "kind": "topic", "regime": "specified",
-        })
-        n_topic += 1
-        if n_topic >= 12:
-            break
+    # Topic-anchored, SPECIFIED — minority topics (filtering away cs.CL helps) + a few cs.CL
+    # probes (the dominant topic, where the filter barely narrows: 113/155 papers).
+    def _add_topic_probes(codes, cap):
+        with driver.session() as s:
+            trows = s.run(
+                "MATCH (p:Paper)-[:ABOUT]->(t:Topic) WHERE t.name IN $codes "
+                "RETURN p.paper_id AS pid, p.title AS title, t.name AS code", codes=codes).data()
+        rng.shuffle(trows)
+        n = 0
+        for r in trows:
+            if r["pid"] not in chunks_by_paper or not r["title"]:
+                continue
+            kp = _title_keyphrase(r["title"])
+            if len(kp.split()) < 3:
+                continue
+            probes.append({
+                "query": f"In {TOPIC_PHRASE.get(r['code'], r['code'])} research, {kp}?",
+                "target_paper": r["pid"], "relevant": chunks_by_paper[r["pid"]],
+                "kind": "topic", "regime": "specified", "topic": r["code"],
+            })
+            n += 1
+            if n >= cap:
+                break
+
+    _add_topic_probes(["cs.CV", "cs.LG", "cs.CR", "cs.IR", "cs.SE", "cs.AI"], 12)
+    _add_topic_probes(["cs.CL"], 4)  # dominant-topic control: filter can't narrow much here
 
     return probes, chunks_by_paper
 
@@ -229,10 +280,12 @@ def _backend_ok() -> bool:
 # --- table 1: linking ------------------------------------------------------------------
 def eval_linking(driver, index, probes, methods):
     rows = []
+    n_neg = sum(1 for p in probes if p["kind"] == "negative")
+    n_heldout = sum(1 for p in probes if p["kind"] == "topic-heldout")
     for method in methods:
         tp = fp = fn = 0
-        fp_neg = 0  # any link emitted on a negative query
-        n_neg = sum(1 for p in probes if p["kind"] == "negative")
+        fp_neg = 0       # any link emitted on a negative query (precision on absent/no entity)
+        heldout_hit = 0  # held-out topic paraphrases correctly linked (generalization)
         lats = []
         for p in probes:
             gold = {("Author", a) for a in p["authors"]} | {("Topic", t) for t in p["topics"]}
@@ -248,10 +301,13 @@ def eval_linking(driver, index, probes, methods):
             fn += len(gold - got)
             if p["kind"] == "negative" and got:
                 fp_neg += 1
+            if p["kind"] == "topic-heldout" and (gold & got):
+                heldout_hit += 1
         prec, rec, f1 = _prf(tp, fp, fn)
         rows.append({
             "method": method, "precision": round(prec, 3), "recall": round(rec, 3),
             "f1": round(f1, 3), "fp_rate_neg": round(fp_neg / n_neg, 3) if n_neg else 0.0,
+            "heldout_topic_recall": round(heldout_hit / n_heldout, 3) if n_heldout else 0.0,
             "median_ms": round(st.median(lats), 1),
             "p95_ms": round(sorted(lats)[max(0, int(0.95 * len(lats)) - 1)], 1),
         })
@@ -313,7 +369,9 @@ def _summarize(per_probe, modes=MODES):
             "policy": mode, "hit@5": hit5,
             "hit@10": round(st.mean(v["hit10"] for v in vals), 3),
             "cand_recall": round(st.mean(v["cand_recall"] for v in vals), 3),
-            "subgraph_prec@5": round(st.mean(v["subprec5"] for v in vals), 3),
+            # concentration, NOT relevance: fraction of the top-5 whose paper is in the
+            # selected subgraph (how aggressively a policy focuses on the subgraph).
+            "subgraph_conc@5": round(st.mean(v["subprec5"] for v in vals), 3),
             "Δhit@5_vs_vector": round(hit5 - base, 3),
             "guidance_ms_med": round(st.median(v["lat"] for v in vals), 3),
         })
@@ -357,13 +415,14 @@ def main():
         print("[eval] no LLM backend → llm row marked n/a")
     lprobes = build_linking_probes(driver, index, df, rng)
     print(f"[eval] linking probes: {len(lprobes)} "
-          f"({sum(p['kind']=='negative' for p in lprobes)} negatives)")
+          f"({sum(p['kind']=='negative' for p in lprobes)} negatives, "
+          f"{sum(p['kind']=='topic-heldout' for p in lprobes)} held-out topic paraphrases)")
     ldf = eval_linking(driver, index, lprobes, methods)
     if "llm" not in methods:
         ldf = pd.concat([ldf, pd.DataFrame([{
             "method": "llm", "precision": "n/a", "recall": "n/a", "f1": "n/a",
-            "fp_rate_neg": "n/a", "median_ms": "n/a", "p95_ms": "n/a (no backend)"}])],
-            ignore_index=True)
+            "fp_rate_neg": "n/a", "heldout_topic_recall": "n/a", "median_ms": "n/a",
+            "p95_ms": "n/a (no backend)"}])], ignore_index=True)
     print("\n=== Entity-linking comparison ===")
     print(ldf.to_string(index=False))
 
@@ -384,10 +443,19 @@ def main():
     gdf.to_csv(OUT / "graph_guidance_comparison.csv", index=False)
     (OUT / "graph_linking_comparison.md").write_text(
         "# D3 Task-1 — Entity-linking comparison\n\n"
-        f"Probe set: {len(lprobes)} labelled queries derived from the live graph "
-        f"(seed={SEED}); precision/recall over (label, node) pairs; "
-        "`fp_rate_neg` = fraction of no-entity queries that wrongly linked something.\n\n"
-        + ldf.to_markdown(index=False) + "\n")
+        f"Probe set: {len(lprobes)} labelled queries derived from the live graph (seed={SEED}); "
+        "precision/recall/F1 over (label, node) pairs on the *linkable* probes (author "
+        "plain/prose/typo-1/typo-3, in-vocabulary topics, held-out topic paraphrases, "
+        "author+topic). Diagnostics: **fp_rate_neg** = fraction of non-linkable queries "
+        "(generic questions + plausible *absent* author names) that wrongly linked something; "
+        "**heldout_topic_recall** = recall on topic paraphrases deliberately NOT in the "
+        "synonym table.\n\n"
+        + ldf.to_markdown(index=False) + "\n\n"
+        "**Reading it.** Fuzzy leads on precision, recall and latency; spaCy trails because "
+        "PERSON NER misfires on typo'd/unusual author spans. The low `heldout_topic_recall` "
+        "for *both* offline linkers is the honest limitation: topic linking is bounded by the "
+        "hand-built synonym table, so a paraphrase it has never seen does not link. "
+        "Embedding- or LLM-based topic linking is the future-work fix.\n")
 
     regime_md = "\n\n".join(
         f"### Regime: {reg}\n\n" + rdf.to_markdown(index=False) for reg, rdf in by_regime.items())
@@ -396,15 +464,25 @@ def main():
         f"Probe set: {len(gprobes)} entity-anchored content questions "
         f"({n_spec} specified, {n_under} underspecified; seed={SEED}); candidate pool "
         f"k={CANDIDATE_K}. **Hit@k** = a chunk of the target paper reached the top-k; "
-        "**cand_recall** = a target chunk is anywhere in the reshaped candidate list "
-        "(the signal a downstream reranker sees — this is where expansion pays off); "
-        "**subgraph_prec@5** = fraction of the top-5 inside the selected subgraph. "
+        "**cand_recall** = a target chunk is anywhere in the reshaped candidate list (the "
+        "signal a downstream cross-encoder reranker sees); **subgraph_conc@5** = fraction of "
+        "the top-5 whose paper is in the selected subgraph (concentration, *not* relevance). "
         "Policies apply to the hybrid pool; vector/hybrid carry no graph guidance.\n\n"
         "## Overall\n\n" + gdf.to_markdown(index=False) + "\n\n"
         "## By regime\n\n"
         "*Specified* queries already retrieve well (hit@5 near ceiling) → graph adds "
-        "**precision**. *Underspecified* queries miss the paper under vector search → graph "
-        "adds **recall** (expansion injects the missed subgraph chunks; cand_recall rises).\n\n"
+        "**precision**: filter pushes subgraph_conc@5 to ~1.0 with no recall loss; booster is "
+        "the recall-safe middle ground. *Underspecified* queries miss the paper under vector "
+        "search → graph adds **recall**: expansion raises cand_recall by injecting subgraph "
+        "chunks the vector pool missed.\n\n"
+        "**Honesty note on expansion.** For solo-author underspecified probes the target "
+        "paper *is* the linked subgraph, so a correct link + expansion injects it by "
+        "construction — `cand_recall→1.0` shows the mechanism and its ceiling (bounded by link "
+        "precision), not a free recovery of arbitrary chunks. The non-tautological half is "
+        "`subgraph_conc@5`: expansion's injected chunks land at the tail, so top-5 precision is "
+        "unchanged — expansion buys candidate recall *without* polluting the top-k the reranker "
+        "orders. cs.CL (dominant-topic) probes are included to show filter's limit: when the "
+        "subgraph is 113/155 papers, filtering barely narrows the field.\n\n"
         + regime_md + "\n")
     print(f"\n[eval] wrote 4 artifacts to {OUT}/")
     driver.close()
