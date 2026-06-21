@@ -177,9 +177,7 @@ Or run individually:
 
 ```bash
 python scripts/seed_mongo.py  --source all
-python scripts/seed_qdrant.py --source all       # → chunks_bge384
-python scripts/seed_qdrant.py --source scifact   # → chunks_bge384_scifact
-python scripts/seed_qdrant.py --source arxiv     # → chunks_bge384_arxiv
+python scripts/seed_qdrant.py                    # → single chunks_bge384 (source-filtered at query time)
 python scripts/seed_neo4j.py  --source all
 ```
 
@@ -310,7 +308,7 @@ Total ≈ 10-15 minutes (compose image build dominates first time). All `reports
 
 ## Troubleshooting
 
-- **`/healthz` returns 503 with "qdrant collection ... unreachable"** → run `python scripts/seed_qdrant.py --source <missing>`. The per-source layout requires three collections (`chunks_bge384`, `_scifact`, `_arxiv`); `make seed` creates all three.
+- **`/healthz` returns 503 with "qdrant collection ... unreachable"** → run `python scripts/seed_qdrant.py`. The D3 layout uses a single `chunks_bge384` collection (source-filtered at query time); the seeder drops any stale per-source collections unless `--keep-legacy` is passed.
 - **`make seed` errors out on `seed_neo4j.py`** → check `docker compose ps neo4j` is healthy. Neo4j takes ~15-20 s longer than Mongo/Qdrant to settle on first boot.
 - **Embedder download timing out on the API container** → `BAAI/bge-small-en-v1.5` is fetched at app startup. First boot needs internet; subsequent restarts use the HuggingFace cache mounted in the container.
 - **`docker compose --profile api up` fails to build** → check the `Dockerfile` matches the python version in `.venv` (3.12 expected); the api image installs `requirements.txt` so any local-only deps would surface here.

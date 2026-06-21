@@ -11,7 +11,7 @@ torch>=2.1
 # Retrieval
 scikit-learn>=1.4
 rank-bm25>=0.2.2
-qdrant-client>=1.9
+qdrant-client>=1.18,<1.19  # keep within 1 minor of the qdrant/qdrant:v1.18.2 server image
 
 # Storage / graph (D2)
 pymongo>=4.6

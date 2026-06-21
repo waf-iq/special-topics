@@ -1,9 +1,10 @@
 """Tests for the FastAPI /search service (D2-B1).
 
 Uses a small fixture parquet (60 scifact + 40 arxiv chunks) so the app's
-startup — which builds one BM25 + dense index per source — stays fast and
-needs no Docker. The real BGE embedder still loads (same as the other smoke
-tests), so the run downloads/uses the cached model.
+startup — which builds a single BM25 + dense index over the whole fixture —
+stays fast and needs no Docker. Source filtering is applied at query time. The
+real BGE embedder still loads (same as the other smoke tests), so the run
+downloads/uses the cached model.
 """
 
 from __future__ import annotations
@@ -74,15 +75,15 @@ def test_source_filter_narrows(client: TestClient):
 pytest.importorskip("qdrant_client")
 from qdrant_client import QdrantClient  # noqa: E402
 
-from csai415.api import SOURCE_COLLECTIONS, SOURCE_GROUPS  # noqa: E402
-from csai415.qdrant_dense import seed_collection_from_parquet  # noqa: E402
+from csai415.api import SOURCE_GROUPS  # noqa: E402,F401
+from csai415.qdrant_dense import QDRANT_COLLECTION, seed_collection_from_parquet  # noqa: E402
 
 
 @pytest.fixture(scope="module")
 def qdrant_client_seeded(tmp_path_factory) -> tuple[QdrantClient, Path]:
-    """In-memory Qdrant pre-seeded with the same three collections the live
-    stack carries (full / scifact / arxiv). Verifies the D2-INT2 wiring works
-    without needing Docker.
+    """In-memory Qdrant pre-seeded with the single collection the live stack now
+    carries (D3: one ``chunks_bge384`` over the full corpus, source-filtered at
+    query time). Verifies the wiring works without needing Docker.
     """
     if not CHUNKS_PARQUET.exists():
         pytest.skip("chunks.parquet not present — run ingest first")
@@ -95,16 +96,10 @@ def qdrant_client_seeded(tmp_path_factory) -> tuple[QdrantClient, Path]:
 
     tmp = tmp_path_factory.mktemp("api_qdrant")
     full_path = tmp / "full.parquet"
-    scifact_path = tmp / "scifact.parquet"
-    arxiv_path = tmp / "arxiv.parquet"
     slice_df.to_parquet(full_path)
-    scifact.to_parquet(scifact_path)
-    arxiv.to_parquet(arxiv_path)
 
     client = QdrantClient(":memory:")
-    seed_collection_from_parquet(client, full_path, collection=SOURCE_COLLECTIONS[None])
-    seed_collection_from_parquet(client, scifact_path, collection=SOURCE_COLLECTIONS["scifact"])
-    seed_collection_from_parquet(client, arxiv_path, collection=SOURCE_COLLECTIONS["arxiv"])
+    seed_collection_from_parquet(client, full_path, collection=QDRANT_COLLECTION)
     return client, full_path
 
 
@@ -136,7 +131,7 @@ def test_qdrant_search_returns_topk(qdrant_client_app: TestClient):
 
 
 def test_qdrant_source_filter_narrows(qdrant_client_app: TestClient):
-    """Per-source Qdrant collection routes correctly — scifact filter yields scifact-only hits."""
+    """Query-time source filter over the single collection — scifact filter yields scifact-only hits."""
     resp = qdrant_client_app.post(
         "/search",
         json={"query": "language model pretraining", "k": 5, "source": "scifact"},

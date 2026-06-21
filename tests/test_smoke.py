@@ -205,11 +205,14 @@ def test_d2_stack_smoke():
     assert db.chunks.count_documents({}) > 15000, "chunks undersized — re-seed?"
     mc.close()
 
-    # 5. Qdrant has all three collections per D2-INT2
+    # 5. Qdrant has the single collection per the D3 refactor (one collection +
+    #    source-filter-at-query-time); the old per-source collections are gone.
     qc = QdrantClient(url="http://localhost:6333")
     coll_names = {c.name for c in qc.get_collections().collections}
-    for needed in ("chunks_bge384", "chunks_bge384_scifact", "chunks_bge384_arxiv"):
-        assert needed in coll_names, f"missing collection {needed!r}"
+    assert "chunks_bge384" in coll_names, "missing collection 'chunks_bge384'"
+    assert not ({"chunks_bge384_scifact", "chunks_bge384_arxiv"} & coll_names), (
+        "stale per-source collections present — re-run scripts/seed_qdrant.py"
+    )
     assert qc.get_collection("chunks_bge384").points_count > 15000
 
     # 6. Neo4j has Paper + Author + Topic nodes (from D2-C1 seed)
