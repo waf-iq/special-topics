@@ -5,20 +5,18 @@ config is loaded once at startup from ``configs/winning_runcard.yaml`` — never
 from the request body. The request only carries ``query``, ``k`` and an
 optional ``source`` filter.
 
-Source filtering uses one retriever per source built at startup (``None`` =
-whole corpus, ``"scifact"``, ``"arxiv"``). Filtering at candidate-generation
-time — rather than post-filtering ``/search`` results — keeps SciFact eval
-honest: arXiv chunks never enter the candidate pool, so they can't push real
-SciFact answers out of the top-k (D2 brief, Risk #4).
+Source filtering (D3 refactor) uses ONE retriever over the whole corpus plus a
+query-time ``source`` filter passed down to both backends. Filtering at
+candidate-generation time — rather than post-filtering ``/search`` results —
+keeps SciFact eval honest: arXiv chunks never enter the candidate pool, so they
+can't push real SciFact answers out of the top-k (D2 brief, Risk #4).
 
-Dense backend (D2-INT2): when ``CSAI415_USE_QDRANT=1`` each per-source
-retriever is wired to a separate Qdrant collection (``chunks_bge384`` for the
-full corpus, ``chunks_bge384_{scifact,arxiv}`` for the subsets). The
-per-collection layout sidesteps a corpus_idx mismatch — each collection's
-point IDs match the reset-indexed local df of the retriever consuming it.
-**D3 will refactor this to one global collection + filter-at-query-time**
-(plan B in the design notes); for D2 we keep three collections to avoid
-touching the just-merged per-source routing logic.
+Dense backend (D2-INT2 / D3): when ``CSAI415_USE_QDRANT=1`` the retriever is
+wired to a single Qdrant collection (``chunks_bge384``, seeded from the full
+parquet so point IDs are the global corpus_idx). The ``source`` filter is applied
+at query time via the payload ``source`` field — collapsing D2's three
+per-source collections into one (the locked D3 "1 collection + filter-at-query-
+time" decision). The BM25 side mirrors the filter in-process.
 
 Without the env flag the app falls back to the numpy in-memory backend (D1
 default) so the existing test suite keeps working without Docker.
@@ -30,6 +28,7 @@ from __future__ import annotations
 
 import math
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -37,27 +36,22 @@ from typing import Optional
 import pandas as pd
 import yaml
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from csai415.graphrag import GraphRAGExecutor
+from csai415.qdrant_dense import QDRANT_COLLECTION
 from csai415.retrieve import CHUNKS_PARQUET, HybridRetriever, RetrieverConfig, load_chunks
 
 DEFAULT_RUNCARD = Path("configs/winning_runcard.yaml")
+STATIC_DIR = Path(__file__).parent / "static"  # 1-page demo UI served at GET /
 
 # A request's ``source`` value -> the parquet ``source`` labels it covers.
 # arxiv-demo is folded into "arxiv" (same provenance, just the original 5 PDFs).
+# Passed as ``source_labels`` to the retriever for query-time filtering.
 SOURCE_GROUPS: dict[str, set[str]] = {
     "scifact": {"scifact"},
     "arxiv": {"arxiv", "arxiv-demo"},
-}
-
-# Per-source Qdrant collection names. Each collection is seeded with that
-# source's reset-indexed subset of chunks.parquet so point IDs match the
-# retriever's local df. See module docstring for the D3 refactor note.
-SOURCE_COLLECTIONS: dict[Optional[str], str] = {
-    None: "chunks_bge384",
-    "scifact": "chunks_bge384_scifact",
-    "arxiv": "chunks_bge384_arxiv",
 }
 
 
@@ -125,6 +119,26 @@ class AskResponse(BaseModel):
     steps: list[dict]
 
 
+class AnswererResult(BaseModel):
+    answerer: str
+    answer: str
+    gen_latency_ms: float
+    error: Optional[str] = None
+
+
+class CompareResponse(BaseModel):
+    """Same retrieved evidence, answered by each configured answerer (Qwen vs Groq)."""
+
+    query: str
+    mode: str
+    rerank: bool
+    citations: list[CitationModel]
+    contexts: list[str]
+    steps: list[dict]
+    retrieve_latency_ms: float
+    results: list[AnswererResult]
+
+
 def _page_range(row: pd.Series) -> str | None:
     """Format ``page_start``/``page_end`` as 'start-end' (or 'start' when equal).
 
@@ -157,9 +171,9 @@ def create_app(
     tests to point at a small fixture parquet so startup stays fast). Env vars
     ``CSAI415_CHUNKS_PARQUET`` and ``CSAI415_RUNCARD`` override the defaults.
 
-    Dense backend (D2-INT2): if ``qdrant_client`` is passed in (test-time
-    injection) or ``CSAI415_USE_QDRANT=1`` (production), each per-source
-    retriever is wired to its Qdrant collection per ``SOURCE_COLLECTIONS``.
+    Dense backend (D3): if ``qdrant_client`` is passed in (test-time injection)
+    or ``CSAI415_USE_QDRANT=1`` (production), the single retriever is wired to the
+    one ``chunks_bge384`` collection; ``source`` filtering happens at query time.
     Otherwise the numpy in-memory backend is used (D1 default).
     """
     chunks_path = Path(
@@ -185,40 +199,51 @@ def create_app(
                 url=os.environ.get("QDRANT_URL", "http://localhost:6333")
             )
 
-        def _build_retriever(sub_df: pd.DataFrame, source_key: Optional[str]) -> HybridRetriever:
-            if client is None:
-                return HybridRetriever(sub_df, cfg)
+        # D3: ONE retriever over the whole corpus. Source restriction is a query-time
+        # filter (see /search), so point IDs stay the global corpus_idx and a single
+        # Qdrant collection backs everything.
+        if client is None:
+            retriever = HybridRetriever(df, cfg)
+        else:
             from csai415.qdrant_dense import QdrantDenseBackend
 
-            backend = QdrantDenseBackend(
-                client,
-                collection=SOURCE_COLLECTIONS[source_key],
-                metric=cfg.metric,
-            )
-            return HybridRetriever(sub_df, cfg, dense_backend=backend)
+            backend = QdrantDenseBackend(client, collection=QDRANT_COLLECTION, metric=cfg.metric)
+            retriever = HybridRetriever(df, cfg, dense_backend=backend)
 
-        # One retriever over the whole corpus (source=None) plus one per source.
-        # Each per-source retriever is built over a clean subset, so BOTH its
-        # BM25 and dense candidate pools are already restricted to that source.
-        retrievers: dict[Optional[str], HybridRetriever] = {
-            None: _build_retriever(df, None)
-        }
-        for src, labels in SOURCE_GROUPS.items():
-            sub = df[df["source"].isin(labels)].reset_index(drop=True)
-            if len(sub):
-                retrievers[src] = _build_retriever(sub, src)
-
-        app.state.retrievers = retrievers
+        app.state.retriever = retriever
         # chunk_id -> row, over the FULL corpus, for joining metadata onto hits.
         app.state.lookup = df.set_index("chunk_id")
         app.state.config = cfg
         app.state.qdrant_client = client
-        # D3: GraphRAG executor over the whole-corpus retriever. D3-2 owner wires the
-        # Neo4j driver (neo4j_driver=...) once the graph stage is live.
-        app.state.executor = GraphRAGExecutor(retrievers[None], app.state.lookup)
+
+        # D3 (Task 7): wire the live Neo4j driver into the executor so graph/hybrid
+        # modes can query the subgraph. Gated by CSAI415_USE_NEO4J so the test suite
+        # and offline runs stay graph-less (select_subgraph degrades to fallback when
+        # neo4j_driver is None). Empty password ⇒ auth=None (dev containers).
+        neo4j_driver = None
+        if os.environ.get("CSAI415_USE_NEO4J", "0") == "1":
+            from neo4j import GraphDatabase
+
+            url = os.environ.get("NEO4J_URL", "bolt://localhost:7687")
+            user = os.environ.get("NEO4J_USER", "neo4j")
+            pwd = os.environ.get("NEO4J_PASSWORD", "")
+            auth = (user, pwd) if pwd else None
+            neo4j_driver = GraphDatabase.driver(url, auth=auth)
+        app.state.neo4j_driver = neo4j_driver
+        app.state.executor = GraphRAGExecutor(retriever, app.state.lookup, neo4j_driver=neo4j_driver)
         yield
+        if neo4j_driver is not None:
+            neo4j_driver.close()
 
     app = FastAPI(title="CSAI415 PDF-Papers /search", lifespan=lifespan)
+
+    @app.get("/", response_class=HTMLResponse)
+    def index():
+        """The 1-page GraphRAG demo UI (vanilla HTML/JS calling /ask)."""
+        page = STATIC_DIR / "index.html"
+        if not page.exists():
+            raise HTTPException(status_code=404, detail="UI not found")
+        return page.read_text(encoding="utf-8")
 
     @app.get("/healthz")
     def healthz():
@@ -227,33 +252,34 @@ def create_app(
         Mongo / Neo4j reachability isn't checked here because /search doesn't
         depend on them at request time — only ingest + seed do.
         """
-        if not getattr(app.state, "retrievers", None):
+        if not getattr(app.state, "retriever", None):
             raise HTTPException(status_code=503, detail="retriever not loaded")
         client = getattr(app.state, "qdrant_client", None)
         if client is not None:
-            for col in SOURCE_COLLECTIONS.values():
-                try:
-                    client.get_collection(col)
-                except Exception as exc:
-                    raise HTTPException(
-                        status_code=503,
-                        detail=f"qdrant collection {col!r} unreachable: {exc!s}",
-                    ) from exc
-        return {"status": "ok"}
+            try:
+                client.get_collection(QDRANT_COLLECTION)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=503,
+                    detail=f"qdrant collection {QDRANT_COLLECTION!r} unreachable: {exc!s}",
+                ) from exc
+        from csai415.answer import current_backend
+
+        return {"status": "ok", "answerer": current_backend()}
 
     @app.post("/search", response_model=list[SearchHit])
     def search(req: SearchRequest):
-        retrievers: dict = app.state.retrievers
-        if req.source is not None and req.source not in retrievers:
+        if req.source is not None and req.source not in SOURCE_GROUPS:
             raise HTTPException(
                 status_code=400,
                 detail=f"unknown source {req.source!r}; expected one of "
-                f"{sorted(s for s in retrievers if s)} or null",
+                f"{sorted(SOURCE_GROUPS)} or null",
             )
-        retriever: HybridRetriever = retrievers[req.source]
+        retriever: HybridRetriever = app.state.retriever
         lookup: pd.DataFrame = app.state.lookup
 
-        hits = retriever.search_with_scores(req.query, req.k)
+        source_labels = SOURCE_GROUPS[req.source] if req.source is not None else None
+        hits = retriever.search_with_scores(req.query, req.k, source_labels=source_labels)
         out: list[SearchHit] = []
         for chunk_id, score in hits:
             row = lookup.loc[chunk_id]
@@ -292,6 +318,59 @@ def create_app(
             rerank=res.rerank,
             latency_ms=res.latency_ms,
             steps=res.steps,
+        )
+
+    @app.post("/compare", response_model=CompareResponse)
+    def compare(req: AskRequest):
+        """Retrieve ONCE, then answer the same evidence with each configured answerer
+        (``CSAI415_COMPARE``, default ``qwen2.5:3b-instruct,groq``) — the zero-shot /
+        ceiling side-by-side. Generation latency is per-model on identical contexts.
+        """
+        executor: GraphRAGExecutor = getattr(app.state, "executor", None)
+        if executor is None:
+            raise HTTPException(status_code=503, detail="executor not loaded")
+        if req.mode not in ("vector", "graph", "hybrid"):
+            raise HTTPException(
+                status_code=400, detail=f"unknown mode {req.mode!r}; expected vector|graph|hybrid"
+            )
+        from csai415.answer import generate_answer
+
+        answerers = [
+            a.strip()
+            for a in os.environ.get("CSAI415_COMPARE", "qwen2.5:3b-instruct,groq").split(",")
+            if a.strip()
+        ]
+        orig = os.environ.get("CSAI415_ANSWERER")
+        results: list[AnswererResult] = []
+        try:
+            # Base pass with NO answerer ⇒ fast extractive gen, so latency ≈ pure retrieval.
+            os.environ.pop("CSAI415_ANSWERER", None)
+            base = executor.answer(req.query, k=req.k, mode=req.mode, rerank=req.rerank)
+            for a in answerers:
+                os.environ["CSAI415_ANSWERER"] = a
+                t0 = time.perf_counter()
+                try:
+                    text, _ = generate_answer(req.query, base.citations, base.contexts)
+                    err = None
+                except Exception as exc:  # e.g. Groq key missing, Ollama down
+                    text, err = "", f"{type(exc).__name__}: {exc}"
+                results.append(
+                    AnswererResult(
+                        answerer=a, answer=text,
+                        gen_latency_ms=(time.perf_counter() - t0) * 1000.0, error=err,
+                    )
+                )
+        finally:
+            if orig is None:
+                os.environ.pop("CSAI415_ANSWERER", None)
+            else:
+                os.environ["CSAI415_ANSWERER"] = orig
+
+        return CompareResponse(
+            query=req.query, mode=base.mode, rerank=base.rerank,
+            citations=[CitationModel(**vars(c)) for c in base.citations],
+            contexts=base.contexts, steps=base.steps,
+            retrieve_latency_ms=base.latency_ms, results=results,
         )
 
     return app

@@ -86,9 +86,13 @@ class NumpyDenseBackend:
     either interchangeably.
     """
 
-    def __init__(self, dense_matrix: np.ndarray, metric: Metric):
+    def __init__(self, dense_matrix: np.ndarray, metric: Metric, sources: np.ndarray | None = None):
         self.dense_matrix = dense_matrix
         self.metric = metric
+        # Per-row source labels (aligned to dense_matrix rows), so top_k can restrict
+        # candidate generation at query time — the numpy mirror of QdrantDenseBackend's
+        # source filter. None ⇒ source filtering unavailable on this backend.
+        self.sources = sources
 
     def _all_scores(self, query_vec: np.ndarray) -> np.ndarray:
         if self.metric in ("cosine", "dot"):
@@ -96,8 +100,19 @@ class NumpyDenseBackend:
         diffs = self.dense_matrix - query_vec
         return -np.linalg.norm(diffs, axis=1)  # l2: negate so higher = better
 
-    def top_k(self, query_vec: np.ndarray, k: int) -> list[tuple[int, float]]:
+    def top_k(
+        self, query_vec: np.ndarray, k: int, source_labels: set[str] | None = None
+    ) -> list[tuple[int, float]]:
         scores = self._all_scores(query_vec)
+        if source_labels:
+            if self.sources is None:
+                raise ValueError("source_labels given but this backend has no source array")
+            allowed = np.where(np.isin(self.sources, list(source_labels)))[0]
+            if len(allowed) == 0:
+                return []
+            k = min(k, len(allowed))
+            sub = allowed[np.argpartition(-scores[allowed], k - 1)[:k]]
+            return [(int(i), float(scores[i])) for i in sub]
         k = min(k, len(scores))
         idx = np.argpartition(-scores, k - 1)[:k]
         return [(int(i), float(scores[i])) for i in idx]
@@ -113,6 +128,13 @@ class HybridRetriever:
     the D1 numpy default, or inject a :class:`QdrantDenseBackend` for the
     FastAPI app. Backends must expose ``top_k`` (candidate generation) and
     ``scores_for`` (fusion-time rescoring under the configured metric).
+
+    D3 integration note (Task 7 / Abdulrahman, coordinated with Pair B): the
+    optional ``source_labels`` arg on ``search``/``search_with_scores`` was added
+    for the single-Qdrant-collection refactor (filter at query time instead of
+    one collection per source). It is purely additive — default ``None`` keeps the
+    exact pre-D3 behavior, so Pair B's AutoML and Pair C's online-learner callers
+    are unaffected.
     """
 
     def __init__(
@@ -131,6 +153,12 @@ class HybridRetriever:
         tokenized = [t.lower().split() for t in self.df["text"]]
         self.bm25 = BM25Okapi(tokenized, k1=self.config.bm25_k1, b=self.config.bm25_b)
 
+        # Per-row source labels for query-time source filtering (D3 single-collection
+        # design). None when the corpus carries no ``source`` column (e.g. unit fixtures).
+        self._sources = (
+            self.df["source"].to_numpy() if "source" in self.df.columns else None
+        )
+
         # Optional SVD — fit on corpus now, .transform the query later in search()
         self.svd = None
         if self.config.svd_dim is not None:
@@ -142,7 +170,7 @@ class HybridRetriever:
             dense = self.svd.fit_transform(dense).astype(np.float32)
             if self.config.normalize:
                 dense = normalize(dense).astype(np.float32)
-            self.dense_backend = NumpyDenseBackend(dense, self.config.metric)
+            self.dense_backend = NumpyDenseBackend(dense, self.config.metric, self._sources)
         elif self._dense_backend_override is not None:
             # Injected backend (typically Qdrant). SVD must be off because we
             # can't apply it to an external corpus we don't materialize here.
@@ -156,7 +184,7 @@ class HybridRetriever:
             dense = np.array(self.df["embedding"].tolist(), dtype=np.float32)
             if self.config.normalize:
                 dense = normalize(dense).astype(np.float32)
-            self.dense_backend = NumpyDenseBackend(dense, self.config.metric)
+            self.dense_backend = NumpyDenseBackend(dense, self.config.metric, self._sources)
 
         self.embedder = _get_embedder()
 
@@ -171,8 +199,25 @@ class HybridRetriever:
             vec = normalize(vec).astype(np.float32)
         return vec[0]
 
+    def _bm25_top(self, bm25_scores: np.ndarray, c_k: int, source_labels: set[str] | None):
+        """Top-``c_k`` BM25 candidate indices, restricted to ``source_labels`` rows when
+        given (the BM25 mirror of the dense backend's query-time source filter)."""
+        if source_labels:
+            if self._sources is None:
+                raise ValueError("source_labels given but corpus has no 'source' column")
+            allowed = np.where(np.isin(self._sources, list(source_labels)))[0]
+            if len(allowed) == 0:
+                return np.array([], dtype=np.int64)
+            n = min(c_k, len(allowed))
+            return allowed[np.argpartition(-bm25_scores[allowed], n - 1)[:n]]
+        return np.argpartition(-bm25_scores, c_k)[:c_k]
+
     def _ranked_candidates(
-        self, query: str, k: int, hybrid_weight: float | None = None
+        self,
+        query: str,
+        k: int,
+        hybrid_weight: float | None = None,
+        source_labels: set[str] | None = None,
     ) -> list[tuple[str, float]]:
         """Core fusion. Returns the top-k ``(chunk_id, fused_score)`` pairs,
         sorted by descending fused score.
@@ -181,19 +226,27 @@ class HybridRetriever:
         so the BM25/dense fusion math lives in exactly one place. The fused
         score is the per-query min-max-scaled weighted sum — comparable WITHIN
         a query's result list, not across queries.
+
+        ``source_labels`` (a set of corpus ``source`` values) restricts BOTH backends'
+        candidate pools at query time, so a filtered search never lets other-source
+        chunks crowd out real hits — the D2 per-source-collection honesty guarantee,
+        preserved over the D3 single collection.
         """
         w = hybrid_weight if hybrid_weight is not None else self.config.hybrid_weight
         c_k = self.config.candidate_k
 
         bm25_scores = self.bm25.get_scores(query.lower().split())
-        bm25_top = np.argpartition(-bm25_scores, c_k)[:c_k]
+        bm25_top = self._bm25_top(bm25_scores, c_k, source_labels)
 
         q_vec = self._embed_query(query)
-        dense_hits = self.dense_backend.top_k(q_vec, c_k)
+        dense_hits = self.dense_backend.top_k(q_vec, c_k, source_labels=source_labels)
         dense_top = np.asarray([i for i, _ in dense_hits], dtype=np.int64)
 
         # Union of candidates, min-max scale each backend's raw scores over the pool
-        candidates = np.unique(np.concatenate([bm25_top, dense_top]))
+        pooled = [a for a in (bm25_top, dense_top) if len(a)]
+        if not pooled:
+            return []
+        candidates = np.unique(np.concatenate(pooled))
         bm25_pool = bm25_scores[candidates]
         dense_pool = self.dense_backend.scores_for(q_vec, candidates)
         bm25_norm = (bm25_pool - bm25_pool.min()) / max(np.ptp(bm25_pool), 1e-12)
@@ -203,16 +256,27 @@ class HybridRetriever:
         order = np.argsort(-fused)[:k]
         return [(self.df.iloc[candidates[i]]["chunk_id"], float(fused[i])) for i in order]
 
-    def search(self, query: str, k: int, hybrid_weight: float | None = None) -> list[str]:
-        """Top-k chunk_ids. hybrid_weight overrides config.hybrid_weight if given."""
-        return [chunk_id for chunk_id, _ in self._ranked_candidates(query, k, hybrid_weight)]
+    def search(
+        self,
+        query: str,
+        k: int,
+        hybrid_weight: float | None = None,
+        source_labels: set[str] | None = None,
+    ) -> list[str]:
+        """Top-k chunk_ids. hybrid_weight overrides config.hybrid_weight if given.
+        ``source_labels`` restricts the search to those corpus sources at query time."""
+        return [cid for cid, _ in self._ranked_candidates(query, k, hybrid_weight, source_labels)]
 
     def search_with_scores(
-        self, query: str, k: int, hybrid_weight: float | None = None
+        self,
+        query: str,
+        k: int,
+        hybrid_weight: float | None = None,
+        source_labels: set[str] | None = None,
     ) -> list[tuple[str, float]]:
         """Top-k ``(chunk_id, fused_score)`` pairs — same ranking as ``search``,
         with the fused score exposed for the FastAPI ``/search`` response (D2-B1)."""
-        return self._ranked_candidates(query, k, hybrid_weight)
+        return self._ranked_candidates(query, k, hybrid_weight, source_labels)
 
 
 def load_chunks(path: Path = CHUNKS_PARQUET) -> pd.DataFrame:

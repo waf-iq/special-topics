@@ -51,6 +51,9 @@ class QdrantDenseBackend:
         self.client = client
         self.collection = collection
         self.metric = metric
+        # Construction-time default filter (single source label). The D3 single-collection
+        # design prefers the per-query ``source_labels`` arg on ``top_k`` instead, but this
+        # is kept for back-compat with callers that pin one source at build time.
         self.source_filter = source_filter
 
         info = client.get_collection(collection)
@@ -61,22 +64,35 @@ class QdrantDenseBackend:
                 f"seed_collection_from_parquet() before using this backend"
             )
 
-    def _query_filter(self):
-        if not self.source_filter:
-            return None
-        from qdrant_client.models import FieldCondition, Filter, MatchValue
+    def _query_filter(self, source_labels: Optional[set[str]] = None):
+        """Build a Qdrant source filter. Per-query ``source_labels`` (a set of payload
+        ``source`` values) wins; otherwise fall back to the construction-time
+        ``source_filter``. ``None`` from both ⇒ no filter (whole collection)."""
+        from qdrant_client.models import FieldCondition, Filter, MatchAny, MatchValue
 
-        return Filter(
-            must=[FieldCondition(key="source", match=MatchValue(value=self.source_filter))]
-        )
+        if source_labels:
+            return Filter(
+                must=[FieldCondition(key="source", match=MatchAny(any=sorted(source_labels)))]
+            )
+        if self.source_filter:
+            return Filter(
+                must=[FieldCondition(key="source", match=MatchValue(value=self.source_filter))]
+            )
+        return None
 
-    def top_k(self, query_vec: np.ndarray, k: int) -> list[tuple[int, float]]:
-        """Top ``k * OVERFETCH_MULT`` candidates under cosine ANN."""
+    def top_k(
+        self, query_vec: np.ndarray, k: int, source_labels: Optional[set[str]] = None
+    ) -> list[tuple[int, float]]:
+        """Top ``k * OVERFETCH_MULT`` candidates under cosine ANN.
+
+        ``source_labels`` restricts candidate generation to those payload sources at
+        query time — the single-collection equivalent of D2's per-source collections.
+        """
         response = self.client.query_points(
             collection_name=self.collection,
             query=query_vec.astype(np.float32).tolist(),
             limit=k * OVERFETCH_MULT,
-            query_filter=self._query_filter(),
+            query_filter=self._query_filter(source_labels),
             with_payload=False,
             with_vectors=False,
         )
