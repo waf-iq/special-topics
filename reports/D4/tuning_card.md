@@ -8,7 +8,7 @@ Fill the `TODO` cells from the notebook's printed output, then commit alongside 
 |---|---|
 | Base model | `Qwen/Qwen2.5-3B-Instruct` |
 | Base license | Apache-2.0 |
-| Method | QLoRA (4-bit NF4 + double-quant, bf16 compute) |
+| Method | QLoRA (4-bit NF4 + double-quant, fp16 compute) |
 | Served as | `qwen2.5-3b-csai415` (Ollama, GGUF `Q4_K_M`) |
 | Selected by | `CSAI415_ANSWERER=qwen2.5-3b-csai415` (no code change vs zero-shot) |
 
@@ -26,11 +26,12 @@ Fill the `TODO` cells from the notebook's printed output, then commit alongside 
 |---|---|
 | LoRA dropout | 0.05 |
 | Target modules | q,k,v,o,gate,up,down proj |
-| Epochs | 3 |
+| Epochs | 2 (T4-friendly; 3rd epoch overfits a ~112-row train split) |
 | Learning rate | 2e-4 (cosine, warmup 0.03) |
 | Effective batch | 8 (bs 1 × grad-accum 8) |
 | Max seq len | 2048 |
 | Optimizer | paged_adamw_8bit |
+| Precision | fp16 (Colab T4 / Turing — no bf16) |
 | Seed | 42 |
 
 ## LoRA-rank sweep — compared approaches (TODO — paste Cell 7 table)
