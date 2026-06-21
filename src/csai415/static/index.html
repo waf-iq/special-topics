@@ -41,6 +41,14 @@
   .chip b { color:var(--fg); font-weight:600; }
   .answer { font-size:16px; line-height:1.65; white-space:pre-wrap; }
   .answer sup { color:var(--accent); font-weight:700; }
+  .cols { display:none; grid-template-columns:1fr 1fr; gap:12px; }
+  .col { border:1px solid var(--line); border-radius:9px; padding:12px; background:#0d0f14; }
+  .col h4 { margin:0 0 8px; font-size:13px; display:flex; justify-content:space-between; gap:8px; }
+  .col h4 .pid { color:var(--accent2); font-family:ui-monospace,Menlo,monospace; }
+  .col h4 .lat { color:var(--muted); font-weight:500; }
+  .col .answer { font-size:14.5px; }
+  @media (max-width:680px){ .cols { grid-template-columns:1fr; } }
+  button.alt { background:var(--accent2); margin-left:8px; }
   h3 { font-size:13px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted);
     margin:22px 0 10px; }
   .cite { border:1px solid var(--line); border-radius:9px; padding:10px 12px; margin-bottom:9px; background:#0d0f14; }
@@ -81,6 +89,7 @@
       <label class="f">k <input type="number" id="k" value="4" min="1" max="10" /></label>
       <label class="f"><input type="checkbox" id="rerank" checked /> rerank</label>
       <button id="ask">Ask</button>
+      <button id="compare" class="alt" title="Answer the same evidence with Qwen-3B and Groq-70B">Compare</button>
     </div>
     <div class="examples" id="examples"></div>
   </div>
@@ -88,6 +97,7 @@
   <div id="out" class="card">
     <div class="meta" id="meta"></div>
     <div class="answer" id="answer"></div>
+    <div class="cols" id="cols"></div>
     <h3 id="citeHead">Citations</h3>
     <div id="cites"></div>
   </div>
@@ -126,58 +136,102 @@ function fmtAnswer(text) {
   return text.replace(/\[(\d+)\]/g, '<sup>[$1]</sup>');
 }
 
+function metaChips(j, latLabel, latVal) {
+  const sub = j.steps.find(s => s.stage === "subgraph");
+  return [
+    `<span class="chip">mode <b>${j.mode}</b></span>`,
+    `<span class="chip">rerank <b>${j.rerank}</b></span>`,
+    `<span class="chip">${latLabel} <b>${latVal.toFixed(0)} ms</b></span>`,
+    `<span class="chip">cites <b>${j.citations.length}</b></span>`,
+    sub ? `<span class="chip">graph <b>${sub.method}</b> (${sub.n_papers} papers)</span>` : "",
+  ].join("");
+}
+
+function renderCites(j) {
+  $("#citeHead").style.display = j.citations.length ? "block" : "none";
+  $("#cites").innerHTML = "";
+  j.citations.forEach((c, i) => {
+    const ctx = (j.contexts && j.contexts[i]) ? j.contexts[i] : "";
+    const div = document.createElement("div");
+    div.className = "cite";
+    div.innerHTML =
+      `<div class="top"><span class="n">[${i+1}]</span>` +
+      `<span class="pid">${c.paper_id}</span>` +
+      (c.page_range ? `<span class="pg">p${c.page_range}</span>` : "") +
+      `<span class="ti">${c.title || ""}</span>` +
+      (ctx ? `<span class="toggle">context ▾</span>` : "") +
+      `</div>` + (ctx ? `<div class="ctx">${ctx.replace(/</g,"&lt;")}</div>` : "");
+    const tg = div.querySelector(".toggle");
+    if (tg) tg.onclick = () => div.classList.toggle("open");
+    $("#cites").appendChild(div);
+  });
+}
+
+function busy(on) {
+  ["#ask", "#compare"].forEach(s => { $(s).disabled = on; });
+  if (on) $("#ask").innerHTML = '<span class="spin"></span>'; else $("#ask").textContent = "Ask";
+}
+
+function prep(query) {
+  if (!query) return false;
+  busy(true);
+  $("#out").style.display = "block";
+  $("#meta").innerHTML = ""; $("#cites").innerHTML = ""; $("#cols").innerHTML = "";
+  return true;
+}
+
 async function ask() {
   const query = $("#q").value.trim();
-  if (!query) return;
-  const btn = $("#ask");
-  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
-  $("#out").style.display = "block";
-  $("#meta").innerHTML = ""; $("#cites").innerHTML = "";
-  $("#answer").innerHTML = '<span class="err" id="thinking">running pipeline…</span>';
+  if (!prep(query)) return;
+  $("#cols").style.display = "none"; $("#answer").style.display = "block";
+  $("#answer").innerHTML = '<span class="err">running pipeline…</span>';
   try {
     const r = await fetch("/ask", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        query, mode:$("#mode").value, k:+$("#k").value, rerank:$("#rerank").checked
-      })
+      body: JSON.stringify({ query, mode:$("#mode").value, k:+$("#k").value, rerank:$("#rerank").checked })
     });
     if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
     const j = await r.json();
-    const stages = j.steps.map(s => s.stage).join(" → ");
-    const sub = j.steps.find(s => s.stage === "subgraph");
-    $("#meta").innerHTML = [
-      `<span class="chip">mode <b>${j.mode}</b></span>`,
-      `<span class="chip">rerank <b>${j.rerank}</b></span>`,
-      `<span class="chip">latency <b>${j.latency_ms.toFixed(0)} ms</b></span>`,
-      `<span class="chip">cites <b>${j.citations.length}</b></span>`,
-      sub ? `<span class="chip">graph <b>${sub.method}</b> (${sub.n_papers} papers)</span>` : "",
-    ].join("");
-    $("#answer").innerHTML = fmtAnswer(j.answer) + `<div class="steps">pipeline: ${stages}</div>`;
-    $("#citeHead").style.display = j.citations.length ? "block" : "none";
-    $("#cites").innerHTML = "";
-    j.citations.forEach((c, i) => {
-      const ctx = (j.contexts && j.contexts[i]) ? j.contexts[i] : "";
-      const div = document.createElement("div");
-      div.className = "cite";
-      div.innerHTML =
-        `<div class="top"><span class="n">[${i+1}]</span>` +
-        `<span class="pid">${c.paper_id}</span>` +
-        (c.page_range ? `<span class="pg">p${c.page_range}</span>` : "") +
-        `<span class="ti">${c.title || ""}</span>` +
-        (ctx ? `<span class="toggle">context ▾</span>` : "") +
-        `</div>` + (ctx ? `<div class="ctx">${ctx.replace(/</g,"&lt;")}</div>` : "");
-      const tg = div.querySelector(".toggle");
-      if (tg) tg.onclick = () => div.classList.toggle("open");
-      $("#cites").appendChild(div);
-    });
+    $("#meta").innerHTML = metaChips(j, "latency", j.latency_ms);
+    $("#answer").innerHTML = fmtAnswer(j.answer) +
+      `<div class="steps">pipeline: ${j.steps.map(s => s.stage).join(" → ")}</div>`;
+    renderCites(j);
   } catch (e) {
     $("#answer").innerHTML = `<span class="err">Error: ${e.message}</span>`;
-  } finally {
-    btn.disabled = false; btn.textContent = "Ask";
-  }
+  } finally { busy(false); }
+}
+
+async function compare() {
+  const query = $("#q").value.trim();
+  if (!prep(query)) return;
+  $("#answer").style.display = "none"; $("#cols").style.display = "grid";
+  $("#cols").innerHTML = '<div class="col"><span class="err">running both answerers…</span></div>';
+  try {
+    const r = await fetch("/compare", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ query, mode:$("#mode").value, k:+$("#k").value, rerank:$("#rerank").checked })
+    });
+    if (!r.ok) throw new Error((await r.json()).detail || r.statusText);
+    const j = await r.json();
+    $("#meta").innerHTML = metaChips(j, "retrieve", j.retrieve_latency_ms);
+    $("#cols").innerHTML = "";
+    j.results.forEach(res => {
+      const col = document.createElement("div");
+      col.className = "col";
+      col.innerHTML =
+        `<h4><span class="pid">${res.answerer}</span><span class="lat">${res.gen_latency_ms.toFixed(0)} ms</span></h4>` +
+        (res.error ? `<span class="err">${res.error}</span>`
+                   : `<div class="answer">${fmtAnswer(res.answer)}</div>`);
+      $("#cols").appendChild(col);
+    });
+    renderCites(j);
+  } catch (e) {
+    $("#cols").innerHTML = `<div class="col"><span class="err">Error: ${e.message}</span></div>`;
+  } finally { busy(false); }
 }
 
 $("#ask").onclick = ask;
+$("#compare").onclick = compare;
 $("#q").addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey||e.ctrlKey)) ask(); });
 renderExamples();
 loadStatus();

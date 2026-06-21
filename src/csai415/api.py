@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import math
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -116,6 +117,26 @@ class AskResponse(BaseModel):
     rerank: bool
     latency_ms: float
     steps: list[dict]
+
+
+class AnswererResult(BaseModel):
+    answerer: str
+    answer: str
+    gen_latency_ms: float
+    error: Optional[str] = None
+
+
+class CompareResponse(BaseModel):
+    """Same retrieved evidence, answered by each configured answerer (Qwen vs Groq)."""
+
+    query: str
+    mode: str
+    rerank: bool
+    citations: list[CitationModel]
+    contexts: list[str]
+    steps: list[dict]
+    retrieve_latency_ms: float
+    results: list[AnswererResult]
 
 
 def _page_range(row: pd.Series) -> str | None:
@@ -297,6 +318,59 @@ def create_app(
             rerank=res.rerank,
             latency_ms=res.latency_ms,
             steps=res.steps,
+        )
+
+    @app.post("/compare", response_model=CompareResponse)
+    def compare(req: AskRequest):
+        """Retrieve ONCE, then answer the same evidence with each configured answerer
+        (``CSAI415_COMPARE``, default ``qwen2.5:3b-instruct,groq``) — the zero-shot /
+        ceiling side-by-side. Generation latency is per-model on identical contexts.
+        """
+        executor: GraphRAGExecutor = getattr(app.state, "executor", None)
+        if executor is None:
+            raise HTTPException(status_code=503, detail="executor not loaded")
+        if req.mode not in ("vector", "graph", "hybrid"):
+            raise HTTPException(
+                status_code=400, detail=f"unknown mode {req.mode!r}; expected vector|graph|hybrid"
+            )
+        from csai415.answer import generate_answer
+
+        answerers = [
+            a.strip()
+            for a in os.environ.get("CSAI415_COMPARE", "qwen2.5:3b-instruct,groq").split(",")
+            if a.strip()
+        ]
+        orig = os.environ.get("CSAI415_ANSWERER")
+        results: list[AnswererResult] = []
+        try:
+            # Base pass with NO answerer ⇒ fast extractive gen, so latency ≈ pure retrieval.
+            os.environ.pop("CSAI415_ANSWERER", None)
+            base = executor.answer(req.query, k=req.k, mode=req.mode, rerank=req.rerank)
+            for a in answerers:
+                os.environ["CSAI415_ANSWERER"] = a
+                t0 = time.perf_counter()
+                try:
+                    text, _ = generate_answer(req.query, base.citations, base.contexts)
+                    err = None
+                except Exception as exc:  # e.g. Groq key missing, Ollama down
+                    text, err = "", f"{type(exc).__name__}: {exc}"
+                results.append(
+                    AnswererResult(
+                        answerer=a, answer=text,
+                        gen_latency_ms=(time.perf_counter() - t0) * 1000.0, error=err,
+                    )
+                )
+        finally:
+            if orig is None:
+                os.environ.pop("CSAI415_ANSWERER", None)
+            else:
+                os.environ["CSAI415_ANSWERER"] = orig
+
+        return CompareResponse(
+            query=req.query, mode=base.mode, rerank=base.rerank,
+            citations=[CitationModel(**vars(c)) for c in base.citations],
+            contexts=base.contexts, steps=base.steps,
+            retrieve_latency_ms=base.latency_ms, results=results,
         )
 
     return app
