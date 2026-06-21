@@ -192,10 +192,25 @@ def create_app(
         app.state.lookup = df.set_index("chunk_id")
         app.state.config = cfg
         app.state.qdrant_client = client
-        # D3: GraphRAG executor over the whole-corpus retriever. D3-2 owner wires the
-        # Neo4j driver (neo4j_driver=...) once the graph stage is live.
-        app.state.executor = GraphRAGExecutor(retriever, app.state.lookup)
+
+        # D3 (Task 7): wire the live Neo4j driver into the executor so graph/hybrid
+        # modes can query the subgraph. Gated by CSAI415_USE_NEO4J so the test suite
+        # and offline runs stay graph-less (select_subgraph degrades to fallback when
+        # neo4j_driver is None). Empty password ⇒ auth=None (dev containers).
+        neo4j_driver = None
+        if os.environ.get("CSAI415_USE_NEO4J", "0") == "1":
+            from neo4j import GraphDatabase
+
+            url = os.environ.get("NEO4J_URL", "bolt://localhost:7687")
+            user = os.environ.get("NEO4J_USER", "neo4j")
+            pwd = os.environ.get("NEO4J_PASSWORD", "")
+            auth = (user, pwd) if pwd else None
+            neo4j_driver = GraphDatabase.driver(url, auth=auth)
+        app.state.neo4j_driver = neo4j_driver
+        app.state.executor = GraphRAGExecutor(retriever, app.state.lookup, neo4j_driver=neo4j_driver)
         yield
+        if neo4j_driver is not None:
+            neo4j_driver.close()
 
     app = FastAPI(title="CSAI415 PDF-Papers /search", lifespan=lifespan)
 
