@@ -255,11 +255,18 @@ def create_app(
 
     @app.get("/", response_class=HTMLResponse)
     def index():
-        """The 1-page GraphRAG demo UI (vanilla HTML/JS calling /ask)."""
+        """The 1-page GraphRAG demo UI (vanilla HTML/JS calling /ask + /ask/stream).
+
+        Served with ``no-store`` so the browser always fetches the latest markup — during
+        active demo iteration a cached copy of an older UI is worse than a fresh round-trip.
+        """
         page = STATIC_DIR / "index.html"
         if not page.exists():
             raise HTTPException(status_code=404, detail="UI not found")
-        return page.read_text(encoding="utf-8")
+        return HTMLResponse(
+            page.read_text(encoding="utf-8"),
+            headers={"Cache-Control": "no-store, must-revalidate"},
+        )
 
     @app.get("/healthz")
     def healthz():
