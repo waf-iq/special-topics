@@ -26,6 +26,7 @@ Runs under uvicorn as ``csai415.api:app`` (see Dockerfile / docker-compose).
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import time
@@ -36,7 +37,7 @@ from typing import Optional
 import pandas as pd
 import yaml
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from csai415.graphrag import GraphRAGExecutor
@@ -137,6 +138,21 @@ class CompareResponse(BaseModel):
     steps: list[dict]
     retrieve_latency_ms: float
     results: list[AnswererResult]
+
+
+class JudgeRequest(BaseModel):
+    """A streamed answer + its evidence, to be scored by the RAGAS/Groq judge (T4)."""
+
+    query: str = Field(..., min_length=1)
+    answer: str = Field(..., min_length=1)
+    contexts: list[str] = Field(default_factory=list)
+
+
+class JudgeResponse(BaseModel):
+    faithfulness: Optional[float] = None
+    answer_relevancy: Optional[float] = None
+    available: bool = True
+    detail: Optional[str] = None
 
 
 def _page_range(row: pd.Series) -> str | None:
@@ -319,6 +335,108 @@ def create_app(
             latency_ms=res.latency_ms,
             steps=res.steps,
         )
+
+    @app.post("/ask/stream")
+    def ask_stream(req: AskRequest):
+        """Server-Sent-Events twin of ``/ask`` — emits the pipeline live for the demo UI.
+
+        Event stream (each ``event:``/``data:`` frame is JSON):
+          ``step``     one per retrieval stage as it completes (retrieve→subgraph→graph_filter
+                       →rerank), carrying the funnel counts + graph entities the UI animates.
+          ``blocked``  the T6 injection guard rejected the query *before* any model ran — this
+                       is the live "break-it" moment; no further events follow.
+          ``evidence`` the final citations + contexts (so the cite panel fills before generation).
+          ``token``    a generated text delta (token-by-token answer reveal).
+          ``done``     end-of-stream: total latency + the parsed ``[n]`` citations actually used.
+          ``error``    an exception bubbled up mid-stream (e.g. Ollama down).
+        Generation runs through the same ``CSAI415_ANSWERER`` seam as ``/ask``, so base / tuned /
+        Groq all stream through here unchanged.
+        """
+        executor: GraphRAGExecutor = getattr(app.state, "executor", None)
+        if executor is None:
+            raise HTTPException(status_code=503, detail="executor not loaded")
+        if req.mode not in ("vector", "graph", "hybrid"):
+            raise HTTPException(
+                status_code=400, detail=f"unknown mode {req.mode!r}; expected vector|graph|hybrid"
+            )
+
+        from csai415.answer import _parse_citations, stream_answer
+        from csai415.safety import detect_injection_regex
+
+        def _sse(event: str, data: dict) -> str:
+            return f"event: {event}\ndata: {json.dumps(data)}\n\n"
+
+        def event_stream():
+            t0 = time.perf_counter()
+            try:
+                # T6 safety gate first — a blocked query never reaches retrieval or the model.
+                blocked, reason = detect_injection_regex(req.query)
+                if blocked:
+                    yield _sse("blocked", {"reason": reason})
+                    return
+
+                pipe = executor.run_pipeline(req.query, k=req.k, mode=req.mode, rerank=req.rerank)
+                citations, contexts = [], []
+                try:
+                    while True:
+                        yield _sse("step", next(pipe))
+                except StopIteration as stop:
+                    citations, contexts, _ = stop.value
+
+                yield _sse(
+                    "evidence",
+                    {
+                        "citations": [vars(c) for c in citations],
+                        "contexts": contexts,
+                    },
+                )
+
+                acc = ""
+                for delta in stream_answer(req.query, citations, contexts):
+                    acc += delta
+                    yield _sse("token", {"t": delta})
+
+                yield _sse(
+                    "done",
+                    {
+                        "latency_ms": (time.perf_counter() - t0) * 1000.0,
+                        "cited": _parse_citations(acc, len(contexts)),
+                    },
+                )
+            except Exception as exc:  # surface any mid-stream failure to the UI
+                yield _sse("error", {"detail": f"{type(exc).__name__}: {exc}"})
+
+        return StreamingResponse(
+            event_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    @app.post("/judge", response_model=JudgeResponse)
+    def judge(req: JudgeRequest):
+        """Score one streamed answer with the real RAGAS faithfulness/relevance judge (T4).
+
+        Deliberately *off* the hot path: the UI calls this after the answer finishes streaming
+        and shows a live badge, so the pipeline stays fast. The judge needs ``GROQ_API_KEY`` +
+        the ragas deps; when either is missing (or the answer is a refusal) it returns
+        ``available=false`` with a reason rather than failing — the badge just shows "unavailable".
+        """
+        from csai415.answer import REFUSAL
+
+        if not req.contexts or req.answer.strip() == REFUSAL:
+            return JudgeResponse(available=False, detail="no answer/context to judge")
+        if not os.environ.get("GROQ_API_KEY"):
+            return JudgeResponse(available=False, detail="GROQ_API_KEY not set")
+        try:
+            from csai415.ragas_groq import ragas_score
+
+            scores = ragas_score([req.query], [req.answer], [list(req.contexts)])
+            return JudgeResponse(
+                faithfulness=scores.get("faithfulness"),
+                answer_relevancy=scores.get("answer_relevancy"),
+            )
+        except Exception as exc:  # ragas/dep/network failure → graceful "unavailable"
+            return JudgeResponse(available=False, detail=f"{type(exc).__name__}: {exc}")
 
     @app.post("/compare", response_model=CompareResponse)
     def compare(req: AskRequest):

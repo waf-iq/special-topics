@@ -123,41 +123,70 @@ class GraphRAGExecutor:
             score=float(score),
         )
 
-    def answer(self, query: str, k: int = 5, mode: Mode = "hybrid", rerank: bool = True) -> AnswerResult:
-        t0 = time.perf_counter()
-        steps: list[dict] = []
+    def run_pipeline(self, query: str, k: int = 5, mode: Mode = "hybrid", rerank: bool = True):
+        """Retrieval pipeline as a generator — the single source of truth for stages 1–4.
+
+        ``yield``s one step dict per stage as it completes (so a streaming endpoint can light
+        up the UI in real time), then ``return``s ``(citations, contexts, score_by_id)`` via the
+        generator's ``StopIteration.value``. ``answer()`` drains this and adds the generate stage;
+        the SSE ``/ask/stream`` endpoint drains it and then streams generation token-by-token.
+        Generation itself is deliberately *not* here — it's the one stage with two shapes
+        (blocking vs. streamed), so each caller owns it.
+        """
         hw = _MODE_HYBRID_WEIGHT.get(mode)
 
         # 1. Candidate retrieval — pool ≥ k so the reranker has room to reorder.
         pool = self.retriever.search_with_scores(query, self.candidate_k, hybrid_weight=hw)
         candidates = [cid for cid, _ in pool]
         score_by_id = {cid: float(s) for cid, s in pool}
-        steps.append({"stage": "retrieve", "mode": mode, "hybrid_weight": hw, "n_candidates": len(candidates)})
+        yield {
+            "stage": "retrieve", "mode": mode, "hybrid_weight": hw,
+            "n_candidates": len(candidates), "pool": list(candidates),
+        }
 
         # 2. Graph guidance (graph/hybrid modes). H0 default = graph-as-filter with fallback.
         if mode in ("graph", "hybrid"):
             sub = self.select_fn(query, neo4j_driver=self.neo4j_driver)
-            steps.append(
-                {"stage": "subgraph", "method": sub.method, "cypher": sub.cypher_used, "n_papers": len(sub.paper_ids)}
-            )
+            yield {
+                "stage": "subgraph", "method": sub.method, "cypher": sub.cypher_used,
+                "n_papers": len(sub.paper_ids),
+                # reporting extras for the UI (entities the graph linked + the papers it pulled)
+                "entities": [{"name": e.name, "label": e.label, "score": round(e.score, 3)} for e in sub.linked],
+                "paper_ids": list(sub.paper_ids)[:12],
+            }
             if sub.paper_ids:
                 wanted = set(sub.paper_ids)
                 in_sub = [cid for cid in candidates if self._paper_of(cid) in wanted]
                 if mode == "graph" and in_sub:  # graph mode hard-filters; hybrid leaves the pool for D3-2 to tune
+                    dropped = [c for c in candidates if c not in set(in_sub)]
                     candidates = in_sub
-                    steps.append({"stage": "graph_filter", "kept": len(candidates)})
+                    yield {"stage": "graph_filter", "kept": len(candidates), "dropped": dropped}
 
         # 3. Optional rerank → final top-k.
         if rerank:
             chunk_text = {cid: self._text(cid) for cid in candidates}
+            before = list(candidates)
             candidates = self.rerank_fn(query, candidates, chunk_text, top_n=k)
-            steps.append({"stage": "rerank", "top_n": k})
+            yield {"stage": "rerank", "top_n": k, "before": before[:k], "after": list(candidates)}
         else:
             candidates = candidates[:k]
 
-        # 4. Build citations + aligned contexts.
+        # 4. Build citations + aligned contexts (the generator's return value).
         citations = [self._citation(cid, score_by_id.get(cid, 0.0)) for cid in candidates]
         contexts = [self._text(cid) for cid in candidates]
+        return citations, contexts, score_by_id
+
+    def answer(self, query: str, k: int = 5, mode: Mode = "hybrid", rerank: bool = True) -> AnswerResult:
+        t0 = time.perf_counter()
+        steps: list[dict] = []
+
+        # Drain the shared pipeline generator, collecting each stage as it completes.
+        pipe = self.run_pipeline(query, k, mode, rerank)
+        try:
+            while True:
+                steps.append(next(pipe))
+        except StopIteration as stop:
+            citations, contexts, _ = stop.value
 
         # 5. Generate the grounded answer.
         answer_text, used = self.answer_fn(query, citations, contexts)

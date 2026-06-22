@@ -144,18 +144,71 @@ def generate_answer(
     raise ValueError(f"unknown CSAI415_CITE_MODE={mode!r}; expected numbered|hybrid|posthoc")
 
 
-# --- Strategy 1: numbered-source (shipped default) -------------------------------------
-def _numbered_source(client, model, query: str, contexts: list[str]) -> tuple[str, list[int]]:
-    """Single generation call; the model cites ``[n]`` inline. Fast, abstractive-constrained."""
+# --- Streaming variant (for the live demo UI's token-by-token reveal) ------------------
+def _numbered_prompt(query: str, contexts: list[str]) -> str:
+    """The user-message body shared by the blocking and streaming numbered-source paths."""
     sources = "\n".join(f"[{i}] {(c or '')[:_MAX_CTX_CHARS]}" for i, c in enumerate(contexts, 1))
-    user = (
+    return (
         f"Sources:\n{sources}\n\nQuestion: {query}\n\n"
         "Answer (cite each claim with its source's number in square brackets, e.g. [1]):"
     )
+
+
+def stream_answer(query: str, citations: "list[Citation]", contexts: list[str]):
+    """Yield the grounded answer as text deltas, for the SSE ``/ask/stream`` endpoint.
+
+    Mirrors ``generate_answer`` but streams: with a backend configured it uses the
+    OpenAI-compatible ``stream=True`` (Ollama or Groq); with no backend it word-chunks the
+    deterministic extractive fallback so the UI still animates a real grounded answer offline.
+    Only the shipped ``numbered`` cite-mode streams natively; the verify/posthoc arms (which
+    post-process the whole text) fall back to a one-shot yield. The caller accumulates the
+    deltas and parses ``[n]`` markers from the final text.
+    """
+    if not citations or not contexts:
+        yield REFUSAL
+        return
+
+    backend = resolve_backend()
+    if backend is None:
+        text, _ = _extractive(contexts)
+        yield from _word_chunks(text)
+        return
+
+    client, model, _kind = backend
+    mode = (os.getenv("CSAI415_CITE_MODE") or "numbered").strip().lower()
+    if mode != "numbered":
+        # hybrid/posthoc rewrite the full text post-hoc → can't stream meaningfully; one-shot it.
+        text, _ = generate_answer(query, citations, contexts)
+        yield from _word_chunks(text)
+        return
+
+    stream = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "system", "content": _SYSTEM_PROMPT},
+                  {"role": "user", "content": _numbered_prompt(query, contexts)}],
+        temperature=_TEMPERATURE,
+        max_tokens=_MAX_TOKENS,
+        stream=True,
+    )
+    for chunk in stream:
+        delta = (chunk.choices[0].delta.content or "") if chunk.choices else ""
+        if delta:
+            yield delta
+
+
+def _word_chunks(text: str):
+    """Split a finished string into small deltas so the offline path still animates."""
+    for tok in re.findall(r"\S+\s*", text or ""):
+        yield tok
+
+
+# --- Strategy 1: numbered-source (shipped default) -------------------------------------
+def _numbered_source(client, model, query: str, contexts: list[str]) -> tuple[str, list[int]]:
+    """Single generation call; the model cites ``[n]`` inline. Fast, abstractive-constrained."""
     resp = client.chat.completions.create(
         model=model,
         messages=[{"role": "system", "content": _SYSTEM_PROMPT},
-                  {"role": "user", "content": user}],
+                  {"role": "user", "content": _numbered_prompt(query, contexts)}],
         temperature=_TEMPERATURE,
         max_tokens=_MAX_TOKENS,
     )
