@@ -236,7 +236,8 @@ function buildCanvas() {
 }
 function setNode(key, state, data) {
   const el = nodeEl[key]; if (!el) return;
-  el.classList.remove("active","done","skip"); el.classList.add(state);
+  el.classList.remove("active","done","skip");
+  if (state) el.classList.add(state);   // classList.add("") throws — only add a real state
   if (data !== undefined) $("#dat-"+key).textContent = data;
 }
 function resetCanvas() {
